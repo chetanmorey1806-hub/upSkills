@@ -64,6 +64,12 @@ finally:
 \`);
       flush(id);
       postMessage({ type: 'done', id, ms: Math.round(performance.now() - t0) });
+    } else if (msg.mode === 'pyexec') {
+      if (msg.packages && msg.packages.length) await py.loadPackage(msg.packages);
+      for (const [k, v] of Object.entries(msg.vars || {})) py.globals.set(k, v);
+      const r = await py.runPythonAsync(msg.code);
+      flush(id);
+      postMessage({ type: 'result', id, value: r === undefined || r === null ? null : String(r), ms: Math.round(performance.now() - t0) });
     } else if (msg.mode === 'sql') {
       await py.loadPackage('sqlite3');
       py.globals.set('__setup', msg.setup || '');
@@ -151,6 +157,15 @@ export function runSQL({ setup, query }, onEvent, timeoutMs = 20000) {
   return runJob({ mode: 'sql', setup, query }, onEvent, timeoutMs);
 }
 
+// Run arbitrary Python in the worker and get the final expression's value (string) back.
+export function runPyExec({ code, vars = {}, packages = [] }, timeoutMs = 30000) {
+  let value = null, error = null;
+  return runJob({ mode: 'pyexec', code, vars, packages }, (m) => {
+    if (m.type === 'result') value = m.value;
+    if (m.type === 'done' && m.error) error = m.error;
+  }, timeoutMs).then(() => { if (error) throw new Error(error); return value; });
+}
+
 async function runJob(job, onEvent, timeoutMs) {
   await ensurePython();
   const id = nextId++;
@@ -163,7 +178,7 @@ async function runJob(job, onEvent, timeoutMs) {
     }, timeoutMs);
     handlers.set(id, (m) => {
       onEvent(m);
-      if (m.type === 'done' || m.type === 'sql') { clearTimeout(timer); handlers.delete(id); resolve(); }
+      if (m.type === 'done' || m.type === 'sql' || m.type === 'result') { clearTimeout(timer); handlers.delete(id); resolve(); }
     });
     worker.postMessage({ ...job, id });
   });

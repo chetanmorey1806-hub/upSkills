@@ -35,6 +35,7 @@ const pyGlob = {
   drf: load(import.meta.glob('./drf-days/*.js', { eager: true })),
 };
 Object.values(pyGlob).forEach((l) => l.sort(byDay));
+const mysqlDays = load(import.meta.glob('./mysql-days/*.js', { eager: true })).sort(byDay);
 const powerbiExtra = load(import.meta.glob('./powerbi-extra/*.js', { eager: true })).sort((a, b) => (a.extraNo || 0) - (b.extraNo || 0));
 
 export const tracks = {
@@ -171,6 +172,11 @@ export const tracks = {
     tagline: 'Serializers, API views, viewsets, routers, JWT auth, permissions, filtering, pagination, docs and a React full-stack project.',
     topics: pyGlob.drf,
   },
+  mysql: {
+    key: 'mysql', name: 'MySQL with Workbench (30 Days)', short: 'MySQL', icon: '🐬', color: '#00758f', unit: 'Day', lang: 'mysql', group: 'db',
+    tagline: '6 modules, 30 days: install MySQL & Workbench, CRUD, functions, joins, subqueries, views, indexes, procedures, triggers, transactions, window functions, EER diagrams, users and backup.',
+    topics: mysqlDays,
+  },
   guides: {
     key: 'guides',
     name: 'Excel Topic Guides',
@@ -183,13 +189,15 @@ export const tracks = {
   },
 };
 
-export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'python', 'sql', 'flask', 'django', 'drf'];
+export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'python', 'sql', 'flask', 'django', 'drf', 'mysql'];
 export const trackGroups = [
   { key: 'data', name: '📈 Data Analytics', tracks: ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides'] },
   { key: 'web', name: '💻 Web Development', tracks: ['html', 'htmlextra', 'css', 'js', 'react'] },
   { key: 'java', name: '☕ Java Full Stack', tracks: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'] },
   { key: 'python', name: '🐍 Python Full Stack', tracks: ['python', 'sql', 'flask', 'django', 'drf'] },
+  { key: 'db', name: '🗄️ Databases', tracks: ['mysql', 'sql'] },
 ];
+export const isMySQL = (track) => tracks[track]?.lang === 'mysql';
 export const isPython = (track) => tracks[track]?.lang === 'python';
 export const isJava = (track) => tracks[track]?.lang === 'java';
 export const isWeb = (track) => tracks[track]?.lang === 'web';

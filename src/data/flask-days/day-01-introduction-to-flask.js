@@ -232,8 +232,58 @@ Browser: Hello from python app.py`,
         "Create main.py and paste the code",
         "Run with python main.py (no Flask needed)",
       ],
-      code: `@@FD01@@`,
-      python: { files: { "main.py": `@@FD01@@` } },
+      code: `def app(environ, start_response):
+    path = environ["PATH_INFO"]
+    if path == "/":
+        body = "Hello, Flask learners!"
+        status = "200 OK"
+    else:
+        body = "Page not found"
+        status = "404 NOT FOUND"
+    start_response(status, [("Content-Type", "text/plain")])
+    return [body.encode("utf-8")]
+
+
+def fake_server(path):
+    captured = {}
+
+    def start_response(status, headers):
+        captured["status"] = status
+        captured["headers"] = headers
+
+    chunks = app({"PATH_INFO": path, "REQUEST_METHOD": "GET"}, start_response)
+    print("GET", path, "->", captured["status"])
+    print("Body:", b"".join(chunks).decode("utf-8"))
+
+
+fake_server("/")
+fake_server("/about")`,
+      python: { files: { "main.py": `def app(environ, start_response):
+    path = environ["PATH_INFO"]
+    if path == "/":
+        body = "Hello, Flask learners!"
+        status = "200 OK"
+    else:
+        body = "Page not found"
+        status = "404 NOT FOUND"
+    start_response(status, [("Content-Type", "text/plain")])
+    return [body.encode("utf-8")]
+
+
+def fake_server(path):
+    captured = {}
+
+    def start_response(status, headers):
+        captured["status"] = status
+        captured["headers"] = headers
+
+    chunks = app({"PATH_INFO": path, "REQUEST_METHOD": "GET"}, start_response)
+    print("GET", path, "->", captured["status"])
+    print("Body:", b"".join(chunks).decode("utf-8"))
+
+
+fake_server("/")
+fake_server("/about")` } },
       result: `GET / -> 200 OK
 Body: Hello, Flask learners!
 GET /about -> 404 NOT FOUND

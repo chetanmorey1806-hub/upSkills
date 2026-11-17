@@ -14,6 +14,7 @@ import Courses from './pages/Courses.jsx';
 import JavaIDE from './pages/JavaIDE.jsx';
 import PythonIDE from './pages/PythonIDE.jsx';
 import SqlLab from './pages/SqlLab.jsx';
+import MySQLWorkbench from './pages/MySQLWorkbench.jsx';
 import QuizArena from './pages/QuizArena.jsx';
 import Flashcards from './pages/Flashcards.jsx';
 import Shortcuts from './pages/Shortcuts.jsx';
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/tools/java-ide" element={<JavaIDE />} />
         <Route path="/tools/python-ide" element={<PythonIDE />} />
         <Route path="/tools/sql-lab" element={<SqlLab />} />
+        <Route path="/tools/mysql-workbench" element={<MySQLWorkbench />} />
         <Route path="/tools/quiz" element={<QuizArena />} />
         <Route path="/tools/flashcards" element={<Flashcards />} />
         <Route path="/tools/shortcuts" element={<Shortcuts />} />

@@ -332,8 +332,68 @@ Upload 5 MB image     -> 413 Request Entity Too Large`,
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD04@@`,
-      python: { files: { "main.py": `@@FD04@@` } },
+      code: `import re
+
+EMAIL_RE = re.compile(r"^[^@ ]+@[^@ ]+[.][a-z]+$")
+
+
+def validate(form):
+    errors = {}
+    name = form.get("name", "").strip()
+    email = form.get("email", "").strip()
+    age = form.get("age", "").strip()
+    if not name:
+        errors["name"] = "This field is required."
+    elif len(name) < 3:
+        errors["name"] = "Field must be at least 3 characters long."
+    if not EMAIL_RE.match(email):
+        errors["email"] = "Invalid email address."
+    if not age.isdigit() or not 18 <= int(age) <= 60:
+        errors["age"] = "Age must be between 18 and 60."
+    return errors
+
+
+forms = [
+    {"name": "Asha", "email": "asha@example.com", "age": "21"},
+    {"name": "Al", "email": "al-at-mail", "age": "15"},
+]
+for form in forms:
+    errors = validate(form)
+    if errors:
+        print("Flash (danger):", errors)
+    else:
+        print("Flash (success): Welcome,", form["name"])`,
+      python: { files: { "main.py": `import re
+
+EMAIL_RE = re.compile(r"^[^@ ]+@[^@ ]+[.][a-z]+$")
+
+
+def validate(form):
+    errors = {}
+    name = form.get("name", "").strip()
+    email = form.get("email", "").strip()
+    age = form.get("age", "").strip()
+    if not name:
+        errors["name"] = "This field is required."
+    elif len(name) < 3:
+        errors["name"] = "Field must be at least 3 characters long."
+    if not EMAIL_RE.match(email):
+        errors["email"] = "Invalid email address."
+    if not age.isdigit() or not 18 <= int(age) <= 60:
+        errors["age"] = "Age must be between 18 and 60."
+    return errors
+
+
+forms = [
+    {"name": "Asha", "email": "asha@example.com", "age": "21"},
+    {"name": "Al", "email": "al-at-mail", "age": "15"},
+]
+for form in forms:
+    errors = validate(form)
+    if errors:
+        print("Flash (danger):", errors)
+    else:
+        print("Flash (success): Welcome,", form["name"])` } },
       result: `Flash (success): Welcome, Asha
 Flash (danger): {'name': 'Field must be at least 3 characters long.', 'email': 'Invalid email address.', 'age': 'Age must be between 18 and 60.'}`,
       explanation: "Each rule checks one field and stores an error message by field name - exactly what WTForms puts into form.errors. If the errors dict is empty the form is valid.",

@@ -269,8 +269,110 @@ http://localhost/notes`,
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD02@@`,
-      python: { files: { "main.py": `@@FD02@@` } },
+      code: `routes = []
+
+
+def route(rule):
+    def decorator(func):
+        routes.append((rule.strip("/").split("/"), func))
+        return func
+    return decorator
+
+
+def match(rule_parts, path_parts):
+    if len(rule_parts) != len(path_parts):
+        return None
+    kwargs = {}
+    for rule, value in zip(rule_parts, path_parts):
+        if rule.startswith("<int:"):
+            if not value.isdigit():
+                return None
+            kwargs[rule[5:-1]] = int(value)
+        elif rule.startswith("<"):
+            kwargs[rule[1:-1]] = value
+        elif rule != value:
+            return None
+    return kwargs
+
+
+@route("/")
+def index():
+    return "Home page"
+
+
+@route("/user/<name>")
+def profile(name):
+    return f"Profile of {name}"
+
+
+@route("/post/<int:post_id>")
+def show_post(post_id):
+    return f"Post {post_id}, next is {post_id + 1}"
+
+
+def dispatch(path):
+    parts = path.strip("/").split("/")
+    for rule_parts, func in routes:
+        kwargs = match(rule_parts, parts)
+        if kwargs is not None:
+            return func(**kwargs)
+    return "404 Not Found"
+
+
+for url in ["/", "/user/asha", "/post/7", "/post/abc"]:
+    print(url, "=>", dispatch(url))`,
+      python: { files: { "main.py": `routes = []
+
+
+def route(rule):
+    def decorator(func):
+        routes.append((rule.strip("/").split("/"), func))
+        return func
+    return decorator
+
+
+def match(rule_parts, path_parts):
+    if len(rule_parts) != len(path_parts):
+        return None
+    kwargs = {}
+    for rule, value in zip(rule_parts, path_parts):
+        if rule.startswith("<int:"):
+            if not value.isdigit():
+                return None
+            kwargs[rule[5:-1]] = int(value)
+        elif rule.startswith("<"):
+            kwargs[rule[1:-1]] = value
+        elif rule != value:
+            return None
+    return kwargs
+
+
+@route("/")
+def index():
+    return "Home page"
+
+
+@route("/user/<name>")
+def profile(name):
+    return f"Profile of {name}"
+
+
+@route("/post/<int:post_id>")
+def show_post(post_id):
+    return f"Post {post_id}, next is {post_id + 1}"
+
+
+def dispatch(path):
+    parts = path.strip("/").split("/")
+    for rule_parts, func in routes:
+        kwargs = match(rule_parts, parts)
+        if kwargs is not None:
+            return func(**kwargs)
+    return "404 Not Found"
+
+
+for url in ["/", "/user/asha", "/post/7", "/post/abc"]:
+    print(url, "=>", dispatch(url))` } },
       result: `/ => Home page
 /user/asha => Profile of asha
 /post/7 => Post 7, next is 8

@@ -423,8 +423,54 @@ Correct                -> 'Password changed.' -> dashboard; old password no long
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD08@@`,
-      python: { files: { "main.py": `@@FD08@@` } },
+      code: `import hashlib
+import hmac
+import secrets
+
+
+def generate_password_hash(password):
+    salt = secrets.token_hex(8)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+    return "pbkdf2:sha256:100000$" + salt + "$" + digest
+
+
+def check_password_hash(stored, password):
+    method, salt, digest = stored.split("$")
+    iterations = int(method.split(":")[2])
+    new = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), iterations).hex()
+    return hmac.compare_digest(new, digest)
+
+
+h1 = generate_password_hash("secret123")
+h2 = generate_password_hash("secret123")
+print("Starts with:", h1.split("$")[0])
+print("Same password, same hash?", h1 == h2)
+print("Correct password:", check_password_hash(h1, "secret123"))
+print("Wrong password:", check_password_hash(h1, "Secret123"))`,
+      python: { files: { "main.py": `import hashlib
+import hmac
+import secrets
+
+
+def generate_password_hash(password):
+    salt = secrets.token_hex(8)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+    return "pbkdf2:sha256:100000$" + salt + "$" + digest
+
+
+def check_password_hash(stored, password):
+    method, salt, digest = stored.split("$")
+    iterations = int(method.split(":")[2])
+    new = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), iterations).hex()
+    return hmac.compare_digest(new, digest)
+
+
+h1 = generate_password_hash("secret123")
+h2 = generate_password_hash("secret123")
+print("Starts with:", h1.split("$")[0])
+print("Same password, same hash?", h1 == h2)
+print("Correct password:", check_password_hash(h1, "secret123"))
+print("Wrong password:", check_password_hash(h1, "Secret123"))` } },
       result: `Starts with: pbkdf2:sha256:100000
 Same password, same hash? False
 Correct password: True

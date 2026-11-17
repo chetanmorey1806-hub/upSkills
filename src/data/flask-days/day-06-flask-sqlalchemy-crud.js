@@ -376,8 +376,54 @@ mysql> DESCRIBE book;
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD06@@`,
-      python: { files: { "main.py": `@@FD06@@` } },
+      code: `import sqlite3
+
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+cur.execute("CREATE TABLE book (id INTEGER PRIMARY KEY, title TEXT NOT NULL, price REAL)")
+
+# CREATE
+cur.executemany("INSERT INTO book (title, price) VALUES (?, ?)",
+                [("Flask Basics", 299.0), ("Python Tricks", 450.0), ("SQL Guide", 199.0)])
+conn.commit()
+
+# READ
+for row in cur.execute("SELECT id, title, price FROM book ORDER BY id"):
+    print(row)
+
+# UPDATE
+cur.execute("UPDATE book SET price = ? WHERE id = ?", (349.0, 1))
+# DELETE
+cur.execute("DELETE FROM book WHERE id = ?", (3,))
+conn.commit()
+
+print("After update/delete:")
+for row in cur.execute("SELECT id, title, price FROM book ORDER BY id"):
+    print(row)`,
+      python: { files: { "main.py": `import sqlite3
+
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+cur.execute("CREATE TABLE book (id INTEGER PRIMARY KEY, title TEXT NOT NULL, price REAL)")
+
+# CREATE
+cur.executemany("INSERT INTO book (title, price) VALUES (?, ?)",
+                [("Flask Basics", 299.0), ("Python Tricks", 450.0), ("SQL Guide", 199.0)])
+conn.commit()
+
+# READ
+for row in cur.execute("SELECT id, title, price FROM book ORDER BY id"):
+    print(row)
+
+# UPDATE
+cur.execute("UPDATE book SET price = ? WHERE id = ?", (349.0, 1))
+# DELETE
+cur.execute("DELETE FROM book WHERE id = ?", (3,))
+conn.commit()
+
+print("After update/delete:")
+for row in cur.execute("SELECT id, title, price FROM book ORDER BY id"):
+    print(row)` } },
       result: `(1, 'Flask Basics', 299.0)
 (2, 'Python Tricks', 450.0)
 (3, 'SQL Guide', 199.0)

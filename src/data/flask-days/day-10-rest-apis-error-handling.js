@@ -88,6 +88,7 @@ Flask-SQLAlchemy==3.1.1
 Flask-Cors==5.0.0
 
 # ---- app.py ----
+import os
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, url_for
 from flask_cors import CORS
@@ -103,7 +104,7 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tasks.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///tasks.db")
 app.json.sort_keys = False
 db.init_app(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -291,13 +292,16 @@ DELETE http://127.0.0.1:5000/api/v1/tasks/1
 
 
 # ---- tests/test_api.py ----
+import os
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"   # must be set BEFORE importing app
+
 import pytest
 from app import app as flask_app, db
 
 
 @pytest.fixture
 def client():
-    flask_app.config.update(TESTING=True, SQLALCHEMY_DATABASE_URI="sqlite:///:memory:")
+    flask_app.config.update(TESTING=True)
     with flask_app.app_context():
         db.create_all()
         yield flask_app.test_client()
@@ -397,8 +401,78 @@ task_v2       DELETE, GET, PATCH     /api/v2/tasks/<int:task_id>`,
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD10@@`,
-      python: { files: { "main.py": `@@FD10@@` } },
+      code: `import json
+
+tasks = [{"id": 1, "title": "Learn Flask", "done": False}]
+
+
+def api(method, path, body=None):
+    if path == "/api/tasks" and method == "GET":
+        return 200, {"tasks": tasks}
+    if path == "/api/tasks" and method == "POST":
+        data = json.loads(body) if body else None
+        if not data or "title" not in data:
+            return 400, {"error": "title is required"}
+        task = {"id": len(tasks) + 1, "title": data["title"], "done": False}
+        tasks.append(task)
+        return 201, task
+    if path.startswith("/api/tasks/") and method == "DELETE":
+        task_id = int(path.rsplit("/", 1)[1])
+        for t in tasks:
+            if t["id"] == task_id:
+                tasks.remove(t)
+                return 204, None
+        return 404, {"error": "task not found"}
+    return 405, {"error": "method not allowed"}
+
+
+calls = [
+    ("GET", "/api/tasks", None),
+    ("POST", "/api/tasks", '{"title": "Build API"}'),
+    ("POST", "/api/tasks", '{}'),
+    ("DELETE", "/api/tasks/9", None),
+    ("DELETE", "/api/tasks/1", None),
+    ("GET", "/api/tasks", None),
+]
+for method, path, body in calls:
+    status, payload = api(method, path, body)
+    print(method, path, status, json.dumps(payload))`,
+      python: { files: { "main.py": `import json
+
+tasks = [{"id": 1, "title": "Learn Flask", "done": False}]
+
+
+def api(method, path, body=None):
+    if path == "/api/tasks" and method == "GET":
+        return 200, {"tasks": tasks}
+    if path == "/api/tasks" and method == "POST":
+        data = json.loads(body) if body else None
+        if not data or "title" not in data:
+            return 400, {"error": "title is required"}
+        task = {"id": len(tasks) + 1, "title": data["title"], "done": False}
+        tasks.append(task)
+        return 201, task
+    if path.startswith("/api/tasks/") and method == "DELETE":
+        task_id = int(path.rsplit("/", 1)[1])
+        for t in tasks:
+            if t["id"] == task_id:
+                tasks.remove(t)
+                return 204, None
+        return 404, {"error": "task not found"}
+    return 405, {"error": "method not allowed"}
+
+
+calls = [
+    ("GET", "/api/tasks", None),
+    ("POST", "/api/tasks", '{"title": "Build API"}'),
+    ("POST", "/api/tasks", '{}'),
+    ("DELETE", "/api/tasks/9", None),
+    ("DELETE", "/api/tasks/1", None),
+    ("GET", "/api/tasks", None),
+]
+for method, path, body in calls:
+    status, payload = api(method, path, body)
+    print(method, path, status, json.dumps(payload))` } },
       result: `GET /api/tasks 200 {"tasks": [{"id": 1, "title": "Learn Flask", "done": false}]}
 POST /api/tasks 201 {"id": 2, "title": "Build API", "done": false}
 POST /api/tasks 400 {"error": "title is required"}

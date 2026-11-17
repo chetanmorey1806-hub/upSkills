@@ -310,8 +310,64 @@ Total: Rs. 140`,
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD05@@`,
-      python: { files: { "main.py": `@@FD05@@` } },
+      code: `import base64
+import hashlib
+import hmac
+import json
+
+SECRET_KEY = b"dev-secret-key"
+
+
+def sign(data):
+    payload = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    sig = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()[:16]
+    return payload + "." + sig
+
+
+def unsign(cookie):
+    payload, sig = cookie.rsplit(".", 1)
+    good = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()[:16]
+    if not hmac.compare_digest(sig, good):
+        return None
+    return json.loads(base64.urlsafe_b64decode(payload))
+
+
+cookie = sign({"user": "asha", "cart": 2})
+print("Cookie value:", cookie)
+print("Read back:", unsign(cookie))
+
+tampered_payload = base64.urlsafe_b64encode(json.dumps({"user": "admin", "cart": 2}).encode()).decode()
+tampered = tampered_payload + "." + cookie.rsplit(".", 1)[1]
+print("Tampered:", unsign(tampered))`,
+      python: { files: { "main.py": `import base64
+import hashlib
+import hmac
+import json
+
+SECRET_KEY = b"dev-secret-key"
+
+
+def sign(data):
+    payload = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    sig = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()[:16]
+    return payload + "." + sig
+
+
+def unsign(cookie):
+    payload, sig = cookie.rsplit(".", 1)
+    good = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()[:16]
+    if not hmac.compare_digest(sig, good):
+        return None
+    return json.loads(base64.urlsafe_b64decode(payload))
+
+
+cookie = sign({"user": "asha", "cart": 2})
+print("Cookie value:", cookie)
+print("Read back:", unsign(cookie))
+
+tampered_payload = base64.urlsafe_b64encode(json.dumps({"user": "admin", "cart": 2}).encode()).decode()
+tampered = tampered_payload + "." + cookie.rsplit(".", 1)[1]
+print("Tampered:", unsign(tampered))` } },
       result: `Cookie value: eyJ1c2VyIjogImFzaGEiLCAiY2FydCI6IDJ9.2dbb9f86b0a50c44
 Read back: {'user': 'asha', 'cart': 2}
 Tampered: None`,

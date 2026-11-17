@@ -337,8 +337,50 @@ class Profile(db.Model):
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD07@@`,
-      python: { files: { "main.py": `@@FD07@@` } },
+      code: `import sqlite3
+
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+
+# Version 1 of the schema
+cur.execute("CREATE TABLE author (id INTEGER PRIMARY KEY, name TEXT NOT NULL)")
+cur.execute("CREATE TABLE post (id INTEGER PRIMARY KEY, title TEXT, "
+            "author_id INTEGER REFERENCES author(id))")
+cur.execute("INSERT INTO author (name) VALUES ('Asha'), ('Ravi')")
+cur.execute("INSERT INTO post (title, author_id) VALUES "
+            "('Hello Flask', 1), ('Jinja Tips', 1), ('SQL Joins', 2)")
+
+# "Migration" to version 2: add a column without losing data
+cur.execute("ALTER TABLE post ADD COLUMN views INTEGER DEFAULT 0")
+cur.execute("UPDATE post SET views = 10 WHERE id = 1")
+
+# One-to-many: posts per author
+query = ("SELECT author.name, COUNT(post.id), SUM(post.views) FROM author "
+         "JOIN post ON post.author_id = author.id GROUP BY author.id ORDER BY author.id")
+for row in cur.execute(query):
+    print(row)`,
+      python: { files: { "main.py": `import sqlite3
+
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+
+# Version 1 of the schema
+cur.execute("CREATE TABLE author (id INTEGER PRIMARY KEY, name TEXT NOT NULL)")
+cur.execute("CREATE TABLE post (id INTEGER PRIMARY KEY, title TEXT, "
+            "author_id INTEGER REFERENCES author(id))")
+cur.execute("INSERT INTO author (name) VALUES ('Asha'), ('Ravi')")
+cur.execute("INSERT INTO post (title, author_id) VALUES "
+            "('Hello Flask', 1), ('Jinja Tips', 1), ('SQL Joins', 2)")
+
+# "Migration" to version 2: add a column without losing data
+cur.execute("ALTER TABLE post ADD COLUMN views INTEGER DEFAULT 0")
+cur.execute("UPDATE post SET views = 10 WHERE id = 1")
+
+# One-to-many: posts per author
+query = ("SELECT author.name, COUNT(post.id), SUM(post.views) FROM author "
+         "JOIN post ON post.author_id = author.id GROUP BY author.id ORDER BY author.id")
+for row in cur.execute(query):
+    print(row)` } },
       result: `('Asha', 2, 10)
 ('Ravi', 1, 0)`,
       explanation: "ALTER TABLE ... ADD COLUMN ... DEFAULT 0 is what the upgrade() generates; existing rows keep their data. The JOIN on post.author_id = author.id is what author.posts uses under the hood.",

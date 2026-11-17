@@ -766,7 +766,7 @@ print(pairs([1, 5, 7, -1, 5, 3], 6))   # [(-1, 7), (1, 5)]
       task: "Count the number of words, characters (without spaces) and sentences in a paragraph.",
       hint: "split(), replace(' ', ''), count('.').",
       solution: `text = "Python is easy. Python is powerful. Learn it."
-print(len(text.split()), len(text.replace(" ", "")), text.count("."))   # 8 39 3
+print(len(text.split()), len(text.replace(" ", "")), text.count("."))   # 8 38 3
 `,
     },
     {

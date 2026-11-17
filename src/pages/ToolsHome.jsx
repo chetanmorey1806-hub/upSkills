@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 const tools = [
+  ['/tools/mysql-workbench', '🐬', 'MySQL Workbench Lab', 'A MySQL Workbench–style practice tool: Navigator with schemas/tables/columns, query tabs, ⚡ execute all (Ctrl+Shift+Enter) or current statement (Ctrl+Enter), Result Grid and Action Output. Understands MySQL syntax (CREATE DATABASE, USE, SHOW TABLES, DESCRIBE, AUTO_INCREMENT, DATE_FORMAT, IF, CONCAT…). Sample college & ecommerce databases; your databases are saved in the browser.'],
   ['/tools/python-ide', '🐍', 'Python IDE (PyCharm style)', 'Write and RUN real Python 3.12 in your browser (Pyodide): multiple .py files with imports, input() support, output console, Stop button, compare with the expected output, numpy/pandas auto-loaded.'],
   ['/tools/sql-lab', '🗄️', 'SQL Lab (Workbench style)', 'Run SQL queries in your browser on a ready sample company database (employees, departments, customers, products, orders). Result grids, setup editor, practice queries incl. joins and window functions.'],
   ['/tools/java-ide', '☕', 'Java IDE (IntelliJ / Eclipse style)', 'Java editor with a project tree, multiple class files, syntax highlighting, IntelliJ (dark) and Eclipse (light) themes, expected output from each lesson, program-input notes, and copy/download to run in your IDE.'],

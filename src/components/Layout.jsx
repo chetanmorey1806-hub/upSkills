@@ -10,6 +10,7 @@ const links = [
   { to: '/tools/playground', label: '💻 Web' },
   { to: '/tools/java-ide', label: '☕ Java' },
   { to: '/tools/python-ide', label: '🐍 Python' },
+  { to: '/tools/mysql-workbench', label: '🐬 MySQL' },
 ];
 
 export default function Layout({ children }) {

@@ -274,8 +274,34 @@ Mouse     - Price: Rs. 499 - Out of stock`,
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD03@@`,
-      python: { files: { "main.py": `@@FD03@@` } },
+      code: `from html import escape
+
+layout = "<html><title>{title}</title><body>{content}</body></html>"
+
+
+def render(title, content, autoescape=True):
+    if autoescape:
+        content = escape(content)
+    return layout.format(title=title, content=content)
+
+
+comment = "<script>alert('hacked')</script>"
+print(render("Safe", comment))
+print(render("Unsafe", comment, autoescape=False))`,
+      python: { files: { "main.py": `from html import escape
+
+layout = "<html><title>{title}</title><body>{content}</body></html>"
+
+
+def render(title, content, autoescape=True):
+    if autoescape:
+        content = escape(content)
+    return layout.format(title=title, content=content)
+
+
+comment = "<script>alert('hacked')</script>"
+print(render("Safe", comment))
+print(render("Unsafe", comment, autoescape=False))` } },
       result: `<html><title>Safe</title><body>&lt;script&gt;alert(&#x27;hacked&#x27;)&lt;/script&gt;</body></html>
 <html><title>Unsafe</title><body><script>alert('hacked')</script></body></html>`,
       explanation: "html.escape turns < > and quotes into entities, so the browser shows the text instead of running it. Jinja2 autoescaping does this for every {{ variable }} in .html templates; |safe turns it off, which is why you must never use |safe on user input.",

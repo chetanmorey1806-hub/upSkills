@@ -1,7 +1,8 @@
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { openInPlayground } from '../components/playgroundRuntime.js';
 import { useState } from 'react';
-import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython } from '../data/index.js';
+import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL } from '../data/index.js';
+import { MYSQL_LOAD_KEY } from './MySQLWorkbench.jsx';
 import { PY_LOAD_KEY } from './PythonIDE.jsx';
 import { SQL_LOAD_KEY } from './SqlLab.jsx';
 import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
@@ -62,13 +63,15 @@ export default function TopicPage() {
   const web = isWeb(track);
   const java = isJava(track);
   const py = isPython(track);
-  const isExcel = !isPbi(track) && !web && !java && !py;
+  const my = isMySQL(track);
+  const isExcel = !isPbi(track) && !web && !java && !py && !my;
+  const openWb = (payload) => { try { sessionStorage.setItem(MYSQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/mysql-workbench'); };
   const openPy = (payload) => { try { sessionStorage.setItem(PY_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/python-ide'); };
   const openSql = (payload) => { try { sessionStorage.setItem(SQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/sql-lab'); };
   const openJava = (payload) => { try { sessionStorage.setItem(JAVA_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/java-ide'); };
-  const codeLabel = py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
+  const codeLabel = my ? 'MySQL' : py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
   const pqTopic = !isExcel && /power query|\bM\b|m language|dataflow/i.test(`${t.module || ''} ${t.title}`);
-  const lab = track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
+  const lab = my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
 
   const setTab = (k) => setParams({ tab: k }, { replace: true });
 
@@ -153,6 +156,11 @@ export default function TopicPage() {
                 </div>
               )}
               <CodeBlock code={ex.code} label={codeLabel} />
+              {ex.mysql && (
+                <button className="btn small primary try-btn" onClick={() => openWb({ script: ex.mysql, expected: ex.result || '', title: ex.title })}>
+                  🐬 Open in Workbench Lab
+                </button>
+              )}
               {ex.python?.files && (
                 <button className="btn small primary try-btn" onClick={() => openPy({ files: ex.python.files, stdin: ex.python.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
                   🐍 Run in Python IDE
@@ -217,7 +225,7 @@ export default function TopicPage() {
       {tab === 'practice' && (
         <div>
           <div className="card info">
-            Do these exercises in {track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
+            Do these exercises in {my ? 'MySQL Workbench' : track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
             {!isExcel && <> (the DAX Lab has a download button for the practice CSV files)</>}.
             Try first, then use the hint, then check the solution. Tick an exercise once you've solved it.
           </div>
@@ -232,6 +240,11 @@ export default function TopicPage() {
               <RichText text={ex.task} />
               {ex.hint && <Reveal label="hint"><div className="tip">💡 <Inline text={ex.hint} /></div></Reveal>}
               {ex.solution && <Reveal label="solution"><SolutionText text={ex.solution} /></Reveal>}
+              {my && (
+                <button className="btn small" onClick={() => openWb({ script: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n-- Tip: load a sample DB from the Navigator first (college / ecommerce)\n\n', expected: '', title: `Exercise ${i + 1}` })}>
+                  ✍ Solve in Workbench Lab
+                </button>
+              )}
               {py && track !== 'sql' && (
                 <button className="btn small" onClick={() => openPy({ files: { 'main.py': '# Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n\n' }, expected: '', title: `Exercise ${i + 1}` })}>
                   ✍ Solve in Python IDE

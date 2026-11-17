@@ -514,8 +514,120 @@ User 'admin' -> Admin dashboard`,
         "Create main.py and paste the code",
         "Run with python main.py",
       ],
-      code: `@@FD09@@`,
-      python: { files: { "main.py": `@@FD09@@` } },
+      code: `class Blueprint:
+    def __init__(self, name):
+        self.name = name
+        self.rules = {}
+
+    def route(self, rule):
+        def decorator(func):
+            self.rules[rule] = func
+            return func
+        return decorator
+
+
+class App:
+    def __init__(self, config):
+        self.config = config
+        self.url_map = {}
+
+    def register_blueprint(self, bp, url_prefix=""):
+        for rule, func in bp.rules.items():
+            full = (url_prefix + rule).rstrip("/") or "/"
+            self.url_map[full] = bp.name + "." + func.__name__
+
+
+auth_bp = Blueprint("auth")
+blog_bp = Blueprint("blog")
+
+
+@auth_bp.route("/login")
+def login():
+    return "login page"
+
+
+@blog_bp.route("/")
+def index():
+    return "blog home"
+
+
+@blog_bp.route("/<int:id>")
+def detail(id):
+    return "post"
+
+
+def create_app(config_name="development"):
+    configs = {"development": {"DEBUG": True}, "testing": {"TESTING": True}}
+    app = App(configs[config_name])
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(blog_bp, url_prefix="/blog")
+    return app
+
+
+dev = create_app()
+test = create_app("testing")
+print("dev config:", dev.config)
+print("test config:", test.config)
+for url, endpoint in dev.url_map.items():
+    print(f"{url:16} -> {endpoint}")
+print("Different objects?", dev is not test)`,
+      python: { files: { "main.py": `class Blueprint:
+    def __init__(self, name):
+        self.name = name
+        self.rules = {}
+
+    def route(self, rule):
+        def decorator(func):
+            self.rules[rule] = func
+            return func
+        return decorator
+
+
+class App:
+    def __init__(self, config):
+        self.config = config
+        self.url_map = {}
+
+    def register_blueprint(self, bp, url_prefix=""):
+        for rule, func in bp.rules.items():
+            full = (url_prefix + rule).rstrip("/") or "/"
+            self.url_map[full] = bp.name + "." + func.__name__
+
+
+auth_bp = Blueprint("auth")
+blog_bp = Blueprint("blog")
+
+
+@auth_bp.route("/login")
+def login():
+    return "login page"
+
+
+@blog_bp.route("/")
+def index():
+    return "blog home"
+
+
+@blog_bp.route("/<int:id>")
+def detail(id):
+    return "post"
+
+
+def create_app(config_name="development"):
+    configs = {"development": {"DEBUG": True}, "testing": {"TESTING": True}}
+    app = App(configs[config_name])
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(blog_bp, url_prefix="/blog")
+    return app
+
+
+dev = create_app()
+test = create_app("testing")
+print("dev config:", dev.config)
+print("test config:", test.config)
+for url, endpoint in dev.url_map.items():
+    print(f"{url:16} -> {endpoint}")
+print("Different objects?", dev is not test)` } },
       result: `dev config: {'DEBUG': True}
 test config: {'TESTING': True}
 /auth/login      -> auth.login
