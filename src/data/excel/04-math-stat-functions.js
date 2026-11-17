@@ -1,0 +1,323 @@
+export default {
+  id: 'math-stat-functions',
+  title: 'Math & Statistical Functions',
+  level: 'Beginner',
+  day: 4,
+  duration: '3 hours',
+  summary: 'Learn the everyday aggregation functions (SUM, AVERAGE, COUNT family, MIN/MAX), rounding, conditional aggregation (SUMIFS, COUNTIFS, AVERAGEIFS), SUMPRODUCT, ranking and filter-aware totals with SUBTOTAL and AGGREGATE. These are the most frequently used functions in any business report and a staple of Excel interviews.',
+  objectives: [
+    'Summarise data with SUM, AVERAGE, COUNT, COUNTA, COUNTBLANK, MIN and MAX and know exactly what each one counts or ignores',
+    'Round numbers correctly with ROUND, ROUNDUP and ROUNDDOWN and explain the difference between rounding and formatting',
+    'Build single and multi-condition totals with SUMIF(S), COUNTIF(S) and AVERAGEIF(S), including wildcards, dates and cell-based criteria',
+    'Use SUMPRODUCT for weighted totals and conditional calculations without helper columns',
+    'Rank values and pull top/bottom N with RANK.EQ, LARGE and SMALL',
+    'Create totals that respect filters and ignore errors using SUBTOTAL and AGGREGATE',
+  ],
+  theory: [
+    {
+      heading: 'Basic aggregation: SUM, AVERAGE, MIN, MAX',
+      content: 'These functions take one or more numbers, cell references or ranges and return a single summary value. They **ignore text, logical values and empty cells inside ranges**, which is why a column with a few blank rows still sums correctly.\n\n`SUM` adds, `AVERAGE` returns the arithmetic mean (sum divided by the count of numeric cells), `MIN` and `MAX` return the smallest and largest numbers. You can pass several arguments: `=SUM(B2:B10, D2:D10, 500)`.\n\nImportant: numbers stored as text (for example values imported from a CSV with a leading apostrophe) are ignored by SUM when they sit in a range. If your total looks too small, check for green triangles in the corner of cells.',
+      points: [
+        '`=SUM(B2:B100)` total of a range',
+        '`=AVERAGE(B2:B100)` blank cells are skipped, but cells containing 0 are counted',
+        '`=MIN(B2:B100)` / `=MAX(B2:B100)` smallest / largest number',
+        'Alt + = inserts AutoSum for the adjacent range',
+      ],
+      syntax: '=SUM(number1, [number2], ...)\n=AVERAGE(number1, [number2], ...)\n=MIN(number1, ...)   =MAX(number1, ...)',
+      tip: 'AVERAGE treats an empty cell and a zero differently. An empty cell is skipped; a 0 drags the average down. If missing data is entered as 0, your average will be wrong.',
+    },
+    {
+      heading: 'The COUNT family: COUNT, COUNTA, COUNTBLANK',
+      content: 'Counting is where many beginners get confused, so learn exactly what each function counts.\n\n`COUNT` counts only cells that contain **numbers** (dates and times are numbers in Excel, so they are counted). `COUNTA` counts every **non-empty** cell: numbers, text, errors, logical values, and even a formula that returns an empty string `""`. `COUNTBLANK` counts empty cells **and** cells containing a formula that returns `""`.\n\nSo a cell with `=""` is counted by both COUNTA and COUNTBLANK, which is a classic interview trick question.',
+      points: [
+        '`=COUNT(A2:A50)` how many numeric entries',
+        '`=COUNTA(A2:A50)` how many filled cells (e.g. number of employees listed)',
+        '`=COUNTBLANK(A2:A50)` how many missing values',
+        '`=ROWS(A2:A50)` total rows in range, useful to check COUNTA + COUNTBLANK',
+      ],
+      tip: 'A cell containing just a space looks empty but is counted by COUNTA and NOT by COUNTBLANK. Use TRIM or Find & Replace to clean such data.',
+    },
+    {
+      heading: 'Rounding: ROUND, ROUNDUP, ROUNDDOWN (and formatting vs rounding)',
+      content: 'Number formatting only changes how a value is **displayed**; the underlying value stays the same. If B2 holds 10.456 and is formatted to 2 decimals it shows 10.46, but a formula using B2 still uses 10.456. This causes totals that seem to be off by 0.01.\n\n`ROUND(number, num_digits)` actually changes the value. Positive `num_digits` rounds to decimal places, 0 rounds to a whole number, and negative values round to the left of the decimal point: `=ROUND(1234.5, -2)` returns 1200.\n\n`ROUNDUP` always rounds away from zero and `ROUNDDOWN` always rounds toward zero, regardless of the next digit.',
+      syntax: '=ROUND(number, num_digits)\n=ROUNDUP(number, num_digits)\n=ROUNDDOWN(number, num_digits)',
+      points: [
+        '`=ROUND(2.345, 2)` returns 2.35',
+        '`=ROUNDUP(2.341, 2)` returns 2.35',
+        '`=ROUNDDOWN(2.349, 2)` returns 2.34',
+        '`=ROUND(87450, -3)` returns 87000',
+        'Related: INT (rounds down to integer), TRUNC (cuts decimals), MROUND (to nearest multiple), CEILING.MATH / FLOOR.MATH',
+      ],
+      tip: 'ROUNDUP of a negative number moves away from zero: =ROUNDUP(-2.1, 0) returns -3.',
+    },
+    {
+      heading: 'Conditional aggregation: SUMIF, COUNTIF, AVERAGEIF',
+      content: 'The single-condition versions test one range against one criterion.\n\n`=SUMIF(range, criteria, [sum_range])` adds values from sum_range where the matching cell in range meets the criteria. If sum_range is omitted, the range itself is summed.\n\n`=COUNTIF(range, criteria)` counts cells meeting the criteria. `=AVERAGEIF(range, criteria, [average_range])` averages them.\n\nCriteria are written as text: `"North"`, `">1000"`, `"<>Closed"`, `"*phone*"`. To combine an operator with a cell value, concatenate: `">"&E1`. Criteria are not case-sensitive.',
+      syntax: '=SUMIF(range, criteria, [sum_range])\n=COUNTIF(range, criteria)\n=AVERAGEIF(range, criteria, [average_range])',
+      points: [
+        'Wildcards: `*` any number of characters, `?` exactly one character, `~*` a literal asterisk',
+        '`=COUNTIF(A:A, "")` counts blanks, `=COUNTIF(A:A, "<>")` counts non-blanks',
+        'Date criteria: `">="&DATE(2024,1,1)`',
+      ],
+      tip: 'Never write ">E1" in quotes; that compares against the literal text E1. Write ">"&E1 instead.',
+    },
+    {
+      heading: 'Multiple conditions: SUMIFS, COUNTIFS, AVERAGEIFS',
+      content: 'The plural versions accept multiple range/criteria pairs, and **all conditions must be true** (AND logic). Note the argument order differs: in SUMIFS and AVERAGEIFS the **sum/average range comes first**.\n\n`=SUMIFS(D2:D100, B2:B100, "North", C2:C100, "Laptop")` sums sales for North region AND Laptop product.\n\nAll ranges must be the same size, otherwise you get #VALUE!. For OR logic (North OR South), add two SUMIFS together, or use an array constant: `=SUM(SUMIFS(D2:D100, B2:B100, {"North","South"}))`.\n\nA common use is a date window: `=SUMIFS(Sales, Date, ">="&G1, Date, "<="&G2)`.',
+      syntax: '=SUMIFS(sum_range, criteria_range1, criteria1, [criteria_range2, criteria2], ...)\n=COUNTIFS(criteria_range1, criteria1, ...)\n=AVERAGEIFS(average_range, criteria_range1, criteria1, ...)',
+      tip: 'Prefer SUMIFS even for one condition: the argument order is consistent and adding a second condition later is easy.',
+    },
+    {
+      heading: 'SUMPRODUCT: multiply then add',
+      content: '`SUMPRODUCT` multiplies corresponding elements of arrays and returns the sum of those products. The classic use is revenue from quantity and price: `=SUMPRODUCT(B2:B10, C2:C10)` equals B2*C2 + B3*C3 + ... without a helper column.\n\nBecause it handles arrays natively, it can also do conditional sums with any logic: `=SUMPRODUCT((A2:A10="North")*(B2:B10>100)*C2:C10)`. Each comparison produces TRUE/FALSE, multiplying converts them to 1/0, so only rows meeting all conditions contribute. Use `+` between conditions for OR logic (wrapped so that a row is not counted twice, e.g. `--(((A="x")+(A="y"))>0)`).\n\nSUMPRODUCT can do things SUMIFS cannot, such as conditions on a calculated value: `=SUMPRODUCT((MONTH(A2:A100)=3)*B2:B100)`.',
+      syntax: '=SUMPRODUCT(array1, [array2], ...)',
+      points: [
+        'Weighted average: `=SUMPRODUCT(Scores, Weights)/SUM(Weights)`',
+        'Arrays must be the same size, or you get #VALUE!',
+        'The double unary `--` converts TRUE/FALSE to 1/0: `=SUMPRODUCT(--(A2:A10="Yes"))`',
+      ],
+      tip: 'SUMPRODUCT on whole columns (A:A) is slow because it evaluates over a million rows. Use exact ranges or Excel Tables.',
+    },
+    {
+      heading: 'Ranking and Top/Bottom N: RANK.EQ, RANK.AVG, LARGE, SMALL',
+      content: '`=RANK.EQ(number, ref, [order])` returns the position of a number in a list. order 0 or omitted = descending (highest is rank 1); 1 = ascending. Ties get the same rank and the next rank is skipped (two values at rank 2 means the next is rank 4). `RANK` is the older compatible version and behaves like RANK.EQ. `RANK.AVG` gives tied values the average rank (2.5).\n\n`=LARGE(array, k)` returns the k-th largest value and `=SMALL(array, k)` the k-th smallest. `=LARGE(C2:C20, 1)` equals MAX, `=LARGE(C2:C20, 3)` is the third highest. Combined with SUM you get a Top 3 total: `=SUM(LARGE(C2:C20, {1,2,3}))`.',
+      syntax: '=RANK.EQ(number, ref, [order])\n=LARGE(array, k)\n=SMALL(array, k)',
+      tip: 'Always lock the ref range with $ when copying RANK down: =RANK.EQ(C2, $C$2:$C$20).',
+    },
+    {
+      heading: 'SUBTOTAL: totals that respect filters',
+      content: '`=SUBTOTAL(function_num, ref1, ...)` performs an aggregation that **ignores rows hidden by a filter**. Function numbers 1-11 include manually hidden rows; 101-111 also ignore manually hidden rows. Both ignore other SUBTOTAL results inside the range, so nested subtotals are not double counted.\n\nCommon codes: 1/101 AVERAGE, 2/102 COUNT, 3/103 COUNTA, 4/104 MAX, 5/105 MIN, 9/109 SUM.\n\nWhen you click AutoSum on a filtered list, Excel automatically writes `SUBTOTAL(9, ...)`. The total row of an Excel Table also uses SUBTOTAL (109).',
+      syntax: '=SUBTOTAL(function_num, ref1, [ref2], ...)',
+      points: [
+        '`=SUBTOTAL(9, D2:D500)` sum of visible rows after filtering',
+        '`=SUBTOTAL(103, A2:A500)` count of visible non-blank rows',
+      ],
+    },
+    {
+      heading: 'AGGREGATE: SUBTOTAL with error handling',
+      content: '`AGGREGATE` is a more powerful SUBTOTAL. It supports 19 functions (including LARGE, SMALL, MEDIAN, PERCENTILE) and an **options** argument that can ignore error values, hidden rows, and nested SUBTOTAL/AGGREGATE.\n\n`=AGGREGATE(9, 6, D2:D100)` sums D2:D100 while ignoring any #N/A or #DIV/0! cells, which a normal SUM cannot do (SUM returns the error).\n\nUseful options: 5 = ignore hidden rows, 6 = ignore error values, 7 = ignore hidden rows and errors. Function numbers: 1 AVERAGE, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 9 SUM, 14 LARGE, 15 SMALL.',
+      syntax: '=AGGREGATE(function_num, options, ref1, ...)          reference form\n=AGGREGATE(function_num, options, array, k)            array form (14-19)',
+      tip: '=AGGREGATE(14, 6, C2:C100, 1) returns the maximum while skipping errors; this is a common interview answer for "how do you MAX a range that contains errors?".',
+    },
+  ],
+  examples: [
+    {
+      title: 'Count employees, numeric entries and missing values',
+      scenario: 'HR wants to know how many employees are listed, how many have a salary entered and how many salaries are missing.',
+      table: {
+        headers: ['A: Employee', 'B: Salary'],
+        rows: [['Asha', '52000'], ['Ravi', ''], ['Meera', '61000'], ['John', 'Pending'], ['Sara', '48000']],
+      },
+      code: '=COUNTA(A2:A6)      -> employees listed\n=COUNT(B2:B6)       -> numeric salaries\n=COUNTBLANK(B2:B6)  -> blank salaries',
+      result: '5, 3, 1',
+      explanation: 'COUNTA counts all 5 names. COUNT counts only numbers, so the text "Pending" and the blank are excluded, giving 3. COUNTBLANK finds only the truly empty cell (Ravi). "Pending" is text, so it is neither numeric nor blank.',
+    },
+    {
+      title: 'Regional sales with SUMIF and SUMIFS',
+      scenario: 'Calculate total sales for the North region, and total Laptop sales in the North region.',
+      table: {
+        headers: ['A: Region', 'B: Product', 'C: Sales'],
+        rows: [['North', 'Laptop', '1200'], ['South', 'Laptop', '900'], ['North', 'Phone', '700'], ['North', 'Laptop', '1500'], ['East', 'Phone', '400']],
+      },
+      code: '=SUMIF(A2:A6, "North", C2:C6)\n=SUMIFS(C2:C6, A2:A6, "North", B2:B6, "Laptop")',
+      result: '3400 and 2700',
+      explanation: 'SUMIF checks column A for "North" (rows 2, 4, 5) and adds 1200+700+1500 = 3400. SUMIFS starts with the sum range C2:C6 and requires both conditions, so only rows 2 and 5 qualify: 1200+1500 = 2700.',
+    },
+    {
+      title: 'COUNTIFS with numbers and a cell-based criterion',
+      scenario: 'Count orders above a threshold typed in F1 (1000) that belong to the North region.',
+      table: {
+        headers: ['A: Region', 'C: Sales', 'F1: Threshold'],
+        rows: [['North', '1200', '1000'], ['South', '900', ''], ['North', '700', ''], ['North', '1500', ''], ['East', '400', '']],
+      },
+      code: '=COUNTIFS(A2:A6, "North", C2:C6, ">"&F1)',
+      result: '2',
+      explanation: 'The operator is in quotes and joined to the cell with &, producing the criterion ">1000". North rows have 1200, 700 and 1500; two of them exceed 1000.',
+    },
+    {
+      title: 'Invoice total with SUMPRODUCT',
+      scenario: 'Compute the invoice total from quantity and unit price without adding a line-total column.',
+      table: {
+        headers: ['A: Item', 'B: Qty', 'C: Unit Price'],
+        rows: [['Pen', '10', '15'], ['Notebook', '5', '60'], ['Stapler', '2', '120']],
+      },
+      code: '=SUMPRODUCT(B2:B4, C2:C4)',
+      result: '690',
+      explanation: 'SUMPRODUCT multiplies row by row (10*15 = 150, 5*60 = 300, 2*120 = 240) and sums the results: 150+300+240 = 690.',
+    },
+    {
+      title: 'Rank salespeople and total the Top 3',
+      scenario: 'Rank each salesperson by sales (highest = 1) and compute the combined sales of the top three.',
+      table: {
+        headers: ['A: Name', 'B: Sales', 'C: Rank'],
+        rows: [['Amit', '45000', '3'], ['Neha', '62000', '1'], ['Karan', '38000', '4'], ['Priya', '51000', '2'], ['Vikas', '29000', '5']],
+      },
+      code: 'C2: =RANK.EQ(B2, $B$2:$B$6)   (copy down)\nTop 3 total: =SUM(LARGE(B2:B6, {1,2,3}))',
+      result: 'Ranks as shown; Top 3 total = 158000',
+      explanation: 'RANK.EQ with no order argument ranks descending. The absolute reference keeps the comparison list fixed while copying. LARGE with the array constant {1,2,3} returns 62000, 51000 and 45000, and SUM adds them to 158000.',
+    },
+    {
+      title: 'Total of filtered rows and a sum that ignores errors',
+      scenario: 'A report is filtered to show only the West region. You need a total of visible rows. A second column contains some #N/A values from a lookup and still needs a total.',
+      table: {
+        headers: ['A: Region', 'B: Sales', 'C: Commission'],
+        rows: [['West', '500', '50'], ['East', '800', '#N/A'], ['West', '300', '30'], ['West', '200', '#N/A']],
+      },
+      code: '=SUBTOTAL(109, B2:B5)        (with filter Region = West)\n=AGGREGATE(9, 6, C2:C5)',
+      result: '1000 and 80',
+      explanation: 'With the filter applied, rows 2, 4 and 5 are visible, so SUBTOTAL(109, ...) returns 500+300+200 = 1000. A plain SUM on column C would return #N/A, but AGGREGATE with option 6 skips error values and returns 50+30 = 80.',
+    },
+  ],
+  interview: [
+    {
+      q: 'What is the difference between COUNT, COUNTA and COUNTBLANK?',
+      a: '`COUNT` counts cells containing numbers (including dates and times, which are stored as numbers). `COUNTA` counts all non-empty cells: numbers, text, logical values, errors and formulas returning `""`. `COUNTBLANK` counts empty cells plus cells with formulas returning `""`.\n\nSo a cell containing `=""` is counted by both COUNTA and COUNTBLANK. A cell containing a single space is counted by COUNTA but not by COUNTBLANK.',
+      level: 'Easy',
+    },
+    {
+      q: 'What is the difference between SUMIF and SUMIFS? Why does the argument order differ?',
+      a: '`SUMIF(range, criteria, [sum_range])` handles one condition, and sum_range is optional and comes last. `SUMIFS(sum_range, criteria_range1, criteria1, ...)` handles up to 127 condition pairs combined with AND logic. Because the number of criteria pairs is variable, the required sum_range has to come first.\n\nIn practice many analysts use SUMIFS everywhere for consistency.',
+      level: 'Easy',
+    },
+    {
+      q: 'How do you write a SUMIFS with OR logic, for example total sales for North OR South?',
+      a: 'SUMIFS uses AND logic between conditions, so you have two options:\n\n1. Add two SUMIFS: `=SUMIFS(C:C, A:A, "North") + SUMIFS(C:C, A:A, "South")`\n2. Use an array constant and wrap in SUM: `=SUM(SUMIFS(C:C, A:A, {"North","South"}))`\n\nFor complex logic SUMPRODUCT also works: `=SUMPRODUCT(((A2:A100="North")+(A2:A100="South"))*C2:C100)`. Here the conditions are mutually exclusive so adding them is safe.',
+      level: 'Medium',
+    },
+    {
+      q: 'How do you use a cell value or a date in a SUMIFS / COUNTIFS criterion?',
+      a: 'The operator must be text and joined to the value with `&`: `=COUNTIFS(C2:C100, ">"&F1)`. For dates: `=SUMIFS(Sales, OrderDate, ">="&DATE(2024,1,1), OrderDate, "<"&DATE(2024,2,1))` gives January 2024 sales.\n\nA common mistake is writing `">F1"`, which compares against the literal text "F1" and returns 0.',
+      level: 'Medium',
+    },
+    {
+      q: 'Why does my SUM total differ by 0.01 from the sum of the displayed values?',
+      a: 'Formatting only changes the display. The cells hold more decimals than shown, and SUM adds the full-precision values. For example 3 cells each holding 1.333 display as 1.33 (sum of displayed values = 3.99) but the real total is 3.999, which displays as 4.00.\n\nFix: round each value with `=ROUND(x, 2)` at the calculation stage (or `=SUMPRODUCT(ROUND(range,2))` for the total). Avoid the "Set precision as displayed" option because it permanently changes stored data.',
+      level: 'Medium',
+    },
+    {
+      q: 'Explain ROUND, ROUNDUP, ROUNDDOWN, INT and TRUNC with negative numbers.',
+      a: '`ROUND(-2.5, 0)` = -3 (rounds half away from zero). `ROUNDUP(-2.1, 0)` = -3 (away from zero). `ROUNDDOWN(-2.9, 0)` = -2 (toward zero). `INT(-2.1)` = -3 because INT always rounds down to the next lower integer. `TRUNC(-2.9)` = -2 because it simply cuts off the decimals.\n\nSo INT and TRUNC give the same result for positive numbers but differ for negatives.',
+      level: 'Medium',
+    },
+    {
+      q: 'What does SUMPRODUCT do and when would you use it over SUMIFS?',
+      a: 'SUMPRODUCT multiplies corresponding elements of arrays and sums the results. Uses:\n\n- Weighted totals/averages: `=SUMPRODUCT(Qty, Price)`, `=SUMPRODUCT(Score, Weight)/SUM(Weight)`.\n- Conditions that SUMIFS cannot express, e.g. a condition on a calculated value: `=SUMPRODUCT((MONTH(Dates)=3)*Sales)`, or OR logic, or comparing two columns row by row: `=SUMPRODUCT(--(Actual>Target))`.\n- It works in older Excel versions without Ctrl+Shift+Enter.\n\nSUMIFS is faster on large data and easier to read, so use it when the conditions fit its pattern.',
+      level: 'Medium',
+    },
+    {
+      q: 'What is the difference between SUBTOTAL function numbers 9 and 109?',
+      a: 'Both sum only rows visible after filtering. `9` includes rows that were hidden manually (right-click > Hide), while `109` excludes manually hidden rows too. Both ignore other SUBTOTAL formulas inside the referenced range, which prevents double counting in reports with group subtotals.',
+      level: 'Medium',
+    },
+    {
+      q: 'How do you sum a range that contains #N/A errors?',
+      a: 'A normal SUM returns the error. Options:\n\n- `=AGGREGATE(9, 6, C2:C100)`: function 9 = SUM, option 6 = ignore errors. Best answer.\n- `=SUMIF(C2:C100, "<>#N/A")` works only for #N/A.\n- `=SUM(IFERROR(C2:C100, 0))` as a dynamic array formula.\n\nThe better long-term fix is to handle the error at source, e.g. wrap the lookup in IFNA.',
+      level: 'Hard',
+    },
+    {
+      q: 'How does RANK.EQ handle ties, and how would you produce a unique rank?',
+      a: 'RANK.EQ gives tied values the same rank and skips the next rank (1, 2, 2, 4). RANK.AVG gives the average (1, 2.5, 2.5, 4).\n\nFor a unique rank, break ties by order of appearance: `=RANK.EQ(B2, $B$2:$B$20) + COUNTIF($B$2:B2, B2) - 1`. The expanding range `$B$2:B2` counts how many times the value has appeared so far, so the second duplicate gets +1.',
+      level: 'Hard',
+    },
+    {
+      q: 'How do you find the 2nd highest salary, and the total of the top 5?',
+      a: '2nd highest: `=LARGE(C2:C100, 2)`. If you want the 2nd highest **distinct** value (ignoring duplicates of the max): `=MAXIFS(C2:C100, C2:C100, "<"&MAX(C2:C100))` or `=LARGE(UNIQUE(C2:C100), 2)` in Microsoft 365.\n\nTop 5 total: `=SUM(LARGE(C2:C100, {1,2,3,4,5}))` or `=SUM(LARGE(C2:C100, SEQUENCE(5)))`.',
+      level: 'Medium',
+    },
+    {
+      q: 'What wildcards can be used in COUNTIF/SUMIF criteria? How do you count cells containing an actual asterisk?',
+      a: '`*` matches any sequence of characters, `?` matches exactly one character. `=COUNTIF(A:A, "*phone*")` counts cells containing "phone" anywhere; `=COUNTIF(A:A, "A???")` counts 4-character values starting with A.\n\nTo match a literal `*` or `?` put a tilde before it: `=COUNTIF(A:A, "*~**")` counts cells containing an asterisk.',
+      level: 'Medium',
+    },
+    {
+      q: 'Why might AVERAGE give a different answer from SUM/COUNTA?',
+      a: 'AVERAGE divides the sum by the count of **numeric** cells. COUNTA also counts text entries like "N/A" or "Pending". So if a range has text, SUM/COUNTA divides by a larger number and gives a lower result. Also, blank cells are excluded by AVERAGE but zeros are included, so how missing data is recorded changes the result.',
+      level: 'Easy',
+    },
+    {
+      q: 'Can COUNTIFS count across non-contiguous columns or with different sized ranges?',
+      a: 'No. Each criteria range in COUNTIFS/SUMIFS must have the same number of rows and columns, otherwise you get #VALUE!. The ranges do not have to be adjacent, but they must be the same shape. Also, the range arguments must be real ranges, not arrays produced by other functions (you cannot pass `MONTH(A2:A10)` as a criteria range). For that, use SUMPRODUCT or FILTER.',
+      level: 'Hard',
+    },
+  ],
+  practice: [
+    {
+      task: 'A sheet has Product names in A2:A20 and Units Sold in B2:B20 (some blank). Find: total units, average units per product (ignore blanks), number of products with missing units, and the highest units sold.',
+      hint: 'SUM, AVERAGE, COUNTBLANK and MAX all work on B2:B20.',
+      solution: 'Total: =SUM(B2:B20)\nAverage: =AVERAGE(B2:B20)  (blanks are skipped automatically)\nMissing: =COUNTBLANK(B2:B20)\nHighest: =MAX(B2:B20)',
+    },
+    {
+      task: 'Sales data: Region in A2:A200, Rep in B2:B200, Amount in C2:C200. Calculate (a) total for "East", (b) number of East deals above 5000, (c) average deal size for rep "Neha" in East.',
+      hint: 'Use the S versions; remember sum/average range comes first.',
+      solution: '(a) =SUMIFS(C2:C200, A2:A200, "East")\n(b) =COUNTIFS(A2:A200, "East", C2:C200, ">5000")\n(c) =AVERAGEIFS(C2:C200, A2:A200, "East", B2:B200, "Neha")',
+    },
+    {
+      task: 'Order dates are in A2:A500 and amounts in B2:B500. Cell E1 holds a start date and E2 an end date. Write a formula for total sales between the two dates inclusive.',
+      hint: 'Concatenate the operators with the cells.',
+      solution: '=SUMIFS(B2:B500, A2:A500, ">="&E1, A2:A500, "<="&E2)',
+    },
+    {
+      task: 'Student marks in B2:D2 (Assignment, Midterm, Final) and weights in B1:D1 (20%, 30%, 50%). Compute the weighted score for row 2 so it can be copied down.',
+      hint: 'Lock the weights row.',
+      solution: '=SUMPRODUCT(B2:D2, $B$1:$D$1)\nIf the weights did not add up to 100%, divide by them: =SUMPRODUCT(B2:D2, $B$1:$D$1)/SUM($B$1:$D$1)',
+    },
+    {
+      task: 'Round the following: 15678.456 to 2 decimals, to the nearest hundred, up to the next whole number, and down to 1 decimal.',
+      hint: 'Negative num_digits rounds left of the decimal point.',
+      solution: '=ROUND(15678.456, 2)     -> 15678.46\n=ROUND(15678.456, -2)    -> 15700\n=ROUNDUP(15678.456, 0)   -> 15679\n=ROUNDDOWN(15678.456, 1) -> 15678.4',
+    },
+    {
+      task: 'Scores are in B2:B30. Rank each student (highest = 1) in column C, and in separate cells show the top 3 scores and the lowest score.',
+      hint: 'RANK.EQ with absolute range, LARGE and SMALL.',
+      solution: 'C2: =RANK.EQ(B2, $B$2:$B$30) and copy down\nTop 1/2/3: =LARGE($B$2:$B$30, 1), =LARGE($B$2:$B$30, 2), =LARGE($B$2:$B$30, 3)\nLowest: =SMALL(B2:B30, 1)  (same as MIN)',
+    },
+    {
+      task: 'A filtered list has Amount in D2:D1000, and some cells contain #DIV/0!. Write (a) a total of visible rows and (b) a total of visible rows that also ignores errors.',
+      hint: 'SUBTOTAL cannot ignore errors; AGGREGATE can.',
+      solution: '(a) =SUBTOTAL(109, D2:D1000)  (returns #DIV/0! if a visible cell has that error)\n(b) =AGGREGATE(9, 7, D2:D1000)  (option 7 = ignore hidden rows and error values)',
+    },
+  ],
+  quiz: [
+    {
+      question: 'A1:A5 contains 10, "abc", (empty), TRUE, 25. What does =COUNT(A1:A5) return?',
+      options: ['2', '3', '4', '5'],
+      answer: 0,
+      explanation: 'COUNT counts only numeric cells inside a range: 10 and 25. Text, empty cells and TRUE in a range are ignored.',
+    },
+    {
+      question: 'Which formula correctly sums C2:C100 where A2:A100 is "North" and B2:B100 is greater than the value in F1?',
+      options: [
+        '=SUMIFS(A2:A100, "North", B2:B100, ">F1", C2:C100)',
+        '=SUMIFS(C2:C100, A2:A100, "North", B2:B100, ">"&F1)',
+        '=SUMIF(C2:C100, A2:A100, "North", B2:B100, ">"&F1)',
+        '=SUMIFS(C2:C100, A2:A100, "North", B2:B100, ">F1")',
+      ],
+      answer: 1,
+      explanation: 'SUMIFS takes the sum range first, then range/criteria pairs, and a cell-based criterion needs the operator concatenated: ">"&F1.',
+    },
+    {
+      question: 'What does =ROUND(4567.89, -2) return?',
+      options: ['4567.89', '4600', '4500', '4568'],
+      answer: 1,
+      explanation: 'A negative num_digits rounds to the left of the decimal point; -2 rounds to the nearest hundred, giving 4600.',
+    },
+    {
+      question: 'With B2:B4 = {2, 3, 4} and C2:C4 = {10, 20, 30}, what does =SUMPRODUCT(B2:B4, C2:C4) return?',
+      options: ['60', '200', '9', '1800'],
+      answer: 1,
+      explanation: '2*10 + 3*20 + 4*30 = 20 + 60 + 120 = 200.',
+    },
+    {
+      question: 'Which formula sums only the visible rows of a filtered list?',
+      options: ['=SUM(D2:D100)', '=SUMIF(D2:D100, "visible")', '=SUBTOTAL(109, D2:D100)', '=SUMPRODUCT(D2:D100)'],
+      answer: 2,
+      explanation: 'SUBTOTAL ignores rows hidden by a filter; function number 109 is SUM and also ignores manually hidden rows.',
+    },
+    {
+      question: 'Values 90, 85, 85, 70 are ranked with RANK.EQ (descending). What rank does 70 get?',
+      options: ['3', '4', '2', '3.5'],
+      answer: 1,
+      explanation: '90 is 1, both 85s are 2, and rank 3 is skipped, so 70 is rank 4.',
+    },
+  ],
+};

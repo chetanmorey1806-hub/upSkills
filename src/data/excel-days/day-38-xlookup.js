@@ -1,0 +1,215 @@
+export default {
+  id: 'day-38-xlookup',
+  title: 'XLOOKUP()',
+  module: 'Module 5: Advanced Excel Functions',
+  day: 38,
+  level: 'Intermediate',
+  duration: '2 hours',
+  summary: 'XLOOKUP is the modern lookup function in Microsoft 365 and Excel 2021+. It replaces VLOOKUP and HLOOKUP: it looks left or right, up or down, defaults to exact match, has a built-in "not found" message and can return many columns or the last match.',
+  objectives: [
+    'Write XLOOKUP with its 3 required and 3 optional arguments',
+    'Perform left lookups and horizontal lookups',
+    'Use if_not_found instead of IFERROR',
+    'Use match_mode for approximate and wildcard matches',
+    'Use search_mode to get the last occurrence and return multiple columns with spill',
+  ],
+  theory: [
+    {
+      heading: 'Why XLOOKUP?',
+      content: 'XLOOKUP fixes the main problems of VLOOKUP:\n\n- **No column number**: you select the return column directly, so inserting columns does not break the formula.\n- **Looks in any direction**: the return column can be left or right of the lookup column.\n- **Exact match by default**: no more forgotten FALSE.\n- **Built-in not-found value**: no need for IFERROR.\n- **Vertical or horizontal**: one function for both VLOOKUP and HLOOKUP jobs.\n- **Search from bottom**: get the latest/last entry.\n\nAvailability: Microsoft 365, Excel 2021 and later, Excel for the web. In Excel 2019 or older it shows #NAME?.',
+    },
+    {
+      heading: 'Syntax and arguments',
+      syntax: '=XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found], [match_mode], [search_mode])',
+      content: '1. **lookup_value**: the value to find, e.g. "E103" or F2.\n2. **lookup_array**: the single column (or row) to search, e.g. `A2:A6`.\n3. **return_array**: the column(s) or row(s) to return from, e.g. `D2:D6`. It must have the same number of rows as lookup_array.\n4. **if_not_found** (optional): what to show if nothing is found, e.g. "Not Found". If omitted, #N/A.\n5. **match_mode** (optional):\n   - `0` exact match (default)\n   - `-1` exact match or next smaller item\n   - `1` exact match or next larger item\n   - `2` wildcard match (*, ?, ~)\n6. **search_mode** (optional):\n   - `1` search first to last (default)\n   - `-1` search last to first (finds the last occurrence)\n   - `2` / `-2` binary search on data sorted ascending / descending (fast for very large sorted lists).',
+      tip: 'Skip an optional argument by leaving it empty between commas: =XLOOKUP(F2,A2:A7,C2:C7,,0,-1).',
+    },
+    {
+      heading: 'Basic, left and horizontal lookups',
+      content: '**Basic**: `=XLOOKUP("E103",A2:A6,D2:D6)` returns the salary of E103.\n\n**Left lookup**: lookup_array is to the right of return_array, which VLOOKUP cannot do: `=XLOOKUP("Rahul Gupta",B2:B6,A2:A6)` returns the Emp ID from column A.\n\n**Horizontal**: use rows instead of columns: `=XLOOKUP("Mar",B1:F1,B2:F2)` returns the March value from row 2. This replaces HLOOKUP.',
+    },
+    {
+      heading: 'Approximate matching without sorting',
+      content: 'For slab tables, use **match_mode -1** (exact or next smaller). Unlike VLOOKUP TRUE, the slab column does **not** need to be sorted (with default search_mode 1).\n\n`=XLOOKUP(135000,F2:F5,G2:G5,,-1)` with slabs 0, 50000, 100000, 200000 returns the rate of the 100000 slab.\n\n**match_mode 1** (exact or next larger) is useful for things like courier charges where 1.2 kg must be charged at the 2 kg slab.',
+    },
+    {
+      heading: 'Returning multiple columns and the last match',
+      content: '**Multiple columns**: if return_array has several columns, XLOOKUP returns all of them and the result **spills** into neighbouring cells: `=XLOOKUP("E102",A2:A6,B2:D6)` fills Name, Department and Salary in three cells. If the spill cells are not empty you get **#SPILL!**; clear them.\n\n**Last occurrence**: `search_mode -1` searches from the bottom, so for a transaction list sorted by date it returns the latest entry for a customer.',
+      points: [
+        'Use $ to lock lookup_array and return_array before copying down: $A$2:$A$6.',
+        'lookup_array and return_array must be the same size, otherwise #VALUE!.',
+        'XLOOKUP is not case sensitive.',
+      ],
+    },
+  ],
+  examples: [
+    {
+      title: 'Basic exact lookup: salary by Emp ID',
+      scenario: 'Find the salary of employee E103.',
+      table: {
+        headers: ['A: Emp ID', 'B: Name', 'C: Department', 'D: Salary (₹)'],
+        rows: [
+          ['E101', 'Riya Sharma', 'Accounts', '45000'],
+          ['E102', 'Aman Verma', 'Sales', '38000'],
+          ['E103', 'Priya Nair', 'HR', '42000'],
+          ['E104', 'Rahul Gupta', 'IT', '55000'],
+          ['E105', 'Sneha Patel', 'Sales', '40000'],
+        ],
+      },
+      steps: [
+        'Type E103 in F2.',
+        'In G2 type =XLOOKUP(F2,$A$2:$A$6,$D$2:$D$6)',
+        'Press Enter.',
+      ],
+      code: '=XLOOKUP(F2,$A$2:$A$6,$D$2:$D$6)',
+      result: '42000',
+      explanation: 'XLOOKUP searches E103 in A2:A6 (3rd position) and returns the 3rd item of D2:D6. Exact match is the default, so no FALSE is needed.',
+    },
+    {
+      title: 'Left lookup: Emp ID from name',
+      scenario: 'You know the employee name "Rahul Gupta" and need his Emp ID, which is in a column to the left.',
+      table: {
+        headers: ['A: Emp ID', 'B: Name'],
+        rows: [
+          ['E101', 'Riya Sharma'],
+          ['E102', 'Aman Verma'],
+          ['E103', 'Priya Nair'],
+          ['E104', 'Rahul Gupta'],
+          ['E105', 'Sneha Patel'],
+        ],
+      },
+      steps: [
+        'Click an empty cell, e.g. G3.',
+        'Type =XLOOKUP("Rahul Gupta",$B$2:$B$6,$A$2:$A$6)',
+        'Press Enter.',
+      ],
+      code: '=XLOOKUP("Rahul Gupta",$B$2:$B$6,$A$2:$A$6)',
+      result: 'E104',
+      explanation: 'The lookup column (B) is to the right of the return column (A). VLOOKUP cannot do this; XLOOKUP can because lookup and return arrays are separate.',
+    },
+    {
+      title: 'Built-in "Not Found" message',
+      scenario: 'Some IDs typed in F2:F3 may not exist. Show "Not Found" instead of #N/A.',
+      table: {
+        headers: ['F: Emp ID', 'G: Name'],
+        rows: [
+          ['E105', 'Sneha Patel'],
+          ['E110', 'Not Found'],
+        ],
+      },
+      steps: [
+        'In G2 type =XLOOKUP(F2,$A$2:$A$6,$B$2:$B$6,"Not Found")',
+        'Press Enter and copy down to G3.',
+      ],
+      code: '=XLOOKUP(F2,$A$2:$A$6,$B$2:$B$6,"Not Found")',
+      result: 'G2 = Sneha Patel, G3 = Not Found',
+      explanation: 'The 4th argument if_not_found replaces #N/A only for missing values. Other genuine errors are not hidden, which is safer than IFERROR.',
+    },
+    {
+      title: 'Return several columns at once (spill)',
+      scenario: 'Show Name, Department and Salary of E102 in three adjacent cells with one formula.',
+      table: {
+        headers: ['F: Emp ID', 'G: Name', 'H: Department', 'I: Salary'],
+        rows: [['E102', 'Aman Verma', 'Sales', '38000']],
+      },
+      steps: [
+        'Type E102 in F2.',
+        'Make sure G2:I2 are empty.',
+        'In G2 type =XLOOKUP(F2,$A$2:$A$6,$B$2:$D$6)',
+        'Press Enter.',
+      ],
+      code: '=XLOOKUP(F2,$A$2:$A$6,$B$2:$D$6)',
+      result: 'G2 = Aman Verma, H2 = Sales, I2 = 38000 (spilled from G2)',
+      explanation: 'Because return_array B2:D6 has 3 columns, the whole row is returned and spills right. A blue border shows the spill range. If H2 or I2 had data, G2 would show #SPILL!.',
+    },
+    {
+      title: 'Approximate match: commission slab with match_mode -1',
+      scenario: 'Commission slabs: 0 = 0%, 50000 = 2%, 100000 = 5%, 200000 = 8% (in F2:G5). Find the commission rate for sales of ₹1,35,000 in B2.',
+      table: {
+        headers: ['F: Sales From (₹)', 'G: Rate'],
+        rows: [
+          ['0', '0%'],
+          ['50000', '2%'],
+          ['100000', '5%'],
+          ['200000', '8%'],
+        ],
+      },
+      steps: [
+        'Type 135000 in B2.',
+        'In C2 type =XLOOKUP(B2,$F$2:$F$5,$G$2:$G$5,,-1)',
+        'Press Enter, format C2 as Percentage.',
+        'In D2 type =B2*C2 for the commission amount.',
+      ],
+      code: '=XLOOKUP(B2,$F$2:$F$5,$G$2:$G$5,,-1)',
+      result: 'C2 = 5%, D2 = 6750',
+      explanation: 'match_mode -1 returns an exact match or the next smaller item. 135000 is not in the list, the next smaller is 100000, so 5%. 135000 x 5% = 6750. The empty 4th argument (,,) skips if_not_found.',
+    },
+    {
+      title: 'Last occurrence: latest order of a customer',
+      scenario: 'The order list is in date order. Find the amount of Kavita\'s latest order and of her first order.',
+      table: {
+        headers: ['A: Customer', 'B: Order Date', 'C: Amount (₹)'],
+        rows: [
+          ['Kavita', '05-Jan-2025', '12000'],
+          ['Anil', '08-Jan-2025', '8500'],
+          ['Kavita', '15-Jan-2025', '9800'],
+          ['Sunil', '18-Jan-2025', '4300'],
+          ['Kavita', '22-Jan-2025', '15600'],
+          ['Anil', '25-Jan-2025', '7200'],
+        ],
+      },
+      steps: [
+        'Latest order: in F2 type =XLOOKUP("Kavita",$A$2:$A$7,$C$2:$C$7,"None",0,-1)',
+        'First order: in F3 type =XLOOKUP("Kavita",$A$2:$A$7,$C$2:$C$7)',
+        'Press Enter after each.',
+      ],
+      code: '=XLOOKUP("Kavita",$A$2:$A$7,$C$2:$C$7,"None",0,-1)',
+      result: 'F2 = 15600 (22-Jan-2025 order), F3 = 12000 (05-Jan-2025 order)',
+      explanation: 'search_mode -1 searches from the bottom up, so the first Kavita found is row 6. The default search (top to bottom) finds row 2. Since the list is in date order, bottom = latest.',
+    },
+  ],
+  interview: [
+    { q: 'List the arguments of XLOOKUP.', a: 'lookup_value, lookup_array, return_array, and optional if_not_found, match_mode (0 exact, -1 next smaller, 1 next larger, 2 wildcard) and search_mode (1 first-to-last, -1 last-to-first, 2/-2 binary search).', level: 'Easy' },
+    { q: 'What are the advantages of XLOOKUP over VLOOKUP?', a: 'Exact match by default, can look left, no column index number (not broken by inserted columns), built-in if_not_found, works vertically and horizontally, can return multiple columns, can search from the last item, and approximate match does not need sorted data.', level: 'Medium' },
+    { q: 'How do you get the last matching record with XLOOKUP?', a: 'Set search_mode to -1: =XLOOKUP(value,lookup_array,return_array,,0,-1). It searches from bottom to top.', level: 'Medium' },
+    { q: 'What causes #SPILL! with XLOOKUP?', a: 'When return_array has multiple columns/rows, the result spills into adjacent cells. If any of those cells contain data (or are merged), Excel shows #SPILL!. Clear the blocking cells.', level: 'Medium' },
+    { q: 'Why might a workbook with XLOOKUP show #NAME? on a colleague\'s PC?', a: 'Their Excel version (2019 or older) does not support XLOOKUP. Use INDEX+MATCH or VLOOKUP for compatibility.', level: 'Easy' },
+    { q: 'How would you do a wildcard lookup with XLOOKUP?', a: 'Set match_mode to 2: =XLOOKUP("Sne*",B2:B6,D2:D6,"Not Found",2). Unlike VLOOKUP, wildcards are not active unless match_mode is 2.', level: 'Hard' },
+    { q: 'Write an XLOOKUP for a two-way lookup (row and column).', a: 'Nest XLOOKUPs: =XLOOKUP("East",A2:A5,XLOOKUP("Feb",B1:D1,B2:D5)). The inner one returns the whole Feb column, the outer one picks the East row from it.', level: 'Hard' },
+    { q: 'What does match_mode 1 do? Give a use case.', a: 'Exact match or next larger item. Example: courier slabs 0.5, 1, 2, 5 kg; a 1.2 kg parcel is charged at the 2 kg slab.', level: 'Medium' },
+  ],
+  practice: [
+    {
+      task: 'Products: A2:A6 codes P01-P05, B2:B6 names Pen, Pencil, Eraser, Notebook, Marker, C2:C6 prices 10, 5, 3, 45, 35. Find the code for "Notebook".',
+      hint: 'Left lookup.',
+      solution: '=XLOOKUP("Notebook",B2:B6,A2:A6) returns P04.',
+    },
+    {
+      task: 'Using the same table, find the price of P09 and show "Code not found" if it is missing.',
+      hint: 'if_not_found argument.',
+      solution: '=XLOOKUP("P09",A2:A6,C2:C6,"Code not found") returns Code not found.',
+    },
+    {
+      task: 'Monthly headers Jan to May in B1:F1 and sales in B2:F2 (120000, 135000, 98000, 150000, 142000). Find April sales with XLOOKUP.',
+      hint: 'Horizontal arrays.',
+      solution: '=XLOOKUP("Apr",B1:F1,B2:F2) returns 150000.',
+    },
+    {
+      task: 'Courier slabs: F2:F5 = 0.5, 1, 2, 5 (kg) and G2:G5 = ₹40, ₹60, ₹90, ₹150. A parcel weighs 1.2 kg. Find the charge.',
+      hint: 'Next larger item.',
+      solution: '=XLOOKUP(1.2,F2:F5,G2:G5,,1) returns 90 (the next larger slab is 2 kg).',
+    },
+    {
+      task: 'In the order list from Example 6, find the date of Anil\'s latest order.',
+      hint: 'search_mode -1 and return column B.',
+      solution: '=XLOOKUP("Anil",A2:A7,B2:B7,,0,-1) returns 25-Jan-2025 (format the cell as a date).',
+    },
+  ],
+  quiz: [
+    { question: 'What is the default match_mode of XLOOKUP?', options: ['Approximate (next smaller)', 'Exact match', 'Wildcard', 'Next larger'], answer: 1, explanation: 'match_mode 0 (exact) is the default.' },
+    { question: 'Which argument shows a custom message when the value is not found?', options: ['match_mode', 'search_mode', 'if_not_found', 'return_array'], answer: 2, explanation: 'The 4th argument if_not_found replaces #N/A.' },
+    { question: 'search_mode -1 means:', options: ['Search last to first', 'Binary search ascending', 'Next smaller item', 'Exact match only'], answer: 0, explanation: '-1 searches from the bottom, returning the last occurrence.' },
+    { question: '=XLOOKUP(135000,{0;50000;100000;200000},{"0%";"2%";"5%";"8%"},,-1) returns:', options: ['2%', '5%', '8%', '#N/A'], answer: 1, explanation: 'Next smaller item to 135000 is 100000, giving 5%.' },
+    { question: 'An XLOOKUP returning 3 columns shows #SPILL!. Most likely cause:', options: ['Wrong match_mode', 'Cells to the right are not empty', 'Lookup value missing', 'Excel version too new'], answer: 1, explanation: 'The spilled result needs empty cells; existing data blocks it.' },
+  ],
+};

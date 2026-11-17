@@ -1,0 +1,152 @@
+export default {
+  id: "day-09-rows-columns-insert-delete-hide",
+  title: "Row Height, Column Width, Insert, Delete, Hide, Unhide",
+  module: "Module 1: Excel Basics",
+  day: 9,
+  level: "Beginner",
+  duration: "1.5 hours",
+  summary: "Control the structure of your sheet: resize rows and columns (manually and with AutoFit), insert and delete rows, columns and cells, and hide or unhide them to show only what matters.",
+  objectives: [
+    "Change row height and column width manually and with AutoFit",
+    "Insert rows, columns and cells using Ribbon, right-click and shortcuts",
+    "Delete rows, columns and cells and understand cell shifting",
+    "Hide and unhide rows and columns (including column A and row 1)",
+    "Know how inserting and deleting affects formulas",
+  ],
+  theory: [
+    {
+      heading: "Column Width",
+      content: "Default column width is about **8.43 characters** (64 pixels). Ways to change it:\n- **Drag**: point at the right border of the column header (e.g. between C and D) until the cursor becomes a double arrow, then drag.\n- **AutoFit**: **double-click** that border; the column fits its longest entry. Ribbon: **Home > Cells > Format > AutoFit Column Width** (Alt, H, O, I).\n- **Exact width**: right-click the column header > **Column Width** > type e.g. `20` > OK. Ribbon: Home > Cells > Format > Column Width (Alt, H, O, W).\n- **Default Width**: Home > Cells > Format > Default Width (applies to all columns that have not been changed).\n\nTo set the same width for many columns, select them all (e.g. drag B to F) and drag any one border, or set Column Width once.",
+      tip: "Fastest AutoFit for the whole sheet: Ctrl + A (select all), then double-click any column border.",
+    },
+    {
+      heading: "Row Height",
+      content: "Default row height is **15 points** (20 pixels) for size-11 font; it may differ slightly with Aptos in Microsoft 365. Rows grow automatically when the font is larger or Wrap Text is on.\n- **Drag** the bottom border of the row header.\n- **AutoFit**: double-click the bottom border, or **Home > Cells > Format > AutoFit Row Height** (Alt, H, O, A).\n- **Exact height**: right-click the row number > **Row Height** > e.g. `30` > OK (Alt, H, O, H).\n\nMaximum row height is 409 points; maximum column width is 255 characters.",
+      tip: "If a wrapped cell does not grow, the row has a manually set height. Use AutoFit Row Height to reset it.",
+    },
+    {
+      heading: "Insert rows, columns and cells",
+      content: "**Insert a row**: select a row (click its number or Shift + Space) > right-click > **Insert**. The new row appears **above** the selected row.\n\n**Insert a column**: select a column (Ctrl + Space) > right-click > **Insert**. The new column appears to the **left**.\n\n**Shortcut**: **Ctrl + Shift + +** (Ctrl + Plus). If a whole row/column is selected it inserts immediately; if just a cell is selected it opens the Insert dialog: Shift cells right, Shift cells down, Entire row, Entire column.\n\nRibbon: **Home > Cells > Insert > Insert Sheet Rows / Insert Sheet Columns / Insert Cells**.\n\n**Multiple rows**: select 5 rows then insert, and Excel inserts 5 rows at once.\n\nAfter inserting, the **Insert Options** brush icon lets you choose Format Same As Above / Below / Clear Formatting.",
+      points: [
+        "Formulas update automatically: =SUM(B2:B10) becomes =SUM(B2:B11) if you insert a row inside the range.",
+        "Inserting a row at the very end (below the range) does NOT expand the SUM range; insert inside the range or use Excel Tables (Day 44).",
+      ],
+    },
+    {
+      heading: "Delete rows, columns and cells",
+      content: "**Delete** removes the row/column/cell completely and **shifts** the remaining ones to fill the gap (this is different from the Delete key, which only clears contents).\n\n- Select row(s)/column(s) > right-click > **Delete**, or **Ctrl + -** (Ctrl + Minus).\n- Ribbon: **Home > Cells > Delete > Delete Sheet Rows / Delete Sheet Columns / Delete Cells**.\n- Deleting a single cell asks: **Shift cells left**, **Shift cells up**, **Entire row**, **Entire column**.\n\nWarning: if a formula refers to a cell that you delete, the formula shows the **#REF!** error. Example: D2 has `=B2+C2`; deleting column C changes it to `=B2+#REF!`.",
+      tip: "Shifting cells up/left can misalign records (a name moves next to someone else's salary). Delete entire rows when removing records.",
+    },
+    {
+      heading: "Hide and Unhide rows and columns",
+      content: "Hiding keeps data in the sheet (formulas still use it) but removes it from view and print. Good for helper columns, confidential columns like salary, or old months.\n\n**Hide**: select rows/columns > right-click > **Hide**. Shortcuts: **Ctrl + 9** hides rows, **Ctrl + 0** hides columns. Ribbon: Home > Cells > Format > Hide & Unhide.\n\nA hidden column is visible as a **double line** in the headers, and letters skip (e.g. A, B, D means C is hidden).\n\n**Unhide**: select the columns on **both sides** of the hidden one (e.g. B and D) > right-click > **Unhide**. Shortcut: **Ctrl + Shift + 9** unhides rows. **Ctrl + Shift + 0** for columns may be blocked by Windows; use right-click > Unhide.\n\n**Unhide column A or row 1**: type `A1` in the Name Box, press Enter, then Home > Cells > Format > Hide & Unhide > Unhide Columns (or Unhide Rows).\n\nUnhide everything: Ctrl + A, then right-click any column header > Unhide.",
+      tip: "Hiding is NOT security. Anyone can unhide. Use sheet protection (Day 59) to stop users from unhiding.",
+    },
+  ],
+  examples: [
+    {
+      title: "AutoFit columns for a customer list",
+      scenario: "Names and emails are cut off. Make every column fit its content.",
+      table: {
+        headers: ["A: Cust ID", "B: Customer Name", "C: Email"],
+        rows: [["C001", "Shree Ganesh Enterprises", "accounts@shreeganesh.in"], ["C002", "Patel Brothers", "info@patelbros.co.in"]],
+      },
+      steps: [
+        "Select columns A to C by dragging across the column headers.",
+        "Double-click the border between any two selected headers (e.g. between B and C).",
+      ],
+      result: "Each column widens to fit its longest entry; nothing is cut off.",
+      explanation: "AutoFit works on all selected columns at once. Ribbon equivalent: Home > Cells > Format > AutoFit Column Width.",
+    },
+    {
+      title: "Insert a missed record in the middle",
+      scenario: "You forgot to add employee 'Kiran' between Amit (row 3) and Neha (row 4). Total in B5 must include Kiran.",
+      table: {
+        headers: ["A: Name", "B: Salary (₹)"],
+        rows: [["Ravi", "30000"], ["Amit", "28000"], ["Neha", "35000"], ["Total", "93000"]],
+      },
+      steps: [
+        "Click row number 4 (Neha) to select the entire row.",
+        "Press Ctrl + Shift + + (or right-click > Insert). A blank row appears above Neha.",
+        "In A4 type Kiran, in B4 type 32000.",
+        "Click the Total cell (now B6) and look at the Formula Bar.",
+      ],
+      code: "=SUM(B2:B5)",
+      result: "Total changes from 93000 to 125000; the formula changed from =SUM(B2:B4) to =SUM(B2:B5).",
+      explanation: "Because the row was inserted inside the summed range, Excel expanded the range automatically. 30000 + 28000 + 32000 + 35000 = 125000.",
+    },
+    {
+      title: "Delete a row safely",
+      scenario: "Amit has left. Remove his record completely.",
+      table: {
+        headers: ["A: Name", "B: Salary (₹)"],
+        rows: [["Ravi", "30000"], ["Amit", "28000"], ["Kiran", "32000"], ["Neha", "35000"], ["Total", "125000"]],
+      },
+      steps: [
+        "Click row number 3 (Amit).",
+        "Press Ctrl + - (or right-click > Delete).",
+        "Check the total in B5.",
+      ],
+      code: "=SUM(B2:B4)",
+      result: "Rows shift up; the total becomes 97000 and the formula adjusts to =SUM(B2:B4).",
+      explanation: "30000 + 32000 + 35000 = 97000. Deleting an entire row keeps every name aligned with its salary.",
+    },
+    {
+      title: "Hide confidential salary column",
+      scenario: "You need to show an employee list on a projector without the Salary column (C).",
+      steps: [
+        "Right-click column header C.",
+        "Choose Hide (or select a cell in C and press Ctrl + 0).",
+        "Notice headers now read A, B, D with a double line between B and D.",
+        "After the meeting, select columns B and D, right-click > Unhide.",
+      ],
+      result: "Column C disappears during the presentation and reappears after Unhide.",
+      explanation: "Formulas that use column C keep working while it is hidden.",
+    },
+    {
+      title: "Unhide row 1",
+      scenario: "Someone hid row 1 (the header row) and you cannot select above row 2.",
+      steps: [
+        "Click the Name Box, type A1 and press Enter (the hidden cell becomes active).",
+        "Home > Cells > Format > Hide & Unhide > Unhide Rows.",
+      ],
+      result: "Row 1 is visible again.",
+      explanation: "Since there is no row above row 1 to select, the Name Box trick lets you target the hidden cell directly. The same approach works for column A.",
+    },
+    {
+      title: "Set exact sizes for a printable form",
+      scenario: "A leave application form needs column B exactly 30 wide and rows 2 to 10 exactly 25 high.",
+      steps: [
+        "Right-click column B header > Column Width > 30 > OK.",
+        "Select row headers 2 to 10.",
+        "Right-click > Row Height > 25 > OK.",
+      ],
+      result: "Column B is 30 characters wide; rows 2-10 are 25 points high.",
+      explanation: "Exact sizes give a uniform look, important for printed forms.",
+    },
+  ],
+  interview: [
+    { q: "How do you AutoFit a column?", a: "Double-click the right border of the column header, or Home > Cells > Format > AutoFit Column Width (Alt, H, O, I).", level: "Easy" },
+    { q: "Shortcuts to insert and delete rows/columns?", a: "Ctrl + Shift + + to insert and Ctrl + - to delete. Select the entire row (Shift + Space) or column (Ctrl + Space) first to skip the dialog.", level: "Easy" },
+    { q: "What is the difference between pressing the Delete key and deleting a row?", a: "The Delete key only clears contents; the row stays. Deleting a row (Ctrl + -) removes the row and shifts rows below up.", level: "Easy" },
+    { q: "What happens to a formula if a referenced column is deleted?", a: "The reference becomes #REF!, e.g. =B2+C2 becomes =B2+#REF! and the result shows #REF!.", level: "Medium" },
+    { q: "How do you unhide column A?", a: "Type A1 in the Name Box and press Enter, then Home > Cells > Format > Hide & Unhide > Unhide Columns. Or drag from column B's header leftward to select A, then right-click > Unhide.", level: "Medium" },
+    { q: "Is hiding a column a secure way to protect data?", a: "No. Anyone can unhide it. Use sheet/workbook protection, or remove sensitive data before sharing.", level: "Medium" },
+    { q: "Shortcuts for hiding rows and columns?", a: "Ctrl + 9 hides rows, Ctrl + 0 hides columns, Ctrl + Shift + 9 unhides rows. Ctrl + Shift + 0 for columns may be disabled by Windows language settings.", level: "Easy" },
+    { q: "You insert a row below the last row of a SUM range and the total does not change. Why?", a: "SUM(B2:B10) only expands when the row is inserted within the range. A row added after B10 is outside it. Insert inside the range, adjust the formula, or convert the data to an Excel Table.", level: "Hard" },
+  ],
+  practice: [
+    { task: "Set column A width to 12, column B to 25 and AutoFit column C.", hint: "Right-click header > Column Width.", solution: "Right-click A > Column Width 12; right-click B > Column Width 25; double-click the right border of C's header." },
+    { task: "Insert 3 blank rows above row 5 in one step.", hint: "Select 3 rows first.", solution: "Select row headers 5 to 7, press Ctrl + Shift + + (or right-click > Insert). Three rows are inserted above the old row 5." },
+    { task: "Insert a new column for 'Department' between Name (B) and Salary (C).", hint: "Columns insert to the left.", solution: "Select column C, right-click > Insert. New empty column C appears; old Salary moves to D. Type Department in C1." },
+    { task: "Hide rows 10 to 20 and then unhide them.", hint: "Ctrl + 9 / Ctrl + Shift + 9.", solution: "Select rows 10:20, Ctrl + 9. To unhide, select rows 9 and 21, press Ctrl + Shift + 9 (or right-click > Unhide)." },
+    { task: "In A1:A3 you have 10, 20, 30 and B1 has =A1+A2+A3 (60). Delete row 2. What does B1 show now?", hint: "Rows shift; references adjust.", solution: "B1 shows #REF! because A2 was deleted; the formula becomes =A1+#REF!+A2. Use =SUM(A1:A3) instead, which would adjust to =SUM(A1:A2) and give 40." },
+  ],
+  quiz: [
+    { question: "Where does a new row appear when you insert with row 6 selected?", options: ["Below row 6", "Above row 6", "At the end", "At row 1"], answer: 1, explanation: "Rows are inserted above the selection." },
+    { question: "Shortcut to delete selected rows:", options: ["Ctrl + D", "Ctrl + -", "Delete key", "Ctrl + X"], answer: 1, explanation: "Ctrl + Minus deletes cells/rows/columns." },
+    { question: "Ctrl + 0 is used to:", options: ["Hide rows", "Hide columns", "Insert column", "Zoom 100%"], answer: 1, explanation: "Ctrl + 0 hides columns; Ctrl + 9 hides rows." },
+    { question: "How do you AutoFit a column width with the mouse?", options: ["Single-click header", "Double-click the right border of the header", "Right-click > Hide", "Drag the fill handle"], answer: 1, explanation: "Double-clicking the border AutoFits." },
+    { question: "Column headers read A, B, E. What happened?", options: ["C and D deleted", "C and D hidden", "Sheet is protected", "Freeze panes is on"], answer: 1, explanation: "Skipped letters indicate hidden columns; deleted columns would be renamed." },
+  ],
+};

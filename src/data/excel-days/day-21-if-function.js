@@ -1,0 +1,183 @@
+export default {
+  id: 'day-21-if-function',
+  title: 'IF() Function',
+  module: 'Module 3: Logical & Conditional Functions',
+  day: 21,
+  level: 'Beginner',
+  duration: '1.5 hours',
+  summary: 'IF() lets Excel take a decision: it checks a condition and returns one value when the condition is TRUE and another value when it is FALSE. It is the foundation of every pass/fail, bonus, discount and reorder sheet you will build.',
+  objectives: [
+    'Understand logical tests and the TRUE / FALSE results they produce',
+    'Write the IF() function with all three arguments correctly',
+    'Return text, numbers, calculations or blanks from IF()',
+    'Use comparison operators (=, <>, >, <, >=, <=) inside IF()',
+    'Avoid common IF() mistakes such as missing quotes around text',
+  ],
+  theory: [
+    {
+      heading: 'What is a logical test?',
+      content: 'A **logical test** is a question that Excel can answer with only **TRUE** or **FALSE**. For example, if cell B2 contains 78, then typing `=B2>=40` in another cell shows **TRUE**, because 78 is greater than or equal to 40.\n\nLogical tests are built with **comparison operators**:\n\n- `=` equal to (e.g. `B2="Delhi"`)\n- `<>` not equal to (e.g. `B2<>0`)\n- `>` greater than\n- `<` less than\n- `>=` greater than or equal to\n- `<=` less than or equal to\n\nText comparisons are **not case-sensitive**: `"delhi"` and `"DELHI"` are treated as the same.',
+      tip: 'Before writing an IF, type only the logical test (like =B2>=40) in a cell to check it returns TRUE/FALSE as you expect.',
+    },
+    {
+      heading: 'What is the IF() function?',
+      content: 'IF() checks a logical test and returns **one value if TRUE** and **another value if FALSE**. Think of it as: "IF this is true, THEN show this, ELSE show that."\n\nArguments explained:\n\n- **logical_test** (required): the condition to check, e.g. `B2>=40`.\n- **value_if_true** (optional but almost always given): what to return when the test is TRUE, e.g. `"Pass"`.\n- **value_if_false** (optional): what to return when the test is FALSE, e.g. `"Fail"`. If you leave it out, Excel returns the word **FALSE**.',
+      syntax: '=IF(logical_test, [value_if_true], [value_if_false])',
+      points: [
+        'Text results must be inside double quotes: "Pass"',
+        'Numbers and cell references are written without quotes: 5000, C2',
+        'Calculations are allowed in any argument: B2*10%',
+        'Two double quotes "" return an empty-looking (blank) cell',
+      ],
+    },
+    {
+      heading: 'Returning text, numbers and calculations',
+      content: 'The TRUE and FALSE parts can be anything:\n\n- **Text**: `=IF(B2>=40,"Pass","Fail")`\n- **Number**: `=IF(B2>=100000,5000,0)` gives a fixed bonus of ₹5,000 or 0\n- **Calculation**: `=IF(B2>5000,B2*10%,0)` gives a 10% discount only on bills above ₹5,000\n- **Another cell**: `=IF(C2="","Pending",C2)` shows the value of C2 or the word Pending\n- **Blank**: `=IF(B2>=40,"","Re-exam")` shows nothing for passed students',
+      tip: 'Do not type ₹ or commas inside numbers in a formula. Write 5000, not ₹5,000. Format the result cell as Currency instead.',
+    },
+    {
+      heading: 'Using cell references for the condition value',
+      content: 'Instead of hard-coding the pass mark 40 inside every formula, keep it in a cell (say `F1`) and write `=IF(B2>=$F$1,"Pass","Fail")`. Now changing F1 to 35 updates every result instantly.\n\nThe `$` signs (absolute reference, learned on Day 17) keep F1 fixed when you drag the formula down.',
+    },
+    {
+      heading: 'Common mistakes with IF()',
+      content: '- **Missing quotes around text**: `=IF(B2>=40,Pass,Fail)` gives **#NAME?**. Write `"Pass"`.\n- **Quotes around numbers**: `=IF(B2>=40,"1","0")` returns text, which SUM cannot add. Write `1` and `0`.\n- **Wrong operator**: `>` vs `>=`. A student with exactly 40 fails with `B2>40`.\n- **Extra spaces** in data: `"Delhi "` is not equal to `"Delhi"`. Use TRIM (Day 20) to clean data.\n- **Commas in numbers**: `=IF(B2>1,00,000,...)` breaks the formula. Write `100000`.',
+    },
+    {
+      heading: 'Coming up',
+      content: 'Today IF() makes a decision between **two** choices. On Day 22 you will learn **Nested IF** for 3 or more choices (grades A/B/C), and on Days 23-24 you will combine IF with **AND / OR / NOT** to check many conditions at once.',
+    },
+  ],
+  examples: [
+    {
+      title: 'Pass or Fail in a marks sheet',
+      scenario: 'A teacher wants to mark each student Pass if marks are 40 or more, otherwise Fail.',
+      table: {
+        headers: ['A: Student', 'B: Marks', 'C: Result'],
+        rows: [['Riya', '78', ''], ['Aman', '32', ''], ['Neha', '45', ''], ['Karan', '39', ''], ['Pooja', '91', '']],
+      },
+      steps: [
+        'Click cell C2',
+        'Type =IF(B2>=40,"Pass","Fail")',
+        'Press Enter: C2 shows Pass (78 is >= 40)',
+        'Select C2 and double-click the fill handle (small square at bottom-right) to copy down to C6',
+      ],
+      code: '=IF(B2>=40,"Pass","Fail")',
+      result: 'C2: Pass, C3: Fail, C4: Pass, C5: Fail, C6: Pass',
+      explanation: 'The test B2>=40 is TRUE for 78, 45 and 91, so those rows return "Pass". 32 and 39 are below 40, so the test is FALSE and "Fail" is returned. Note Karan (39) fails because 39 is less than 40.',
+    },
+    {
+      title: 'Fixed sales bonus',
+      scenario: 'Salespeople get a bonus of ₹5,000 if their monthly sales are ₹1,00,000 or more, else no bonus.',
+      table: {
+        headers: ['A: Salesperson', 'B: Sales (₹)', 'C: Bonus (₹)'],
+        rows: [['Rahul', '120000', ''], ['Sneha', '95000', ''], ['Vikram', '100000', ''], ['Anita', '87000', '']],
+      },
+      steps: [
+        'Click cell C2',
+        'Type =IF(B2>=100000,5000,0)',
+        'Press Enter',
+        'Copy the formula down to C5 using the fill handle',
+        'Optionally format C2:C5 as Currency (Home > Number > Currency)',
+      ],
+      code: '=IF(B2>=100000,5000,0)',
+      result: 'C2: 5000, C3: 0, C4: 5000, C5: 0',
+      explanation: 'Numbers are returned without quotes so they can be totalled later with SUM (total bonus = 10000). Vikram gets the bonus because >= includes exactly 100000.',
+    },
+    {
+      title: 'Discount calculation on invoices',
+      scenario: 'A shop gives 10% discount only when the invoice amount is more than ₹5,000.',
+      table: {
+        headers: ['A: Invoice', 'B: Amount (₹)', 'C: Discount (₹)'],
+        rows: [['INV-101', '7500', ''], ['INV-102', '4200', ''], ['INV-103', '5000', ''], ['INV-104', '12000', '']],
+      },
+      steps: [
+        'Click cell C2',
+        'Type =IF(B2>5000,B2*10%,0)',
+        'Press Enter: C2 shows 750',
+        'Drag the fill handle down to C5',
+      ],
+      code: '=IF(B2>5000,B2*10%,0)',
+      result: 'C2: 750, C3: 0, C4: 0, C5: 1200',
+      explanation: 'The value_if_true part is a calculation (B2*10%). INV-103 is exactly 5000, and 5000>5000 is FALSE, so no discount. Use >= if the business rule says "5000 and above".',
+    },
+    {
+      title: 'Inventory reorder alert',
+      scenario: 'The store manager wants to see "Reorder" when current stock is at or below the reorder level.',
+      table: {
+        headers: ['A: Item', 'B: Stock', 'C: Reorder Level', 'D: Status'],
+        rows: [['Pens', '40', '50', ''], ['Notebooks', '120', '100', ''], ['Staplers', '15', '15', ''], ['Files', '60', '30', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =IF(B2<=C2,"Reorder","OK")',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=IF(B2<=C2,"Reorder","OK")',
+      result: 'D2: Reorder, D3: OK, D4: Reorder, D5: OK',
+      explanation: 'The condition compares two cells in the same row. Staplers have stock equal to the reorder level, so <= makes it TRUE and shows Reorder.',
+    },
+    {
+      title: 'Showing Pending for missing entries',
+      scenario: 'In a fee register, column B holds the payment date. If it is empty, show "Pending", otherwise "Paid".',
+      table: {
+        headers: ['A: Student', 'B: Paid On', 'C: Fee Status'],
+        rows: [['Riya', '05-Jun-2025', ''], ['Aman', '', ''], ['Neha', '07-Jun-2025', ''], ['Karan', '', '']],
+      },
+      steps: [
+        'Click cell C2',
+        'Type =IF(B2="","Pending","Paid")',
+        'Press Enter',
+        'Copy down to C5',
+      ],
+      code: '=IF(B2="","Pending","Paid")',
+      result: 'C2: Paid, C3: Pending, C4: Paid, C5: Pending',
+      explanation: 'B2="" checks whether the cell is empty. "" (two double quotes with nothing between) means empty text. You could also use ISBLANK(B2) as the test.',
+    },
+  ],
+  interview: [
+    { q: 'What does the IF() function do?', a: 'IF() evaluates a logical test. If the test is TRUE it returns value_if_true, otherwise it returns value_if_false. Syntax: =IF(logical_test, [value_if_true], [value_if_false]).', level: 'Easy' },
+    { q: 'What happens if you leave out the value_if_false argument?', a: 'If the test is FALSE, Excel returns the logical value FALSE. If you include the comma but leave it empty, e.g. =IF(B2>40,"Yes",), Excel returns 0.', level: 'Medium' },
+    { q: 'Why does =IF(B2>=40,Pass,Fail) give #NAME?', a: 'Pass and Fail are not in double quotes, so Excel treats them as names of named ranges or functions that do not exist. Text must be written as "Pass" and "Fail".', level: 'Easy' },
+    { q: 'Is IF() case-sensitive when comparing text?', a: 'No. =IF(A2="delhi",...) matches Delhi, DELHI and delhi. For a case-sensitive check use EXACT(): =IF(EXACT(A2,"Delhi"),...).', level: 'Medium' },
+    { q: 'How do you return a blank cell from IF()?', a: 'Use two double quotes "" as the result, e.g. =IF(B2>=40,"","Re-exam"). Note the cell is not truly empty: it contains an empty text string, so COUNTA will still count it.', level: 'Medium' },
+    { q: 'Why should the threshold (like a pass mark) be kept in a separate cell?', a: 'So it can be changed in one place. =IF(B2>=$F$1,"Pass","Fail") updates every row when F1 changes. Hard-coded numbers need every formula to be edited, which is error-prone.', level: 'Medium' },
+    { q: 'Your IF returns numbers but SUM of that column shows 0. Why?', a: 'The numbers were probably written with quotes like "5000", which makes them text. SUM ignores text. Remove the quotes so IF returns real numbers.', level: 'Hard' },
+    { q: 'Can IF() perform a calculation instead of returning a fixed value?', a: 'Yes. Any argument can be a formula, e.g. =IF(B2>5000,B2*10%,0) returns 10% of the amount when the amount is above 5000.', level: 'Easy' },
+  ],
+  practice: [
+    {
+      task: 'Attendance: A2:A6 names (Riya, Aman, Neha, Karan, Pooja), B2:B6 attendance % (82, 68, 75, 90, 74). In C show "Allowed" if attendance is 75% or more, else "Not Allowed".',
+      hint: 'Use >= so that exactly 75 is allowed.',
+      solution: 'In C2 type =IF(B2>=75,"Allowed","Not Allowed") and copy down. Results: Allowed, Not Allowed, Allowed, Allowed, Not Allowed.',
+    },
+    {
+      task: 'Overtime: B2:B5 hours worked in a week (48, 40, 52, 38). Overtime is paid at ₹200 per hour for every hour above 45. Calculate overtime pay in C.',
+      hint: 'value_if_true is a calculation (B2-45)*200.',
+      solution: 'C2: =IF(B2>45,(B2-45)*200,0). Results: 600, 0, 1400, 0.',
+    },
+    {
+      task: 'Budget check: B2:B4 budget (50000, 30000, 20000), C2:C4 actual spend (48000, 35000, 20000). In D show "Over Budget" or "Within Budget".',
+      hint: 'Compare C2 with B2.',
+      solution: 'D2: =IF(C2>B2,"Over Budget","Within Budget"). Results: Within Budget, Over Budget, Within Budget.',
+    },
+    {
+      task: 'GST: B2:B4 has item type ("Food", "Electronics", "Food") and C2:C4 price (200, 15000, 500). Food has 5% GST, everything else 18%. Calculate GST amount in D.',
+      hint: 'Return a calculation in both TRUE and FALSE parts.',
+      solution: 'D2: =IF(B2="Food",C2*5%,C2*18%). Results: 10, 2700, 25.',
+    },
+    {
+      task: 'Keep the pass mark in F1 (value 35). Marks in B2:B5 are 34, 35, 60, 20. Write one formula in C2 that can be copied down and uses F1.',
+      hint: 'Lock F1 with $ signs.',
+      solution: 'C2: =IF(B2>=$F$1,"Pass","Fail"). Results: Fail, Pass, Pass, Fail. Changing F1 to 30 makes the first row Pass.',
+    },
+  ],
+  quiz: [
+    { question: 'What does =IF(10>5,"Yes","No") return?', options: ['Yes', 'No', 'TRUE', '#VALUE!'], answer: 0, explanation: '10>5 is TRUE, so value_if_true "Yes" is returned.' },
+    { question: 'Which formula gives #NAME? error?', options: ['=IF(A1>5,"High","Low")', '=IF(A1>5,High,Low)', '=IF(A1>5,1,0)', '=IF(A1>5,A1*2,0)'], answer: 1, explanation: 'High and Low without quotes are treated as unknown names, causing #NAME?.' },
+    { question: 'B2 contains 40. What does =IF(B2>40,"Pass","Fail") return?', options: ['Pass', 'Fail', 'TRUE', '40'], answer: 1, explanation: '40>40 is FALSE. To include 40, use >=.' },
+    { question: 'Which operator means "not equal to" in Excel?', options: ['!=', '=/=', '<>', 'NOT='], answer: 2, explanation: 'Excel uses <> for not equal to.' },
+    { question: 'A2 is empty. What does =IF(A2="","Missing","OK") return?', options: ['OK', 'Missing', '0', 'FALSE'], answer: 1, explanation: 'An empty cell equals "", so the test is TRUE and "Missing" is returned.' },
+  ],
+};

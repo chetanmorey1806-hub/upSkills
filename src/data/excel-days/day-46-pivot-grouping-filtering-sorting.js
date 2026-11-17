@@ -1,0 +1,148 @@
+export default {
+  id: 'day-46-pivot-grouping-filtering-sorting',
+  title: 'Pivot Table Grouping, Filtering, Sorting',
+  module: 'Module 6: Data Analysis & Reporting',
+  day: 46,
+  level: 'Intermediate',
+  duration: '2 hours',
+  summary: 'Turn a basic pivot into a real management report: group dates into months and quarters, group numbers into ranges, group text items into zones, filter by labels, values and Top N, and sort by value or a custom order.',
+  objectives: [
+    'Group date fields by Months, Quarters and Years',
+    'Group number fields into ranges (buckets) and text items into custom groups',
+    'Apply report filters, label filters, value filters and Top 10 filters',
+    'Sort pivot items A-Z, by values, and manually',
+    'Fix the "Cannot group that selection" error',
+  ],
+  theory: [
+    {
+      heading: 'Sample data for today',
+      content: 'All examples use the table **tblSales** from Day 45 (10 invoices, Jan to Mar 2025):\n\n- 05-Jan-2025, North, Amit, Laptop, 2, 90000\n- 12-Jan-2025, South, Priya, Mouse, 10, 5000\n- 20-Jan-2025, North, Amit, Printer, 1, 12000\n- 03-Feb-2025, East, Rahul, Laptop, 1, 45000\n- 14-Feb-2025, South, Priya, Laptop, 2, 90000\n- 25-Feb-2025, East, Rahul, Mouse, 20, 10000\n- 04-Mar-2025, North, Sneha, Printer, 2, 24000\n- 18-Mar-2025, South, Priya, Printer, 1, 12000\n- 22-Mar-2025, East, Rahul, Laptop, 1, 45000\n- 29-Mar-2025, North, Sneha, Mouse, 8, 4000\n\nColumns: Date, Region, Salesperson, Product, Qty, Amount. Total Amount = 337000.',
+    },
+    {
+      heading: 'Grouping dates',
+      content: 'In Microsoft 365, when you drag a Date field to Rows, Excel **auto-groups** it (for example into Years, Quarters and Months) and adds fields like Months and Quarters to the field list.\n\nTo group manually:\n1. Right-click any date in the pivot > **Group** (or **PivotTable Analyze > Group > Group Field**).\n2. In the Grouping dialog, check **Starting at** and **Ending at**.\n3. In **By**, select one or more: Seconds, Minutes, Hours, **Days**, **Months**, **Quarters**, **Years**. Select Months + Years if data covers more than one year, otherwise January 2024 and January 2025 are added together.\n4. Click **OK**.\n\nTo remove grouping: right-click > **Ungroup**.\n\nTo stop auto-grouping: File > Options > Data > tick "Disable automatic grouping of Date/Time columns in PivotTables".',
+      tip: 'Quarters in the grouping dialog are calendar quarters (Qtr1 = Jan-Mar). For an Indian financial-year quarter (Apr-Jun = Q1), add a helper column in the source, e.g. with CHOOSE(MONTH(...)) from Day 41.',
+    },
+    {
+      heading: 'Grouping numbers and text',
+      content: '**Number grouping (buckets)**: put a numeric field such as Amount or Age in Rows, right-click a value > **Group**, then set **Starting at**, **Ending at** and **By** (interval size). Example: Starting 0, Ending 99999, By 25000 creates 0-24999, 25000-49999, 50000-74999, 75000-99999.\n\n**Text grouping (custom groups)**: select several row labels with **Ctrl+click** (e.g. East and South), right-click > **Group**. Excel creates a new field (e.g. Region2) with an item called Group1. Click Group1 and type a new name like "South-East Zone". To rename the new field, use Field Settings (right-click > Field Settings > Custom Name).\n\n**Error: "Cannot group that selection"** occurs when a date or number column contains text, blanks or errors. Clean the source (e.g. convert text dates to real dates), refresh, then group again.',
+    },
+    {
+      heading: 'Filtering a pivot',
+      content: 'Types of filter:\n- **Report Filter (Filters area)**: drag a field to Filters; a drop-down appears above the pivot. Tick **Select Multiple Items** to choose more than one.\n- **Item filter**: click the drop-down arrow on Row Labels / Column Labels and untick items.\n- **Label Filters**: Row Labels arrow > Label Filters > Equals, Begins With, Contains, Greater Than... (works on the text of the labels).\n- **Value Filters**: Row Labels arrow > Value Filters > Greater Than, Between, **Top 10**... (works on the totals, e.g. show salespeople with Sum of Amount > 100000).\n- **Top 10 filter**: Value Filters > Top 10 > choose Top/Bottom, number of items (e.g. 2), Items/Percent/Sum, and the value field.\n\nClear filters: **PivotTable Analyze > Actions > Clear > Clear Filters**, or the arrow > Clear Filter From.\n\n**Show Report Filter Pages** (PivotTable Analyze > PivotTable > Options > Show Report Filter Pages) creates one sheet per item of the report filter, e.g. one sheet per region.',
+      tip: 'When a value filter is applied, the Grand Total shows the total of only the visible items. Slicers (Day 47) are a more visual way to filter.',
+    },
+    {
+      heading: 'Sorting a pivot',
+      content: 'Ways to sort:\n- **A to Z / Z to A on labels**: Row Labels arrow > Sort A to Z.\n- **By value**: right-click any number in the Values column > **Sort > Sort Largest to Smallest**. The sort stays after refresh.\n- **More Sort Options**: Row Labels arrow > More Sort Options > Descending (Z to A) by: Sum of Amount.\n- **Manual order**: click an item label and drag its border up/down, or simply type the item name in a different cell position. Or select the cell and use right-click > Move > Move "East" Up.\n- **Custom list order**: items like Jan, Feb, Mar or Mon, Tue follow built-in custom lists. You can add your own list (e.g. North, South, East, West) at File > Options > Advanced > General > Edit Custom Lists.',
+    },
+  ],
+  examples: [
+    {
+      title: 'Group dates by Months',
+      scenario: 'Create a month-wise sales report from tblSales.',
+      table: {
+        headers: ['Row Labels (Months)', 'Sum of Amount'],
+        rows: [['Jan', '107,000'], ['Feb', '145,000'], ['Mar', '85,000'], ['Grand Total', '337,000']],
+      },
+      steps: [
+        'Insert > Tables > PivotTable > From Table/Range, select tblSales, New Worksheet, OK',
+        'Drag Date to Rows and Amount to Values',
+        'If Excel auto-grouped into Quarters/Months, remove extra fields from Rows so only Months (Date) remains; otherwise right-click any date > Group',
+        'In the Grouping dialog, select only Months (click Days to deselect it), click OK',
+      ],
+      result: 'Jan 107,000 | Feb 145,000 | Mar 85,000 | Grand Total 337,000',
+      explanation: 'Jan = 90000 + 5000 + 12000. Feb = 45000 + 90000 + 10000. Mar = 24000 + 12000 + 45000 + 4000. If you also tick Quarters, all three months fall under Qtr1 with a subtotal of 337,000.',
+    },
+    {
+      title: 'Group invoice amounts into ranges',
+      scenario: 'The sales head wants to know how many invoices fall into each value band of ₹25,000.',
+      table: {
+        headers: ['Row Labels (Amount band)', 'Count of Invoices'],
+        rows: [['0-24999', '6'], ['25000-49999', '2'], ['75000-99999', '2'], ['Grand Total', '10']],
+      },
+      steps: [
+        'Create a new pivot from tblSales',
+        'Drag Amount to Rows (each distinct amount is listed)',
+        'Drag Product (or Date) to Values; it becomes Count of Product. Rename the header to Count of Invoices',
+        'Right-click any amount in Rows > Group',
+        'Set Starting at = 0, Ending at = 99999, By = 25000, click OK',
+      ],
+      result: '0-24999: 6 invoices | 25000-49999: 2 | 75000-99999: 2 | Grand Total 10',
+      explanation: 'The six small invoices are 5000, 12000, 10000, 24000, 12000 and 4000. The two 45000 invoices fall in 25000-49999 and the two 90000 invoices fall in 75000-99999. The 50000-74999 band has no invoices, so it is not shown (tick Field Settings > Layout & Print > Show items with no data to display it).',
+    },
+    {
+      title: 'Group regions into custom zones',
+      scenario: 'East and South are managed by one zonal manager. Show them as "South-East Zone" with a subtotal, and North separately.',
+      table: {
+        headers: ['Row Labels', 'Sum of Amount'],
+        rows: [['North', '130,000'], ['  North', '130,000'], ['South-East Zone', '207,000'], ['  East', '100,000'], ['  South', '107,000'], ['Grand Total', '337,000']],
+      },
+      steps: [
+        'Build a pivot with Region in Rows and Amount in Values',
+        'Click East, then Ctrl+click South to select both labels',
+        'Right-click > Group. A new field Region2 appears with item Group1',
+        'Click the Group1 cell, type South-East Zone and press Enter',
+        'If needed, right-click a Region2 label > Sort > Sort A to Z',
+      ],
+      result: 'North 130,000 (North 130,000) | South-East Zone 207,000 (East 100,000, South 107,000) | Grand Total 337,000',
+      explanation: 'The ungrouped item North becomes its own group with the same name. 100000 + 107000 = 207000 is shown as a subtotal for the zone. The source data is not changed.',
+    },
+    {
+      title: 'Sort regions by sales (largest first) and keep Top 2',
+      scenario: 'Show regions ranked by sales, then show only the top 2 regions.',
+      table: {
+        headers: ['Row Labels', 'Sum of Amount'],
+        rows: [['North', '130,000'], ['South', '107,000'], ['Grand Total', '237,000']],
+      },
+      steps: [
+        'Build Region in Rows and Sum of Amount in Values (order is East, North, South)',
+        'Right-click any number in Sum of Amount > Sort > Sort Largest to Smallest. Order becomes North 130,000; South 107,000; East 100,000',
+        'Click the Row Labels drop-down > Value Filters > Top 10',
+        'Set Top, 2, Items, by Sum of Amount, click OK',
+      ],
+      result: 'North 130,000 | South 107,000 | Grand Total 237,000',
+      explanation: 'After sorting, the Top 10 filter keeps the 2 regions with the highest totals. The Grand Total changes to 130000 + 107000 = 237000 because filtered-out items are excluded.',
+    },
+    {
+      title: 'Value filter and report filter together',
+      scenario: 'Part A: list salespersons whose total sales are greater than ₹1,00,000. Part B: using a report filter, show product sales for the North region only.',
+      table: {
+        headers: ['Part A: Salesperson', 'Sum of Amount', 'Part B (Region = North): Product', 'Sum of Amount'],
+        rows: [['Amit', '102,000', 'Laptop', '90,000'], ['Priya', '107,000', 'Mouse', '4,000'], ['Grand Total', '209,000', 'Printer', '36,000'], ['', '', 'Grand Total', '130,000']],
+      },
+      steps: [
+        'Part A: pivot with Salesperson in Rows, Amount in Values',
+        'Row Labels arrow > Value Filters > Greater Than... > Sum of Amount, is greater than, 100000 > OK',
+        'Part B: pivot with Product in Rows, Amount in Values, drag Region to Filters',
+        'Open the Region filter above the pivot, select North, click OK',
+      ],
+      result: 'Part A: Amit 102,000; Priya 107,000; Grand Total 209,000. Part B: Laptop 90,000; Mouse 4,000; Printer 36,000; Grand Total 130,000',
+      explanation: 'Rahul (100,000) is not greater than 100,000 and Sneha has 28,000, so both are hidden. In Part B, the report filter removes all non-North rows before summarising: North Printer = 12000 + 24000 = 36000.',
+    },
+  ],
+  interview: [
+    { q: 'How do you show month-wise totals when the data has daily dates?', a: 'Put the Date field in Rows, right-click a date > Group, select Months (and Years if data spans multiple years), click OK.', level: 'Easy' },
+    { q: 'You get "Cannot group that selection". What is the cause?', a: 'The field contains non-date/non-number values: text dates, blank cells or errors. Clean the source column (convert text to dates, remove blanks), refresh the pivot, then group again.', level: 'Medium' },
+    { q: 'Why should you select both Months and Years when grouping?', a: 'With only Months, the same month of different years is combined (Jan 2024 + Jan 2025). Adding Years separates them.', level: 'Medium' },
+    { q: 'Difference between Label Filter and Value Filter?', a: 'A Label Filter tests the item text (begins with, contains, equals). A Value Filter tests the summarised number (greater than, between, top 10) for each item.', level: 'Medium' },
+    { q: 'How do you show the Top 5 customers by sales in a pivot?', a: 'Customer in Rows, Sales in Values, then Row Labels arrow > Value Filters > Top 10 > Top 5 Items by Sum of Sales. Also sort Largest to Smallest for a ranked view.', level: 'Medium' },
+    { q: 'How can you create a separate sheet for each region automatically from one pivot?', a: 'Put Region in the Filters area, then PivotTable Analyze > PivotTable > Options drop-down > Show Report Filter Pages > select Region > OK. Excel creates one sheet per region, each with a filtered copy of the pivot.', level: 'Hard' },
+    { q: 'How do you sort pivot row items in a custom order like North, South, East, West?', a: 'Either drag items manually (select the cell and drag its border), or create a custom list in File > Options > Advanced > Edit Custom Lists, then in pivot options make sure "Use Custom Lists when sorting" is ticked and sort A to Z.', level: 'Hard' },
+    { q: 'How do you group numbers into age bands like 20-29, 30-39?', a: 'Put Age in Rows, right-click > Group, Starting at 20, Ending at 59 (or the max), By 10. Excel creates bands 20-29, 30-39, etc.', level: 'Easy' },
+  ],
+  practice: [
+    { task: 'From tblSales, make a pivot with Months in Rows and Product in Columns showing Sum of Amount.', hint: 'Group the date by Months first.', solution: 'Date to Rows (group by Months), Product to Columns, Amount to Values. Jan: Laptop 90,000, Mouse 5,000, Printer 12,000 (107,000). Feb: Laptop 135,000, Mouse 10,000 (145,000). Mar: Laptop 45,000, Mouse 4,000, Printer 36,000 (85,000).' },
+    { task: 'Show only products whose total Qty is greater than 5.', hint: 'Value filter on Sum of Qty.', solution: 'Product in Rows, Qty in Values. Row Labels arrow > Value Filters > Greater Than > Sum of Qty > 5. Result: Laptop 6, Mouse 38 (Printer 4 is hidden). Grand Total 44.' },
+    { task: 'Show salespersons whose names begin with "R" or "S" only, using filters.', hint: 'Label Filters allow one condition at a time; use item checkboxes for two letters.', solution: 'Row Labels arrow: untick Amit and Priya (keep Rahul, Sneha). Result: Rahul 100,000; Sneha 28,000; Grand Total 128,000. For one letter you can use Label Filters > Begins With > R.' },
+    { task: 'Sort the Salesperson pivot so the lowest seller is on top.', hint: 'Sort by value ascending.', solution: 'Right-click a value > Sort > Sort Smallest to Largest. Order: Sneha 28,000; Rahul 100,000; Amit 102,000; Priya 107,000.' },
+    { task: 'Group Qty values (in Rows) into bands of 10 starting at 0 and show count of invoices.', hint: 'Starting at 0, By 10.', solution: 'Qty in Rows, right-click > Group: Starting 0, Ending 29, By 10. Count of invoices: 0-9: 8 (Qty 2,1,1,2,2,1,1,8), 10-19: 1 (Qty 10), 20-29: 1 (Qty 20). Total 10.' },
+  ],
+  quiz: [
+    { question: 'Where do you find the Group Field command?', options: ['Home > Editing', 'PivotTable Analyze > Group', 'Data > Outline only', 'Insert > Group'], answer: 1, explanation: 'PivotTable Analyze > Group > Group Field (or right-click > Group).' },
+    { question: 'Grouping Amount with Starting 0, By 25000 puts an invoice of ₹45,000 in which band?', options: ['0-24999', '25000-49999', '50000-74999', '45000-69999'], answer: 1, explanation: '45000 lies between 25000 and 49999.' },
+    { question: 'Which filter would you use to show only items with Sum of Sales > 1,00,000?', options: ['Label Filter', 'Value Filter', 'Report Filter', 'Date Filter'], answer: 1, explanation: 'Value Filters test the summarised numbers.' },
+    { question: 'After a Top 2 value filter on Region (North 130,000, South 107,000, East 100,000), the Grand Total shows:', options: ['337,000', '237,000', '207,000', '130,000'], answer: 1, explanation: 'Only visible items are totalled: 130000 + 107000 = 237000.' },
+    { question: 'Which feature creates one worksheet per item in the report filter?', options: ['Show Report Filter Pages', 'Drill Down', 'Refresh All', 'Group Selection'], answer: 0, explanation: 'Options > Show Report Filter Pages creates a sheet for each filter item.' },
+  ],
+};

@@ -1,0 +1,173 @@
+export default {
+  id: 'day-23-and-or-not',
+  title: 'AND(), OR(), NOT()',
+  module: 'Module 3: Logical & Conditional Functions',
+  day: 23,
+  level: 'Beginner',
+  duration: '1.5 hours',
+  summary: 'AND(), OR() and NOT() are logical functions that combine or reverse conditions and return TRUE or FALSE. They let you check eligibility rules like "attendance 75% AND assignments submitted" in a single formula.',
+  objectives: [
+    'Use AND() to check that all conditions are TRUE',
+    'Use OR() to check that at least one condition is TRUE',
+    'Use NOT() to reverse a condition',
+    'Read truth tables for AND and OR',
+    'Prepare logical columns that will be used inside IF() on Day 24',
+  ],
+  theory: [
+    {
+      heading: 'Logical values TRUE and FALSE',
+      content: 'Every comparison like `B2>=75` gives a **logical value**: TRUE or FALSE. AND, OR and NOT take one or more of these logical values and give back a single TRUE or FALSE.\n\nIn calculations Excel treats **TRUE as 1** and **FALSE as 0**. So `=TRUE+TRUE` gives 2. This is useful for counting later.',
+    },
+    {
+      heading: 'AND() - all conditions must be TRUE',
+      content: 'AND returns TRUE only when **every** condition is TRUE. If even one condition is FALSE, the answer is FALSE.\n\nArguments explained:\n\n- **logical1** (required): first condition, e.g. `B2>=75`.\n- **logical2, ...** (optional): more conditions, up to 255.\n\nTruth table for two conditions:\n\n- TRUE and TRUE = **TRUE**\n- TRUE and FALSE = FALSE\n- FALSE and TRUE = FALSE\n- FALSE and FALSE = FALSE',
+      syntax: '=AND(logical1, [logical2], ...)',
+      tip: 'Think of AND as a strict security guard: you pass only if you have every document.',
+    },
+    {
+      heading: 'OR() - at least one condition must be TRUE',
+      content: 'OR returns TRUE when **any one** condition is TRUE. It returns FALSE only when **all** conditions are FALSE.\n\nArguments explained:\n\n- **logical1** (required): first condition.\n- **logical2, ...** (optional): more conditions, up to 255.\n\nTruth table for two conditions:\n\n- TRUE or TRUE = TRUE\n- TRUE or FALSE = TRUE\n- FALSE or TRUE = TRUE\n- FALSE or FALSE = **FALSE**',
+      syntax: '=OR(logical1, [logical2], ...)',
+      tip: 'To test one cell against several values, repeat the cell in each condition: =OR(B2="Delhi",B2="Mumbai"). Writing =OR(B2="Delhi","Mumbai") is wrong and gives #VALUE!.',
+    },
+    {
+      heading: 'NOT() - reverse the result',
+      content: 'NOT flips a logical value: TRUE becomes FALSE and FALSE becomes TRUE.\n\nArguments explained:\n\n- **logical** (required): a single condition or logical value to reverse.\n\nExample: `=NOT(B2="Inactive")` returns TRUE for every employee who is not Inactive. It is the same as `=B2<>"Inactive"`, but NOT is handy for reversing a whole AND/OR, e.g. `=NOT(AND(B2>=40,C2>=40))` is TRUE when the student failed at least one subject.',
+      syntax: '=NOT(logical)',
+    },
+    {
+      heading: 'Combining AND, OR and NOT',
+      content: 'These functions can be placed inside each other:\n\n- `=AND(B2="Sales",OR(C2="Delhi",C2="Mumbai"))` Sales staff in Delhi or Mumbai\n- `=AND(B2>=50000,NOT(C2="Probation"))` high earners who are not on probation\n- `=OR(AND(B2>=90,C2>=90),D2="Topper")` both scores 90+ or already marked topper\n\nOn their own these show only TRUE/FALSE. On **Day 24** you will wrap them inside IF() to show messages like "Eligible" or calculate bonuses.',
+      points: [
+        'Text inside conditions needs quotes: C2="Yes"',
+        'Empty cells are ignored by AND/OR when passed as references',
+        'If no argument is a logical value, AND/OR return #VALUE!',
+      ],
+    },
+  ],
+  examples: [
+    {
+      title: 'Exam eligibility with AND()',
+      scenario: 'A student can sit the exam only if attendance is at least 75% AND assignments are submitted ("Yes").',
+      table: {
+        headers: ['A: Student', 'B: Attendance %', 'C: Assignment', 'D: Eligible?'],
+        rows: [['Riya', '82', 'Yes', ''], ['Aman', '70', 'Yes', ''], ['Neha', '90', 'No', ''], ['Karan', '75', 'Yes', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =AND(B2>=75,C2="Yes")',
+        'Press Enter: D2 shows TRUE',
+        'Copy down to D5',
+      ],
+      code: '=AND(B2>=75,C2="Yes")',
+      result: 'D2: TRUE, D3: FALSE, D4: FALSE, D5: TRUE',
+      explanation: 'Aman fails the attendance test and Neha fails the assignment test, so both get FALSE. Only rows where both tests are TRUE return TRUE.',
+    },
+    {
+      title: 'Discount eligibility with OR()',
+      scenario: 'A customer gets a discount if they are a member OR their bill is ₹5,000 or more.',
+      table: {
+        headers: ['A: Customer', 'B: Member', 'C: Bill (₹)', 'D: Discount?'],
+        rows: [['Anil', 'Yes', '2000', ''], ['Bina', 'No', '6500', ''], ['Chetan', 'No', '3000', ''], ['Divya', 'Yes', '8000', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =OR(B2="Yes",C2>=5000)',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=OR(B2="Yes",C2>=5000)',
+      result: 'D2: TRUE, D3: TRUE, D4: FALSE, D5: TRUE',
+      explanation: 'Anil qualifies by membership, Bina by bill amount, Divya by both. Chetan is neither a member nor above ₹5,000, so FALSE.',
+    },
+    {
+      title: 'Active employees with NOT()',
+      scenario: 'HR wants TRUE for every employee whose status is not "Inactive".',
+      table: {
+        headers: ['A: Employee', 'B: Status', 'C: Not Inactive?'],
+        rows: [['Rahul', 'Active', ''], ['Sneha', 'Inactive', ''], ['Amit', 'Active', ''], ['Priya', 'On Leave', '']],
+      },
+      steps: [
+        'Click cell C2',
+        'Type =NOT(B2="Inactive")',
+        'Press Enter',
+        'Copy down to C5',
+      ],
+      code: '=NOT(B2="Inactive")',
+      result: 'C2: TRUE, C3: FALSE, C4: TRUE, C5: TRUE',
+      explanation: 'B2="Inactive" is TRUE only for Sneha; NOT flips it to FALSE. Everyone else gets TRUE, including Priya who is On Leave.',
+    },
+    {
+      title: 'Passed in all subjects (AND with many conditions)',
+      scenario: 'A student passes overall only if marks in all three subjects are 40 or more.',
+      table: {
+        headers: ['A: Student', 'B: Maths', 'C: Science', 'D: English', 'E: All Passed?'],
+        rows: [['Riya', '55', '62', '48', ''], ['Aman', '35', '80', '70', ''], ['Neha', '40', '40', '41', '']],
+      },
+      steps: [
+        'Click cell E2',
+        'Type =AND(B2>=40,C2>=40,D2>=40)',
+        'Press Enter',
+        'Copy down to E4',
+      ],
+      code: '=AND(B2>=40,C2>=40,D2>=40)',
+      result: 'E2: TRUE, E3: FALSE, E4: TRUE',
+      explanation: 'Aman scored 35 in Maths, so one condition is FALSE and AND returns FALSE even though his other marks are high.',
+    },
+    {
+      title: 'Sales staff in metro cities (AND + OR)',
+      scenario: 'Find employees who are in the Sales department AND located in Delhi or Mumbai.',
+      table: {
+        headers: ['A: Employee', 'B: Dept', 'C: City', 'D: Metro Sales?'],
+        rows: [['Rahul', 'Sales', 'Delhi', ''], ['Karan', 'Sales', 'Pune', ''], ['Sneha', 'HR', 'Mumbai', ''], ['Amit', 'Sales', 'Mumbai', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =AND(B2="Sales",OR(C2="Delhi",C2="Mumbai"))',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=AND(B2="Sales",OR(C2="Delhi",C2="Mumbai"))',
+      result: 'D2: TRUE, D3: FALSE, D4: FALSE, D5: TRUE',
+      explanation: 'The OR part checks the city; the AND part makes sure the department is also Sales. Sneha is in Mumbai but in HR, so FALSE.',
+    },
+  ],
+  interview: [
+    { q: 'What is the difference between AND() and OR()?', a: 'AND returns TRUE only if all conditions are TRUE. OR returns TRUE if at least one condition is TRUE, and FALSE only when all are FALSE.', level: 'Easy' },
+    { q: 'What does NOT() do? Give an example.', a: 'NOT reverses a logical value. =NOT(B2="Inactive") returns TRUE for every value except "Inactive". It is often used to reverse a whole AND/OR expression.', level: 'Easy' },
+    { q: 'Why does =OR(A2="Delhi","Mumbai") give #VALUE!?', a: 'The second argument "Mumbai" is plain text, not a logical test. Each argument must be a condition: =OR(A2="Delhi",A2="Mumbai").', level: 'Medium' },
+    { q: 'How many conditions can AND or OR take?', a: 'Up to 255 logical arguments.', level: 'Easy' },
+    { q: 'What do TRUE and FALSE equal in arithmetic?', a: 'TRUE = 1 and FALSE = 0. For example =TRUE+TRUE returns 2 and =SUMPRODUCT(--(B2:B10>50)) counts values above 50.', level: 'Medium' },
+    { q: 'Express "neither Delhi nor Mumbai" in two different ways.', a: '=NOT(OR(A2="Delhi",A2="Mumbai")) or =AND(A2<>"Delhi",A2<>"Mumbai"). Both are equivalent (De Morgan\'s law).', level: 'Hard' },
+    { q: 'Are AND/OR comparisons case-sensitive for text?', a: 'No. "yes", "Yes" and "YES" are treated the same. Use EXACT() for case-sensitive checks.', level: 'Medium' },
+  ],
+  practice: [
+    {
+      task: 'Loan check: B2:B4 monthly salary (45000, 30000, 60000), C2:C4 CIBIL score (760, 780, 690). Show TRUE if salary >= 40000 AND score >= 750.',
+      hint: 'Two conditions inside AND.',
+      solution: 'D2: =AND(B2>=40000,C2>=750). Results: TRUE, FALSE, FALSE.',
+    },
+    {
+      task: 'Weekend check: B2:B5 has day names (Saturday, Monday, Sunday, Friday). Show TRUE if it is Saturday or Sunday.',
+      hint: 'Repeat B2 in both conditions.',
+      solution: 'C2: =OR(B2="Saturday",B2="Sunday"). Results: TRUE, FALSE, TRUE, FALSE.',
+    },
+    {
+      task: 'B2:B4 payment mode (Cash, UPI, Card). Show TRUE if the mode is NOT Cash.',
+      hint: 'Use NOT around B2="Cash".',
+      solution: 'C2: =NOT(B2="Cash"). Results: FALSE, TRUE, TRUE.',
+    },
+    {
+      task: 'Scholarship: B2:B4 marks (92, 85, 86), C2:C4 family income (250000, 180000, 600000). Eligible if marks >= 90 OR (marks >= 80 AND income < 200000).',
+      hint: 'Nest AND inside OR.',
+      solution: 'D2: =OR(B2>=90,AND(B2>=80,C2<200000)). Results: TRUE, TRUE, FALSE (86 is below 90 and income is not below 200000).',
+    },
+  ],
+  quiz: [
+    { question: 'What does =AND(5>3, 2>4) return?', options: ['TRUE', 'FALSE', '#VALUE!', '1'], answer: 1, explanation: '2>4 is FALSE, so AND returns FALSE.' },
+    { question: 'What does =OR(5>3, 2>4) return?', options: ['TRUE', 'FALSE', '#VALUE!', '0'], answer: 0, explanation: 'One condition (5>3) is TRUE, so OR returns TRUE.' },
+    { question: 'What does =NOT(10=10) return?', options: ['TRUE', 'FALSE', '10', '#NAME?'], answer: 1, explanation: '10=10 is TRUE; NOT reverses it to FALSE.' },
+    { question: 'Which formula correctly checks if A2 is "Pune" or "Nagpur"?', options: ['=OR(A2="Pune","Nagpur")', '=OR(A2="Pune",A2="Nagpur")', '=AND(A2="Pune",A2="Nagpur")', '=A2="Pune" OR "Nagpur"'], answer: 1, explanation: 'Each argument of OR must be a full comparison.' },
+    { question: 'OR() returns FALSE only when...', options: ['Any condition is FALSE', 'All conditions are FALSE', 'All conditions are TRUE', 'Exactly one condition is TRUE'], answer: 1, explanation: 'OR needs just one TRUE; it is FALSE only when every condition is FALSE.' },
+  ],
+};

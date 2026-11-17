@@ -1,0 +1,152 @@
+export default {
+  id: "day-08-number-formatting",
+  title: "Number Formatting: Currency, Percentage, Date, Time, Decimal",
+  module: "Module 1: Excel Basics",
+  day: 8,
+  level: "Beginner",
+  duration: "2 hours",
+  summary: "Learn how Excel displays numbers as rupees, percentages, dates, times and with fixed decimal places, and why the stored value stays the same while only the display changes.",
+  objectives: [
+    "Understand the difference between a cell's value and its displayed format",
+    "Apply Number, Currency (₹) and Accounting formats with Indian comma style",
+    "Apply Percentage format correctly",
+    "Apply and understand Date and Time formats (serial numbers)",
+    "Increase and decrease decimal places",
+  ],
+  theory: [
+    {
+      heading: "Value vs Display: how number formats work",
+      content: "A **number format** changes only how a number **looks**. The real value stays the same and is visible in the **Formula Bar**.\n\nExample: B2 contains `1234.5`.\n- Number format with 2 decimals shows `1234.50`\n- Currency (₹) shows `₹1,234.50`\n- Percentage shows `123450.00%`\n\nWhere to apply number formats:\n- **Home > Number group**: the **Number Format drop-down** (shows General by default), plus buttons for Accounting (₹), Percent Style (%), Comma Style, Increase Decimal, Decrease Decimal.\n- **Format Cells > Number tab**: **Ctrl + 1**. Categories: General, Number, Currency, Accounting, Date, Time, Percentage, Fraction, Scientific, Text, Special, Custom.\n\n**General** is the default: no specific format; Excel shows what you typed (up to 11 digits wide, then switches to scientific notation like 1.23457E+11).",
+      tip: "If a cell shows ##### it means the formatted number is too wide for the column. Widen the column (double-click the column border) - the data is not lost.",
+    },
+    {
+      heading: "Number, Currency and Accounting formats",
+      content: "**Number** format (Ctrl + 1 > Number): choose decimal places, **Use 1000 Separator (,)**, and how negative numbers appear (e.g. -1234.10, red, or in brackets (1234.10)). Shortcut: **Ctrl + Shift + !** applies Number with 2 decimals and thousands separator.\n\n**Currency**: adds a currency symbol right next to the number. Ctrl + 1 > Currency > Symbol: **₹ English (India)**. Shortcut: **Ctrl + Shift + $** applies the currency of your Windows region (₹ on Indian settings).\n\n**Accounting**: like Currency but aligns the **₹ symbol at the left edge** of the cell and shows zero as a dash ( - ). Home > Number > **Accounting Number Format** button drop-down > **₹ English (India)**. Used in financial statements so symbols and decimals line up.\n\n**Comma Style** (Home > Number > comma button): Accounting format without the symbol.\n\n**Indian digit grouping (lakhs/crores)**: when Windows region is set to English (India), the thousands separator follows the Indian style automatically: `12,34,567.00`. Otherwise you get `1,234,567.00`. You can force Indian grouping with a custom format (Extra topic 9), e.g. `[>=10000000]##\\,##\\,##\\,##0;[>=100000]##\\,##\\,##0;##,##0`.",
+      points: [
+        "Do not type ₹ or commas yourself; type 25000 and apply the format.",
+        "Currency vs Accounting: Currency puts ₹ next to the number; Accounting lines up ₹ at the cell's left edge.",
+      ],
+    },
+    {
+      heading: "Percentage format",
+      content: "Percentage format **multiplies the displayed value by 100** and adds a % sign.\n- Value `0.18` displays as `18%`.\n- Value `18` displays as `1800%` (common mistake!).\n\nApply with **Home > Number > Percent Style** or **Ctrl + Shift + %** (0 decimals), or Ctrl + 1 > Percentage to set decimals.\n\nIf you type `18%` directly into a General cell, Excel stores **0.18** and applies Percentage format automatically, so formulas like `=B2*C2` work correctly.\n\nTypical use: GST rate, discount %, growth %, attendance %, pass %.",
+      tip: "When calculating a percentage like marks obtained/total, the formula result is a fraction (0.85). Apply % format to show 85%. Do not multiply by 100 and also apply % format.",
+    },
+    {
+      heading: "Date and Time formats",
+      content: "Excel stores **dates as serial numbers**: 1 = 01-01-1900, and each day adds 1. So `01-04-2025` is stored as **45748**. That is why you can subtract dates to find number of days.\n\n**Times are fractions of a day**: 12:00 PM = 0.5, 6:00 AM = 0.25, 18:00 = 0.75.\n\nDate formats (Home > Number drop-down or Ctrl + 1 > Date):\n- **Short Date** (e.g. 01-04-2025, follows Windows region). Shortcut **Ctrl + Shift + #** gives d-mmm-yy (01-Apr-25).\n- **Long Date** (e.g. Tuesday, 1 April 2025).\n- Ctrl + 1 > Date > **Locale: English (India)** for more types; Custom codes: `dd-mm-yyyy`, `dd-mmm-yyyy` (01-Apr-2025), `mmmm yyyy` (April 2025), `ddd` (Tue).\n\nTime formats (Ctrl + 1 > Time): `1:30 PM`, `13:30`, `13:30:55`. Shortcut **Ctrl + Shift + @** applies h:mm AM/PM.\n\nShortcuts to insert: **Ctrl + ;** = today's date, **Ctrl + Shift + ;** = current time.",
+      points: [
+        "A date shown as 45748 means the cell has General/Number format; apply a Date format.",
+        "A date typed in the wrong order (MM/DD vs DD/MM) may stay as text (left-aligned) - check your Windows region setting.",
+        "Total working hours above 24 need custom format [h]:mm.",
+      ],
+    },
+    {
+      heading: "Decimal places",
+      content: "**Increase Decimal** (Home > Number, KeyTips **Alt, H, 0**) and **Decrease Decimal** (**Alt, H, 9**) change how many digits after the decimal point are **shown**.\n\nImportant: decreasing decimals only **rounds the display**. `12.456` shown with 1 decimal looks like `12.5`, but calculations still use `12.456`. To actually round the value use the ROUND() function (Day 15).\n\nExample of the 'wrong total' problem: 0.333 + 0.333 + 0.333 = 0.999 displays as 1.0 with 1 decimal, while each item shows 0.3. Readers may think 0.3 + 0.3 + 0.3 should be 0.9.",
+      tip: "Text format (Ctrl + 1 > Text, or type ' before a value) is used for codes like PIN codes, Aadhaar or account numbers that should never be calculated.",
+    },
+  ],
+  examples: [
+    {
+      title: "Format a salary column in rupees",
+      scenario: "Basic salaries are typed as plain numbers. Show them as Indian rupees with 2 decimals.",
+      table: {
+        headers: ["A: Employee", "B: Basic"],
+        rows: [["Rahul", "32500"], ["Priya", "48000"], ["Imran", "125000"]],
+      },
+      steps: [
+        "Select B2:B4.",
+        "Press Ctrl + 1 > Number tab > Currency.",
+        "Decimal places: 2; Symbol: ₹ English (India).",
+        "Click OK.",
+      ],
+      result: "₹32,500.00   ₹48,000.00   ₹1,25,000.00 (with Indian region grouping; ₹125,000.00 otherwise)",
+      explanation: "The Formula Bar still shows 125000. Only the display changed.",
+    },
+    {
+      title: "Calculate and show discount percentage",
+      scenario: "Find the discount % for each product and display it as a percentage with 1 decimal.",
+      table: {
+        headers: ["A: Product", "B: MRP (₹)", "C: Discount (₹)", "D: Discount %"],
+        rows: [["Mixer", "3200", "480", ""], ["Iron", "1500", "180", ""], ["Kettle", "1800", "225", ""]],
+      },
+      steps: [
+        "Click D2 and type =C2/B2, press Enter. It shows 0.15.",
+        "Select D2 and double-click the fill handle to copy to D4.",
+        "Select D2:D4 and click Home > Number > Percent Style (Ctrl + Shift + %).",
+        "Click Increase Decimal once.",
+      ],
+      code: "=C2/B2",
+      result: "15.0%   12.0%   12.5%",
+      explanation: "480/3200 = 0.15, 180/1500 = 0.12, 225/1800 = 0.125. Percent format multiplies by 100 for display only.",
+    },
+    {
+      title: "Fix dates showing as numbers",
+      scenario: "A downloaded report shows invoice dates as 45748, 45778, 45809.",
+      table: {
+        headers: ["A: Invoice", "B: Date"],
+        rows: [["INV-101", "45748"], ["INV-102", "45778"], ["INV-103", "45809"]],
+      },
+      steps: [
+        "Select B2:B4.",
+        "Press Ctrl + 1 > Number tab > Custom.",
+        "In Type box enter dd-mmm-yyyy and click OK.",
+      ],
+      result: "01-Apr-2025   01-May-2025   01-Jun-2025",
+      explanation: "The serial numbers are real dates with General format. 45748 + 30 days = 45778 (April has 30 days), + 31 = 45809 (May has 31 days).",
+    },
+    {
+      title: "Display time correctly",
+      scenario: "Office in-time is stored as 0.40625. Show it as a time.",
+      steps: [
+        "Type 0.40625 in A2.",
+        "Press Ctrl + 1 > Time > choose 1:30 PM type > OK.",
+        "Change to 24-hour: Ctrl + 1 > Time > 13:30 type.",
+      ],
+      result: "9:45 AM (12-hour) or 9:45 (24-hour)",
+      explanation: "0.40625 x 24 = 9.75 hours = 9 hours 45 minutes. Times are fractions of a 24-hour day.",
+    },
+    {
+      title: "Display rounding vs real value",
+      scenario: "GST on ₹1,234 at 18% is calculated. Show it with 0 decimals and observe the Formula Bar.",
+      table: {
+        headers: ["A: Taxable (₹)", "B: GST Rate", "C: GST (₹)"],
+        rows: [["1234", "18%", ""]],
+      },
+      steps: [
+        "Type 1234 in A2 and 18% in B2.",
+        "In C2 type =A2*B2 and press Enter. It shows 222.12.",
+        "Select C2 and click Decrease Decimal twice.",
+        "Read the cell (222) and then compare with the value used in calculations by typing =C2*2 in D2.",
+      ],
+      code: "=A2*B2",
+      result: "C2 displays 222, but D2 (=C2*2) gives 444.24",
+      explanation: "1234 x 0.18 = 222.12. Decreasing decimals hides digits but the full value 222.12 is still used. Use ROUND (Day 15) when the value itself must be rounded.",
+    },
+  ],
+  interview: [
+    { q: "How does Excel store dates?", a: "As serial numbers counting days from 01-01-1900 (= 1). For example 01-04-2025 = 45748. Times are stored as decimal fractions of a day.", level: "Medium" },
+    { q: "What is the difference between Currency and Accounting formats?", a: "Currency places the symbol next to the number and can show negatives in red. Accounting aligns the symbol at the left edge and decimals in a column, shows zero as a dash and negatives in brackets.", level: "Medium" },
+    { q: "Why does a cell show #####?", a: "The column is too narrow to show the formatted number or date (or a date/time is negative). Widen the column; the data is intact.", level: "Easy" },
+    { q: "You typed 18 and applied Percentage format, it shows 1800%. Why?", a: "Percentage format multiplies the value by 100. Enter 0.18 or type 18% directly so Excel stores 0.18.", level: "Easy" },
+    { q: "Does Decrease Decimal round the actual value?", a: "No, it changes only the display. Calculations still use the full precision. Use ROUND() to change the value.", level: "Medium" },
+    { q: "How do you keep a 12-digit account number exactly as typed?", a: "Format the column as Text before entering, or prefix with an apostrophe. Excel keeps only 15 significant digits for numbers, so 16+ digit numbers like card numbers must be text.", level: "Hard" },
+    { q: "Give shortcuts for common number formats.", a: "Ctrl + Shift + ! Number (2 decimals, separator), Ctrl + Shift + $ Currency, Ctrl + Shift + % Percent, Ctrl + Shift + # Date, Ctrl + Shift + @ Time, Ctrl + Shift + ~ General.", level: "Medium" },
+    { q: "How do you show amounts in Indian lakh/crore comma style?", a: "Set Windows region to English (India) so the separator follows 12,34,567 grouping, or use a custom number format like [>=10000000]##\\,##\\,##\\,##0;[>=100000]##\\,##\\,##0;##,##0.", level: "Hard" },
+  ],
+  practice: [
+    { task: "Type 8500, 12750.5 and 230000 in A2:A4 and format them as Accounting with ₹ and 2 decimals.", hint: "Accounting button drop-down.", solution: "Select A2:A4 > Home > Number > Accounting Number Format drop-down > ₹ English (India). Display: ₹ 8,500.00 / ₹ 12,750.50 / ₹ 2,30,000.00 (Indian region)." },
+    { task: "Marks obtained 432 out of 500. Show the percentage with 2 decimals in C2.", hint: "Divide, then % format.", solution: "In C2: =432/500 (or =A2/B2) gives 0.864. Apply Percent Style and Increase Decimal twice: 86.40%." },
+    { task: "Type 15-08-2025 in A1 and show it as 'Friday, 15 August 2025'.", hint: "Custom format dddd, d mmmm yyyy.", solution: "Ctrl + 1 > Custom > Type: dddd, d mmmm yyyy > OK. Displays Friday, 15 August 2025." },
+    { task: "What time does the value 0.75 represent? Format it to check.", hint: "Fraction of 24 hours.", solution: "0.75 x 24 = 18 hours. Ctrl + 1 > Time > 1:30 PM type shows 6:00 PM." },
+    { task: "Format PIN codes 411001 and 560034 in column D as text so they are not treated as numbers.", hint: "Text format before typing.", solution: "Select column D > Ctrl + 1 > Text > OK, then type the PIN codes. They align left and are stored as text." },
+  ],
+  quiz: [
+    { question: "A cell contains 0.25 with Percentage format. It shows:", options: ["0.25%", "25%", "2.5%", "250%"], answer: 1, explanation: "Percentage displays value x 100 = 25%." },
+    { question: "The value 0.5 formatted as time shows:", options: ["5:00 AM", "12:00 PM", "6:00 PM", "0:30"], answer: 1, explanation: "0.5 of a day = 12 hours = 12:00 PM." },
+    { question: "Which shortcut applies Currency format?", options: ["Ctrl + Shift + $", "Ctrl + Shift + %", "Ctrl + Shift + #", "Ctrl + Shift + @"], answer: 0, explanation: "Ctrl + Shift + $ is Currency." },
+    { question: "A cell displays 12.5 but the Formula Bar shows 12.456. Why?", options: ["Value was rounded", "Display shows fewer decimals", "Formula error", "Text format"], answer: 1, explanation: "Decimal format only affects display." },
+    { question: "Which format aligns the ₹ symbol at the left edge of the cell?", options: ["Currency", "Number", "Accounting", "General"], answer: 2, explanation: "Accounting aligns the symbol to the left edge." },
+  ],
+};

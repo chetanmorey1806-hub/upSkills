@@ -1,0 +1,227 @@
+export default {
+  id: 'day-35-conditional-formatting',
+  title: 'Conditional Formatting, Duplicate Highlighting, Data Bars, Color Scales, Icon Sets',
+  module: 'Module 4: Data Management & Sorting',
+  day: 35,
+  level: 'Intermediate',
+  duration: '2 hours',
+  summary: 'Conditional Formatting changes the look of cells automatically based on their values, so important numbers stand out: duplicates, low marks, top sellers, overdue invoices. You will use highlight rules, duplicate highlighting, Data Bars, Color Scales, Icon Sets and formula-based rules.',
+  objectives: [
+    'Apply Highlight Cells Rules and Top/Bottom Rules',
+    'Highlight duplicate and unique values',
+    'Use Data Bars, Color Scales and Icon Sets and customise them',
+    'Write formula-based rules to highlight entire rows',
+    'Manage, edit, reorder and clear rules with the Rules Manager',
+  ],
+  theory: [
+    {
+      heading: 'What is Conditional Formatting?',
+      content: 'Normal formatting stays the same whatever the value. **Conditional Formatting** applies a format (fill colour, font colour, border, bar, icon) **only when a condition is true**, and updates automatically when values change.\n\nPath: **Home > Styles > Conditional Formatting** (keyboard: Alt, H, L).\n\nThe menu contains:\n- **Highlight Cells Rules**: Greater Than, Less Than, Between, Equal To, Text that Contains, A Date Occurring, Duplicate Values.\n- **Top/Bottom Rules**: Top 10 Items, Top 10%, Bottom 10 Items, Bottom 10%, Above Average, Below Average.\n- **Data Bars**, **Color Scales**, **Icon Sets**.\n- **New Rule**, **Clear Rules**, **Manage Rules**.',
+      tip: 'Select only the data cells (not headers or totals) before applying a rule, otherwise the total row will distort Top 10, averages, bars and colour scales.',
+    },
+    {
+      heading: 'Highlight Cells Rules and Top/Bottom Rules',
+      content: 'Select the range, open the rule, type the value and choose a preset format (Light Red Fill with Dark Red Text, Yellow Fill with Dark Yellow Text, Green Fill with Dark Green Text...) or **Custom Format...** for your own fill/font/border.\n\nExamples:\n- Marks less than 35: Highlight Cells Rules > **Less Than** > 35.\n- Sales between ₹50,000 and ₹1,00,000: **Between**.\n- Cities containing "Pune": **Text that Contains**.\n- Due dates in the last 7 days: **A Date Occurring** > In the last 7 days.\n- Top 3 salespersons: Top/Bottom Rules > **Top 10 Items** > change 10 to 3.\n- Marks above class average: **Above Average**.',
+    },
+    {
+      heading: 'Duplicate (and Unique) Highlighting',
+      content: 'Path: **Home > Conditional Formatting > Highlight Cells Rules > Duplicate Values**.\n\nIn the dialog choose **Duplicate** or **Unique** and a format. "Duplicate" colours **every** copy of a repeated value (both the first and the later ones). "Unique" colours values that appear only once.\n\nThis is a safe way to **review** duplicates before deleting them with Data > Remove Duplicates (Day 31). Like Remove Duplicates, it is **not case sensitive**.\n\nTo highlight only the second and later occurrences, use a formula rule: `=COUNTIF($A$2:A2,A2)>1`.',
+    },
+    {
+      heading: 'Data Bars, Color Scales and Icon Sets',
+      content: 'These are visual rules that compare each cell with the others in the selected range.',
+      points: [
+        '**Data Bars**: a bar inside each cell; longer bar = bigger value. Choose Gradient Fill or Solid Fill. Negative values show to the left of an axis.',
+        '**Color Scales**: a 2- or 3-colour gradient. Green-Yellow-Red scale makes the highest green and the lowest red. Good for heat maps (sales by region and month).',
+        '**Icon Sets**: arrows, traffic lights, flags, ratings. By default a 3-icon set splits the range by percent: top icon for values >= 67%, middle >= 33%, bottom below 33% of the min-to-max range.',
+        'Customise any of these: Conditional Formatting > Manage Rules > Edit Rule. Change Type to Number to use fixed thresholds (e.g. >= 100 green, >= 80 yellow), or tick **Show Bar Only / Show Icon Only** to hide the numbers.',
+      ],
+      tip: 'Percent in icon sets means percent of the range between minimum and maximum, not the cell value as a percentage. For business targets use Type = Number.',
+    },
+    {
+      heading: 'Formula-based rules (highlight entire rows)',
+      content: 'Path: **Home > Conditional Formatting > New Rule > Use a formula to determine which cells to format**.\n\nWrite the formula for the **top-left cell** of the selection; it must return TRUE/FALSE. To colour the whole row based on one column, lock the column with $ but not the row.\n\nExamples (data in A2:E20):\n- Status in column E is "Pending": `=$E2="Pending"`\n- Amount in D more than ₹50,000: `=$D2>50000`\n- Overdue: due date in C is before today and status not Paid: `=AND($C2<TODAY(),$E2<>"Paid")`\n- Alternate row shading: `=MOD(ROW(),2)=0`',
+      tip: 'The most common mistake is writing =$E$2="Pending" (fully absolute). Then every row checks only E2, so either all rows or no rows get coloured.',
+    },
+    {
+      heading: 'Managing rules',
+      content: '**Home > Conditional Formatting > Manage Rules** opens the Rules Manager. Choose "Show formatting rules for: This Worksheet" to see all rules.\n\n- **New Rule / Edit Rule / Delete Rule**.\n- **Applies to**: change the range a rule covers.\n- **Move Up / Move Down**: rules higher in the list run first.\n- **Stop If True**: when ticked, lower rules are not applied if this rule is true.\n\n**Clear Rules**: Conditional Formatting > Clear Rules > from Selected Cells / from Entire Sheet.\n\nFormat Painter (Home > Clipboard) also copies conditional formatting to other cells.',
+    },
+  ],
+  examples: [
+    {
+      title: 'Highlight students who failed (marks below 35)',
+      scenario: 'In a marks sheet, highlight all marks below 35 in light red.',
+      table: {
+        headers: ['A: Student', 'B: Marks'],
+        rows: [
+          ['Riya', '78'],
+          ['Aman', '32'],
+          ['Priya', '56'],
+          ['Rahul', '29'],
+          ['Sneha', '35'],
+        ],
+      },
+      steps: [
+        'Select B2:B6.',
+        'Home > Styles > Conditional Formatting > Highlight Cells Rules > Less Than.',
+        'Type 35 in the box.',
+        'Choose "Light Red Fill with Dark Red Text" and click OK.',
+      ],
+      result: 'B3 (32) and B5 (29) are highlighted red. B6 (35) is not highlighted because 35 is not less than 35.',
+      explanation: 'Less Than is strict. To include 35, use New Rule > Format only cells that contain > Cell Value less than or equal to 35.',
+    },
+    {
+      title: 'Highlight duplicate invoice numbers',
+      scenario: 'Find invoice numbers that were entered more than once before removing them.',
+      table: {
+        headers: ['A: Invoice No', 'B: Amount (₹)'],
+        rows: [
+          ['INV-101', '12000'],
+          ['INV-102', '8500'],
+          ['INV-103', '4300'],
+          ['INV-102', '8500'],
+          ['INV-104', '9900'],
+          ['INV-101', '12000'],
+        ],
+      },
+      steps: [
+        'Select A2:A7.',
+        'Home > Conditional Formatting > Highlight Cells Rules > Duplicate Values.',
+        'Keep "Duplicate" in the first box and choose Light Red Fill with Dark Red Text.',
+        'Click OK.',
+      ],
+      result: 'A2, A3, A5 and A7 (INV-101 and INV-102, both copies) are highlighted. A4 (INV-103) and A6 (INV-104) are not.',
+      explanation: 'Duplicate Values colours every occurrence of a repeated value. Use the formula =COUNTIF($A$2:A2,A2)>1 if you want only A5 and A7 highlighted.',
+    },
+    {
+      title: 'Data Bars on monthly sales',
+      scenario: 'Show the relative size of each salesperson\'s sales inside the cell.',
+      table: {
+        headers: ['A: Salesperson', 'B: Sales (₹)'],
+        rows: [
+          ['Riya', '120000'],
+          ['Aman', '60000'],
+          ['Priya', '90000'],
+          ['Rahul', '30000'],
+        ],
+      },
+      steps: [
+        'Select B2:B5.',
+        'Home > Conditional Formatting > Data Bars > Gradient Fill > Blue Data Bar.',
+        'Optional: Manage Rules > Edit Rule > set Minimum Type = Number, Value = 0 so bars start from zero.',
+      ],
+      result: 'Riya (120000) has the longest bar, then Priya (90000), Aman (60000) and Rahul (30000) the shortest. With minimum set to 0, Aman\'s bar is exactly half of Riya\'s.',
+      explanation: 'By default the shortest bar is based on the lowest value in the range (Automatic). Setting Minimum to 0 makes bar length proportional to the actual value.',
+    },
+    {
+      title: 'Color Scale heat map of region-wise sales',
+      scenario: 'Show high sales in green and low sales in red across regions and months.',
+      table: {
+        headers: ['A: Region', 'B: Jan', 'C: Feb', 'D: Mar'],
+        rows: [
+          ['North', '52000', '48000', '61000'],
+          ['South', '45000', '50000', '47000'],
+          ['East', '39000', '42000', '44000'],
+          ['West', '58000', '55000', '60000'],
+        ],
+      },
+      steps: [
+        'Select B2:D5 (only the numbers).',
+        'Home > Conditional Formatting > Color Scales > Green - Yellow - Red Color Scale.',
+      ],
+      result: 'D2 (61000, the highest) is darkest green, B4 (39000, the lowest) is darkest red, and values near the middle (around 50000) are yellow.',
+      explanation: 'A 3-colour scale uses Lowest value, 50th Percentile and Highest value by default. The heat map makes East\'s weak performance easy to spot.',
+    },
+    {
+      title: 'Icon Sets with fixed target thresholds',
+      scenario: 'Show a green, yellow or red traffic light for target achievement: green at 100% or more, yellow at 80% or more, red below 80%.',
+      table: {
+        headers: ['A: Branch', 'B: Achievement %'],
+        rows: [
+          ['Pune', '112%'],
+          ['Mumbai', '95%'],
+          ['Nashik', '76%'],
+          ['Nagpur', '100%'],
+        ],
+      },
+      steps: [
+        'Select B2:B5.',
+        'Home > Conditional Formatting > Icon Sets > Shapes > 3 Traffic Lights (Unrimmed).',
+        'Home > Conditional Formatting > Manage Rules > select the rule > Edit Rule.',
+        'Green icon: when value is >= , Type = Number, Value = 1.',
+        'Yellow icon: when < 1 and >= , Type = Number, Value = 0.8.',
+        'Click OK twice.',
+      ],
+      result: 'Pune (112%) and Nagpur (100%) show green, Mumbai (95%) shows yellow, Nashik (76%) shows red.',
+      explanation: '100% is stored as 1 and 80% as 0.8, so Number thresholds 1 and 0.8 are used. The default Percent type would compare against the min-max range instead of the real target.',
+    },
+    {
+      title: 'Highlight entire rows of pending invoices',
+      scenario: 'Colour the whole row yellow when the Status column says Pending.',
+      table: {
+        headers: ['A: Invoice', 'B: Customer', 'C: Amount (₹)', 'D: Status'],
+        rows: [
+          ['INV-501', 'Shree Traders', '25000', 'Paid'],
+          ['INV-502', 'Om Supplies', '18000', 'Pending'],
+          ['INV-503', 'Sai Agencies', '42000', 'Paid'],
+          ['INV-504', 'Ganesh Stores', '9500', 'Pending'],
+        ],
+      },
+      steps: [
+        'Select A2:D5 (A2 is the active cell).',
+        'Home > Conditional Formatting > New Rule.',
+        'Choose "Use a formula to determine which cells to format".',
+        'Type =$D2="Pending"',
+        'Click Format > Fill tab > choose yellow > OK > OK.',
+      ],
+      code: '=$D2="Pending"',
+      result: 'Rows 3 (INV-502) and 5 (INV-504) are filled yellow across columns A to D. Rows 2 and 4 stay unchanged.',
+      explanation: '$D locks the check to the Status column for every column in the row; the relative row number 2 changes to 3, 4, 5 for each row. When a status changes to Paid, the yellow disappears automatically.',
+    },
+  ],
+  interview: [
+    { q: 'What is Conditional Formatting?', a: 'A feature (Home > Styles > Conditional Formatting) that automatically formats cells when they meet a condition, such as values above a target, duplicates or dates that are overdue. The formatting updates when values change.', level: 'Easy' },
+    { q: 'How do you highlight duplicate values?', a: 'Select the range and use Home > Conditional Formatting > Highlight Cells Rules > Duplicate Values, choose Duplicate and a format. All copies of repeated values are coloured.', level: 'Easy' },
+    { q: 'How do you highlight an entire row based on one cell value?', a: 'Select the whole data range, New Rule > Use a formula, and write a formula with the column locked and the row relative, e.g. =$D2="Pending". Apply a fill format.', level: 'Medium' },
+    { q: 'What is the difference between Data Bars, Color Scales and Icon Sets?', a: 'Data Bars draw a bar whose length represents the value. Color Scales colour cells on a gradient from low to high. Icon Sets place icons (arrows, traffic lights) based on thresholds. All compare values within the selected range.', level: 'Medium' },
+    { q: 'Why might icon set thresholds look wrong for a target sheet?', a: 'Default thresholds use Type = Percent, meaning percent of the min-to-max range, not the actual value. For targets, edit the rule and change Type to Number with real thresholds like 1 and 0.8.', level: 'Hard' },
+    { q: 'What does Stop If True do in the Rules Manager?', a: 'If a rule with Stop If True is satisfied, rules below it in the list are not evaluated for that cell. Used to prevent overlapping formats.', level: 'Hard' },
+    { q: 'How do you remove all conditional formatting from a sheet?', a: 'Home > Conditional Formatting > Clear Rules > Clear Rules from Entire Sheet.', level: 'Easy' },
+    { q: 'How would you highlight invoices overdue and not paid?', a: 'Formula rule on the data range: =AND($C2<TODAY(),$E2<>"Paid") where C is due date and E is status.', level: 'Medium' },
+  ],
+  practice: [
+    {
+      task: 'Salary sheet B2:B11: highlight salaries greater than ₹50,000 with green fill.',
+      hint: 'Highlight Cells Rules > Greater Than.',
+      solution: '1. Select B2:B11. 2. Home > Conditional Formatting > Highlight Cells Rules > Greater Than. 3. Type 50000, choose Green Fill with Dark Green Text. 4. OK.',
+    },
+    {
+      task: 'Highlight the top 3 sales values in C2:C21.',
+      hint: 'Top/Bottom Rules.',
+      solution: '1. Select C2:C21. 2. Conditional Formatting > Top/Bottom Rules > Top 10 Items. 3. Change 10 to 3, choose a format. 4. OK.',
+    },
+    {
+      task: 'Customer email list in A2:A200 may have repeats. Highlight only the second and later occurrences (not the first).',
+      hint: 'Use an expanding range in COUNTIF.',
+      solution: '1. Select A2:A200. 2. New Rule > Use a formula. 3. =COUNTIF($A$2:A2,A2)>1. 4. Format > Fill red > OK. The first copy stays white.',
+    },
+    {
+      task: 'Attendance % in D2:D30. Show 3 arrows: green up for >= 90%, yellow side for >= 75%, red down below 75%.',
+      hint: 'Icon Sets, then edit thresholds with Type = Number.',
+      solution: '1. Select D2:D30. 2. Conditional Formatting > Icon Sets > Directional > 3 Arrows (Colored). 3. Manage Rules > Edit Rule. 4. Green: >= Number 0.9. Yellow: >= Number 0.75. 5. OK.',
+    },
+    {
+      task: 'In a stock list (A Item, B Qty, C Reorder Level), colour the whole row red when Qty is less than or equal to the Reorder Level.',
+      hint: 'Compare two columns in a formula rule.',
+      solution: '1. Select A2:C50. 2. New Rule > Use a formula. 3. =$B2<=$C2. 4. Format > Fill red > OK.',
+    },
+  ],
+  quiz: [
+    { question: 'Where is Conditional Formatting found?', options: ['Home > Styles', 'Data > Data Tools', 'Insert > Charts', 'Page Layout > Themes'], answer: 0, explanation: 'Home > Styles > Conditional Formatting.' },
+    { question: 'Duplicate Values highlighting colours:', options: ['Only the first occurrence', 'Only later occurrences', 'All occurrences of repeated values', 'Only unique values'], answer: 2, explanation: 'Every copy of a repeated value is highlighted when "Duplicate" is chosen.' },
+    { question: 'Which formula correctly highlights entire rows where column E is "Pending" (data starts in row 2)?', options: ['=$E$2="Pending"', '=E$2="Pending"', '=$E2="Pending"', '=E:E="Pending"'], answer: 2, explanation: 'Lock the column ($E) and keep the row relative (2).' },
+    { question: 'In a 3-colour Green-Yellow-Red scale, the highest value is shown in:', options: ['Red', 'Yellow', 'Green', 'White'], answer: 2, explanation: 'Green - Yellow - Red puts green on the highest value and red on the lowest.' },
+    { question: 'To make an icon set use real values like 100% and 80% as thresholds, set Type to:', options: ['Percent', 'Percentile', 'Number', 'Formula only'], answer: 2, explanation: 'Type = Number uses the actual cell values (1 and 0.8).' },
+  ],
+};

@@ -1,0 +1,193 @@
+export default {
+  id: 'day-24-if-with-and-or',
+  title: 'IF with AND / OR',
+  module: 'Module 3: Logical & Conditional Functions',
+  day: 24,
+  level: 'Intermediate',
+  duration: '1.5 hours',
+  summary: 'Placing AND(), OR() or NOT() inside the logical_test of IF() lets one formula check several conditions and return meaningful text or calculated values. This is how real eligibility, bonus, shipping and approval rules are built in office sheets.',
+  objectives: [
+    'Use AND() inside IF() when all conditions must be met',
+    'Use OR() inside IF() when any one condition is enough',
+    'Combine AND and OR together in one IF for complex rules',
+    'Use NOT() inside IF() to act on everything except one value',
+    'Combine IF + AND/OR with nested IF for multi-level rules',
+  ],
+  theory: [
+    {
+      heading: 'Why combine IF with AND / OR?',
+      content: 'On Day 23, AND/OR returned only TRUE or FALSE. Managers want readable outputs like "Eligible", "Approved" or an actual bonus amount. IF converts that TRUE/FALSE into any result you want.\n\nThe AND/OR function simply becomes the **logical_test** of IF.',
+      syntax: '=IF(AND(condition1, condition2, ...), value_if_true, value_if_false)',
+      points: [
+        'condition1, condition2: the individual tests checked by AND/OR',
+        'value_if_true: returned when AND/OR gives TRUE',
+        'value_if_false: returned when AND/OR gives FALSE',
+      ],
+    },
+    {
+      heading: 'IF + AND: all rules must pass',
+      content: '`=IF(AND(B2>=75,C2>=60),"Eligible","Not Eligible")`\n\nRead it as: "If attendance is at least 75 **and** marks are at least 60, show Eligible, otherwise Not Eligible."\n\nUse AND for rules such as: loan approval (salary AND credit score), bonus (target achieved AND minimum tenure), placement eligibility (CGPA AND no backlogs).',
+    },
+    {
+      heading: 'IF + OR: any one rule is enough',
+      content: '`=IF(OR(B2="Prime",C2>=999),0,49)`\n\nRead it as: "If the customer is Prime **or** the order is ₹999 or more, shipping is free (0), otherwise ₹49."\n\nUse OR for rules such as: weekend check (Saturday OR Sunday), discount (member OR big bill), alert (stock low OR item expired).',
+      syntax: '=IF(OR(condition1, condition2, ...), value_if_true, value_if_false)',
+    },
+    {
+      heading: 'IF + NOT and mixed AND/OR',
+      content: '**NOT**: `=IF(NOT(B2="Paid"),"Send Reminder","No Action")` acts on every status except Paid.\n\n**AND with OR inside**: `=IF(AND(B2="Sales",OR(C2="Delhi",C2="Mumbai")),"Metro Sales","Other")`. The OR is evaluated first as one block, then AND combines it with the department test.\n\nWrite complex rules in plain English first, then underline the words "and" / "or" to decide the structure.',
+      tip: 'Brackets decide the meaning. AND(A, OR(B, C)) is very different from OR(AND(A, B), C). Always confirm with 2-3 test rows.',
+    },
+    {
+      heading: 'IF + AND/OR inside nested IF',
+      content: 'You can use AND/OR at each level of a nested IF:\n\n`=IF(AND(B2>=90,C2>=95),"Gold",IF(AND(B2>=75,C2>=85),"Silver","None"))`\n\nThis checks the strictest combined rule first (Gold), then the next (Silver), then defaults to None.',
+    },
+    {
+      heading: 'Common mistakes',
+      content: '- Writing `=IF(B2>=75 AND C2>=60, ...)`: Excel has no AND operator; use the AND() function.\n- Writing `=IF(OR(B2="Delhi","Mumbai"),...)`: each OR argument must be a full comparison.\n- Using AND when the rule says "either": read the business rule carefully.\n- Forgetting quotes around text values like "Yes".',
+    },
+  ],
+  examples: [
+    {
+      title: 'Scholarship eligibility (IF + AND)',
+      scenario: 'A student is "Eligible" if attendance is at least 75% AND marks are at least 60.',
+      table: {
+        headers: ['A: Student', 'B: Attendance %', 'C: Marks', 'D: Status'],
+        rows: [['Riya', '80', '72', ''], ['Aman', '90', '55', ''], ['Neha', '70', '88', ''], ['Karan', '75', '60', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =IF(AND(B2>=75,C2>=60),"Eligible","Not Eligible")',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=IF(AND(B2>=75,C2>=60),"Eligible","Not Eligible")',
+      result: 'D2: Eligible, D3: Not Eligible, D4: Not Eligible, D5: Eligible',
+      explanation: 'Aman fails on marks (55) and Neha fails on attendance (70). Karan meets both limits exactly, and >= includes the boundary values.',
+    },
+    {
+      title: 'Performance bonus with calculation (IF + AND)',
+      scenario: 'Bonus = 5% of sales only if sales are at least ₹1,00,000 AND the employee has at least 2 years of service; else 0.',
+      table: {
+        headers: ['A: Employee', 'B: Sales (₹)', 'C: Years', 'D: Bonus (₹)'],
+        rows: [['Rahul', '150000', '3', ''], ['Sneha', '120000', '1', ''], ['Amit', '90000', '5', ''], ['Priya', '100000', '2', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =IF(AND(B2>=100000,C2>=2),B2*5%,0)',
+        'Press Enter: D2 shows 7500',
+        'Copy down to D5',
+      ],
+      code: '=IF(AND(B2>=100000,C2>=2),B2*5%,0)',
+      result: 'D2: 7500, D3: 0, D4: 0, D5: 5000',
+      explanation: '150000 x 5% = 7500 and 100000 x 5% = 5000. Sneha has only 1 year and Amit is below target, so both get 0.',
+    },
+    {
+      title: 'Free shipping (IF + OR)',
+      scenario: 'Shipping is free if the customer is "Prime" OR the order value is ₹999 or more; otherwise ₹49.',
+      table: {
+        headers: ['A: Order', 'B: Customer Type', 'C: Order Value (₹)', 'D: Shipping (₹)'],
+        rows: [['ORD-1', 'Prime', '450', ''], ['ORD-2', 'Regular', '1200', ''], ['ORD-3', 'Regular', '799', ''], ['ORD-4', 'Prime', '2500', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =IF(OR(B2="Prime",C2>=999),0,49)',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=IF(OR(B2="Prime",C2>=999),0,49)',
+      result: 'D2: 0, D3: 0, D4: 49, D5: 0',
+      explanation: 'Only ORD-3 is neither Prime nor ₹999+, so it is the only one charged ₹49. Total shipping collected = 49.',
+    },
+    {
+      title: 'Metro sales team (IF + AND + OR)',
+      scenario: 'Label employees "Metro Sales" if they are in Sales AND work in Delhi or Mumbai; else "Other".',
+      table: {
+        headers: ['A: Employee', 'B: Dept', 'C: City', 'D: Category'],
+        rows: [['Rahul', 'Sales', 'Delhi', ''], ['Karan', 'Sales', 'Pune', ''], ['Sneha', 'HR', 'Mumbai', ''], ['Amit', 'Sales', 'Mumbai', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =IF(AND(B2="Sales",OR(C2="Delhi",C2="Mumbai")),"Metro Sales","Other")',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=IF(AND(B2="Sales",OR(C2="Delhi",C2="Mumbai")),"Metro Sales","Other")',
+      result: 'D2: Metro Sales, D3: Other, D4: Other, D5: Metro Sales',
+      explanation: 'OR checks the city, AND adds the department rule. Karan is Sales but in Pune; Sneha is in Mumbai but HR.',
+    },
+    {
+      title: 'Payment reminder (IF + NOT)',
+      scenario: 'Send a reminder to every customer whose status is anything other than "Paid".',
+      table: {
+        headers: ['A: Customer', 'B: Status', 'C: Action'],
+        rows: [['Sharma Traders', 'Paid', ''], ['Gupta & Sons', 'Pending', ''], ['Mehta Stores', 'Partial', ''], ['Rao Agencies', 'Paid', '']],
+      },
+      steps: [
+        'Click cell C2',
+        'Type =IF(NOT(B2="Paid"),"Send Reminder","No Action")',
+        'Press Enter',
+        'Copy down to C5',
+      ],
+      code: '=IF(NOT(B2="Paid"),"Send Reminder","No Action")',
+      result: 'C2: No Action, C3: Send Reminder, C4: Send Reminder, C5: No Action',
+      explanation: 'NOT reverses B2="Paid". Pending and Partial both get reminders without listing each status separately.',
+    },
+    {
+      title: 'Gold / Silver tier (nested IF + AND)',
+      scenario: 'Gold if target achievement >= 90% AND customer rating >= 4.5; Silver if achievement >= 75% AND rating >= 4; else None.',
+      table: {
+        headers: ['A: Agent', 'B: Achievement %', 'C: Rating', 'D: Tier'],
+        rows: [['Anil', '95', '4.7', ''], ['Bina', '92', '4.2', ''], ['Chetan', '78', '4.0', ''], ['Divya', '70', '4.9', '']],
+      },
+      steps: [
+        'Click cell D2',
+        'Type =IF(AND(B2>=90,C2>=4.5),"Gold",IF(AND(B2>=75,C2>=4),"Silver","None"))',
+        'Press Enter',
+        'Copy down to D5',
+      ],
+      code: '=IF(AND(B2>=90,C2>=4.5),"Gold",IF(AND(B2>=75,C2>=4),"Silver","None"))',
+      result: 'D2: Gold, D3: Silver, D4: Silver, D5: None',
+      explanation: 'Bina has 92% but a rating of 4.2, so she misses Gold and is caught by the Silver rule. Divya has a great rating but only 70% achievement.',
+    },
+  ],
+  interview: [
+    { q: 'How do you check two conditions in one IF?', a: 'Put AND() or OR() in the logical_test: =IF(AND(B2>=75,C2>=60),"Yes","No") when both must be true, or =IF(OR(...),...) when either is enough.', level: 'Easy' },
+    { q: 'Why is =IF(B2>50 AND C2>50,"Yes","No") invalid?', a: 'Excel has no AND operator between conditions. AND must be used as a function: =IF(AND(B2>50,C2>50),"Yes","No").', level: 'Easy' },
+    { q: 'Write a formula: free delivery if city is Delhi or order is above ₹500, else ₹40.', a: '=IF(OR(B2="Delhi",C2>500),0,40)', level: 'Easy' },
+    { q: 'What is the difference between IF(AND(A,OR(B,C))) and IF(OR(AND(A,B),C))?', a: 'The first needs A to be TRUE plus either B or C. The second is TRUE when both A and B are TRUE, or when C alone is TRUE (A not required). Bracket placement changes the business meaning.', level: 'Hard' },
+    { q: 'How would you return a calculated bonus only when two conditions are met?', a: 'Put the calculation in value_if_true: =IF(AND(B2>=100000,C2>=2),B2*5%,0).', level: 'Medium' },
+    { q: 'How do you flag every status except "Closed" without listing each status?', a: '=IF(NOT(B2="Closed"),"Open Item","") or =IF(B2<>"Closed","Open Item","").', level: 'Medium' },
+    { q: 'How do you test a combined rule in a nested IF?', a: 'Use AND/OR inside each level, strictest first: =IF(AND(B2>=90,C2>=4.5),"Gold",IF(AND(B2>=75,C2>=4),"Silver","None")).', level: 'Medium' },
+    { q: 'An IF(AND()) gives unexpected FALSE for "Yes" entries. What could be wrong?', a: 'Likely extra spaces or non-printing characters in the data ("Yes "), or the values are typed differently. Clean data with TRIM/CLEAN, or test with =LEN(C2) to see hidden characters.', level: 'Hard' },
+  ],
+  practice: [
+    {
+      task: 'Placement eligibility: B2:B4 CGPA (7.5, 8.2, 6.8), C2:C4 backlogs (0, 1, 0). Show "Eligible" if CGPA >= 7 AND backlogs = 0.',
+      hint: 'Use AND with two tests.',
+      solution: 'D2: =IF(AND(B2>=7,C2=0),"Eligible","Not Eligible"). Results: Eligible, Not Eligible, Not Eligible.',
+    },
+    {
+      task: 'Holiday pay: B2:B5 day (Sunday, Tuesday, Saturday, Monday), C2:C5 holiday flag (No, Yes, No, No). Pay ₹1,000 extra if the day is Sunday OR it is a holiday ("Yes").',
+      hint: 'OR with two tests, return 1000 or 0.',
+      solution: 'D2: =IF(OR(B2="Sunday",C2="Yes"),1000,0). Results: 1000, 1000, 0, 0.',
+    },
+    {
+      task: 'Loan approval: B2:B4 salary (50000, 35000, 80000), C2:C4 credit score (720, 800, 650), D2:D4 existing loan (No, No, Yes). Approve if salary >= 40000 AND score >= 700 AND no existing loan.',
+      hint: 'AND with three conditions.',
+      solution: 'E2: =IF(AND(B2>=40000,C2>=700,D2="No"),"Approved","Rejected"). Results: Approved, Rejected, Rejected.',
+    },
+    {
+      task: 'Commission: B2:B4 region (North, South, North), C2:C4 sales (60000, 80000, 40000). 8% commission if region is North AND sales > 50000; otherwise 2%.',
+      hint: 'Calculation in both result parts.',
+      solution: 'D2: =IF(AND(B2="North",C2>50000),C2*8%,C2*2%). Results: 4800, 1600, 800.',
+    },
+  ],
+  quiz: [
+    { question: 'B2=80, C2=50. What does =IF(AND(B2>=75,C2>=60),"Yes","No") return?', options: ['Yes', 'No', 'TRUE', 'FALSE'], answer: 1, explanation: 'C2>=60 is FALSE, so AND is FALSE and IF returns "No".' },
+    { question: 'B2="Regular", C2=1500. What does =IF(OR(B2="Prime",C2>=999),0,49) return?', options: ['0', '49', 'TRUE', '#VALUE!'], answer: 0, explanation: 'C2>=999 is TRUE, so OR is TRUE and 0 is returned.' },
+    { question: 'Which formula returns "Hold" for every status except "Approved"?', options: ['=IF(B2="Approved","Hold","")', '=IF(NOT(B2="Approved"),"Hold","")', '=IF(AND(B2="Approved"),"Hold","")', '=NOT(IF(B2="Approved","Hold"))'], answer: 1, explanation: 'NOT(B2="Approved") is TRUE for every other status.' },
+    { question: 'Where is AND() placed when combined with IF()?', options: ['value_if_true', 'value_if_false', 'logical_test', 'Outside IF'], answer: 2, explanation: 'AND produces TRUE/FALSE, which is exactly what logical_test needs.' },
+    { question: 'B2=100000, C2=2. What does =IF(AND(B2>=100000,C2>=2),B2*5%,0) return?', options: ['0', '2', '5000', '100000'], answer: 2, explanation: 'Both conditions are TRUE, so 100000 x 5% = 5000.' },
+  ],
+};
