@@ -1,6 +1,10 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { openInPlayground } from '../components/playgroundRuntime.js';
 import { useState } from 'react';
-import { tracks, findTopic, topicKey, topicLabel } from '../data/index.js';
+import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython } from '../data/index.js';
+import { PY_LOAD_KEY } from './PythonIDE.jsx';
+import { SQL_LOAD_KEY } from './SqlLab.jsx';
+import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
 import { useProgress } from '../progress.js';
 import RichText, { Inline } from '../components/RichText.jsx';
 import CodeBlock from '../components/CodeBlock.jsx';
@@ -26,6 +30,9 @@ function Reveal({ label, children }) {
 }
 
 function looksLikeCode(s) {
+  if (/^\s*(def |from |import |print\(|#|class |for |if |with )/.test(s) && /\n/.test(s)) return true;
+  if (/^\s*(public |class |import java|package |@|<\?xml|<dependency|spring\.|SELECT |CREATE |INSERT )/.test(s)) return true;
+  if (/^\s*(<[a-zA-Z!]|[.#]?[a-z-]+\s*\{|const |let |function |import |export |document\.|console\.)/.test(s)) return true;
   return /^\s*(=|let\b|Sub\b|Function\b|[A-Za-z ]+\s*=\s*[A-Z]|EVALUATE|VAR\b|Dim\b|'|\/\/)/.test(s) && !/^\s*\d+\./.test(s);
 }
 
@@ -43,6 +50,7 @@ export default function TopicPage() {
   const p = useProgress();
   const [qaFilter, setQaFilter] = useState('All');
   const [openAll, setOpenAll] = useState(false);
+  const navigate = useNavigate();
 
   if (!found) return <p>Topic not found. <Link to="/">Go home</Link></p>;
   const { topic: t, index, list } = found;
@@ -51,8 +59,16 @@ export default function TopicPage() {
   const prev = list[index - 1];
   const next = list[index + 1];
   const practiceDone = new Set(p.practice[key] || []);
-  const codeLabel = track === 'powerbi' ? 'DAX / M' : 'Formula / Code';
-  const isExcel = track !== 'powerbi';
+  const web = isWeb(track);
+  const java = isJava(track);
+  const py = isPython(track);
+  const isExcel = !isPbi(track) && !web && !java && !py;
+  const openPy = (payload) => { try { sessionStorage.setItem(PY_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/python-ide'); };
+  const openSql = (payload) => { try { sessionStorage.setItem(SQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/sql-lab'); };
+  const openJava = (payload) => { try { sessionStorage.setItem(JAVA_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/java-ide'); };
+  const codeLabel = py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
+  const pqTopic = !isExcel && /power query|\bM\b|m language|dataflow/i.test(`${t.module || ''} ${t.title}`);
+  const lab = track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
 
   const setTab = (k) => setParams({ tab: k }, { replace: true });
 
@@ -66,7 +82,7 @@ export default function TopicPage() {
         <p className="muted">{t.summary}</p>
         <div className="meta">
           <span className={`lvl lvl-${t.level}`}>{t.level}</span>
-          {track === 'excel' && t.day && <span>📅 Day {t.day}</span>}
+          {tr.unit === 'Day' && t.day && <span>📅 Day {t.day}</span>}
           {t.module && <span>📦 {t.module}</span>}
           {t.duration && <span>⏱ {t.duration}</span>}
           {p.quiz[key] != null && <span>🏆 Best quiz: {p.quiz[key]}/{t.quiz.length}</span>}
@@ -82,6 +98,12 @@ export default function TopicPage() {
           <ul>{t.objectives.map((o, i) => <li key={i}><Inline text={o} /></li>)}</ul>
         </div>
       )}
+
+      <div className="practice-cta">
+        <span>🧪 Practise this topic hands-on:</span>
+        <Link className="btn small" to={lab[0]}>Open {lab[1]} →</Link>
+        <Link className="btn small" to={`/track/${track}/${t.id}?tab=quiz`} onClick={() => setTab('quiz')}>Take the quiz</Link>
+      </div>
 
       <div className="tabs">
         {TABS.map(([k, l]) => (
@@ -131,6 +153,26 @@ export default function TopicPage() {
                 </div>
               )}
               <CodeBlock code={ex.code} label={codeLabel} />
+              {ex.python?.files && (
+                <button className="btn small primary try-btn" onClick={() => openPy({ files: ex.python.files, stdin: ex.python.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
+                  🐍 Run in Python IDE
+                </button>
+              )}
+              {ex.sql?.query && (
+                <button className="btn small primary try-btn" onClick={() => openSql({ setup: ex.sql.setup || '', query: ex.sql.query, expected: ex.result || '', title: ex.title })}>
+                  🗄️ Run in SQL Lab
+                </button>
+              )}
+              {ex.java?.files && (
+                <button className="btn small primary try-btn" onClick={() => openJava({ files: ex.java.files, stdin: ex.java.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
+                  ☕ Open in Java IDE
+                </button>
+              )}
+              {ex.playground && (
+                <button className="btn small primary try-btn" onClick={() => openInPlayground(navigate, ex.playground, `${t.title}: ${ex.title}`)}>
+                  ▶ Try it in Code Playground
+                </button>
+              )}
               {ex.result && <div className="result"><b>Result:</b> <Inline text={ex.result} /></div>}
               {ex.explanation && <div className="explanation"><b>Explanation</b><RichText text={ex.explanation} /></div>}
             </section>
@@ -175,9 +217,9 @@ export default function TopicPage() {
       {tab === 'practice' && (
         <div>
           <div className="card info">
-            Do these exercises in real {isExcel ? 'Excel (or the built-in ' : 'Power BI Desktop (or the built-in '}
-            <Link to={isExcel ? '/tools/formula-lab' : '/tools/dax-lab'}>{isExcel ? 'Formula Lab' : 'DAX Lab'}</Link>
-            ). Try first, then use the hint, then check the solution. Tick an exercise once you've solved it.
+            Do these exercises in {track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
+            {!isExcel && <> (the DAX Lab has a download button for the practice CSV files)</>}.
+            Try first, then use the hint, then check the solution. Tick an exercise once you've solved it.
           </div>
           {t.practice.map((ex, i) => (
             <section key={i} className={`card practice ${practiceDone.has(i) ? 'is-done' : ''}`}>
@@ -190,6 +232,26 @@ export default function TopicPage() {
               <RichText text={ex.task} />
               {ex.hint && <Reveal label="hint"><div className="tip">💡 <Inline text={ex.hint} /></div></Reveal>}
               {ex.solution && <Reveal label="solution"><SolutionText text={ex.solution} /></Reveal>}
+              {py && track !== 'sql' && (
+                <button className="btn small" onClick={() => openPy({ files: { 'main.py': '# Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n\n' }, expected: '', title: `Exercise ${i + 1}` })}>
+                  ✍ Solve in Python IDE
+                </button>
+              )}
+              {track === 'sql' && (
+                <button className="btn small" onClick={() => openSql({ setup: (t.examples.find((e) => e.sql?.setup) || {}).sql?.setup || '', query: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n', expected: '', title: `Exercise ${i + 1}` })}>
+                  ✍ Solve in SQL Lab
+                </button>
+              )}
+              {java && (
+                <button className="btn small" onClick={() => openJava({ files: { 'Main.java': '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\npublic class Main {\n    public static void main(String[] args) {\n        // write your code here\n    }\n}\n' }, expected: '', title: `Exercise ${i + 1}` })}>
+                  ✍ Solve in Java IDE
+                </button>
+              )}
+              {web && (
+                <button className="btn small" onClick={() => openInPlayground(navigate, track === 'react' ? { jsx: '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + '\nconst { useState } = React;\n\nfunction App() {\n  return <div>Start here</div>;\n}\n' } : track === 'js' ? { html: '', js: '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + '\n' } : track === 'css' ? { html: '<!-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + ' -->\n', css: '' } : { html: '<!-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + ' -->\n' }, `Exercise ${i + 1}`)}>
+                  ✍ Solve in Code Playground
+                </button>
+              )}
             </section>
           ))}
         </div>

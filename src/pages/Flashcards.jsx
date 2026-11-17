@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { allTopics, tracks, topicKey } from '../data/index.js';
+import { allTopics, trackOrder, tracks, topicKey } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import RichText, { Inline } from '../components/RichText.jsx';
 
@@ -33,7 +33,7 @@ export default function Flashcards() {
         <h1>🃏 Interview flashcards</h1>
         <p className="muted">Read the question, answer it out loud as you would in an interview, then flip the card to compare. Star the questions you find hard.</p>
         <div className="quiz-settings">
-          <label>Track <select value={track} onChange={reset((e) => setTrack(e.target.value))}><option value="both">All tracks</option><option value="excel">Excel 60-Day Course</option><option value="extra">Excel Extra Skills</option><option value="powerbi">Power BI</option><option value="guides">Excel Topic Guides</option></select></label>
+          <label>Track <select value={track} onChange={reset((e) => setTrack(e.target.value))}><option value="both">All courses</option>{trackOrder.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</select></label>
           <label>Level <select value={level} onChange={reset((e) => setLevel(e.target.value))}>{['All', 'Easy', 'Medium', 'Hard'].map((l) => <option key={l}>{l}</option>)}</select></label>
           <label className="check"><input type="checkbox" checked={onlyStar} onChange={reset((e) => setOnlyStar(e.target.checked))} /> Only starred</label>
           <label className="check"><input type="checkbox" checked={shuffled} onChange={reset((e) => setShuffled(e.target.checked))} /> Shuffle</label>

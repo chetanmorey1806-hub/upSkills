@@ -1,8 +1,21 @@
 import { useState } from 'react';
 import { Inline } from './RichText.jsx';
 
+// Deterministic option shuffle so the correct answer isn't always in the same position.
+// Same question => same order every time. Questions whose order matters are left as-is.
+function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function shuffleQuestion(q) {
+  const text = `${q.options.join(' ')} ${q.explanation || ''}`;
+  if (/\b(above|below)\b|both [a-d] and|option [a-d]\b|\([a-d]\)/i.test(text)) return q;
+  let seed = hash(q.question);
+  const idx = q.options.map((_, i) => i);
+  for (let i = idx.length - 1; i > 0; i--) { seed = Math.imul(seed ^ (seed >>> 15), 2246822507) >>> 0; const j = seed % (i + 1); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  return { ...q, options: idx.map((i) => q.options[i]), answer: idx.indexOf(q.answer) };
+}
+
 // questions: [{question, options, answer, explanation, source?}]
-export default function Quiz({ questions, onFinish, title }) {
+export default function Quiz({ questions: rawQuestions, onFinish, title }) {
+  const questions = rawQuestions.map(shuffleQuestion);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const score = questions.reduce((s, q, i) => s + (answers[i] === q.answer ? 1 : 0), 0);

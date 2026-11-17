@@ -144,10 +144,10 @@ export default {
     { task: 'Make a table of five tasks done only in the Service.', hint: 'Think sharing and automation.', solution: 'Dashboards, Apps, Scheduled refresh, Subscriptions, Assigning users to RLS roles (also gateways, workspace access).' },
   ],
   quiz: [
-    { question: 'What is the URL of the Power BI Service?', options: ['powerbi.microsoft.desktop', 'app.powerbi.com', 'portal.azure.com', 'office.com/powerbi-desktop'], answer: 1, explanation: 'The Service is at app.powerbi.com.' },
-    { question: 'Which of these can only be created in the Service?', options: ['Report', 'Measure', 'Dashboard', 'Relationship'], answer: 2, explanation: 'Dashboards are built by pinning in the Service.' },
-    { question: 'Scheduled refresh is configured in:', options: ['Power Query Editor', 'Power BI Desktop Options', 'Power BI Service semantic model settings', 'Power BI Mobile'], answer: 2, explanation: 'Semantic model > Settings > Refresh in the Service.' },
-    { question: 'Data alerts can be set on:', options: ['Any report visual', 'Card, KPI and gauge dashboard tiles', 'Tables in Data view', 'Power Query steps'], answer: 1, explanation: 'Alerts work on dashboard tiles showing a single number.' },
-    { question: 'Publishing a .pbix creates:', options: ['Only a dashboard', 'A report and a semantic model', 'Only a semantic model', 'An app'], answer: 1, explanation: 'Both a report and a semantic model are created.' },
+    { question: 'What is the URL of the Power BI Service?', options: ['powerbi.microsoft.desktop', 'portal.azure.com', 'app.powerbi.com', 'office.com/powerbi-desktop'], answer: 2, explanation: 'The Service is at app.powerbi.com.' },
+    { question: 'Which of these can only be created in the Service?', options: ['Report', 'Dashboard', 'Measure', 'Relationship'], answer: 1, explanation: 'Dashboards are built by pinning in the Service.' },
+    { question: 'Scheduled refresh is configured in:', options: ['Power BI Service semantic model settings', 'Power Query Editor', 'Power BI Desktop Options', 'Power BI Mobile'], answer: 0, explanation: 'Semantic model > Settings > Refresh in the Service.' },
+    { question: 'Data alerts can be set on:', options: ['Any report visual', 'Tables in Data view', 'Power Query steps', 'Card, KPI and gauge dashboard tiles'], answer: 3, explanation: 'Alerts work on dashboard tiles showing a single number.' },
+    { question: 'Publishing a .pbix creates:', options: ['Only a dashboard', 'Only a semantic model', 'A report and a semantic model', 'An app'], answer: 2, explanation: 'Both a report and a semantic model are created.' },
   ],
 };

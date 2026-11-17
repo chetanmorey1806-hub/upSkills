@@ -177,7 +177,7 @@ VAR FieldName =
     SWITCH ( SelOrder, 0, "Category", 1, "City", 2, "Segment", "Selected Field" )
 RETURN
     "Total Sales by " & FieldName & ": " & FORMAT ( [Total Sales], "#,##0" )`,
-      result: 'Title reads Total Sales by City: 1,86,500 when City is chosen (FORMAT uses the standard thousands separator 186,500 or the locale format of the report).',
+      result: 'Title reads Total Sales by City: 186,500 when City is chosen (the "#,##0" format string uses standard thousands separators).',
       explanation: 'Reading the Order column is a reliable way to know the selected field parameter; FORMAT converts the number into text.',
     },
   ],

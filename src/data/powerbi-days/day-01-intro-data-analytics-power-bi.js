@@ -190,10 +190,10 @@ export default {
     },
   ],
   quiz: [
-    { question: 'Which tool inside Power BI is used to clean and shape data?', options: ['DAX', 'Power Query', 'Report view', 'Power BI Mobile'], answer: 1, explanation: 'Power Query (the Transform data editor) cleans and shapes data and records steps in M.' },
-    { question: '"Why did Nashik sales drop last quarter?" is which type of analytics?', options: ['Descriptive', 'Diagnostic', 'Predictive', 'Prescriptive'], answer: 1, explanation: 'Questions about the reason for a result are diagnostic.' },
+    { question: 'Which tool inside Power BI is used to clean and shape data?', options: ['Power Query', 'DAX', 'Report view', 'Power BI Mobile'], answer: 0, explanation: 'Power Query (the Transform data editor) cleans and shapes data and records steps in M.' },
+    { question: '"Why did Nashik sales drop last quarter?" is which type of analytics?', options: ['Descriptive', 'Predictive', 'Prescriptive', 'Diagnostic'], answer: 3, explanation: 'Questions about the reason for a result are diagnostic.' },
     { question: 'What is needed to refresh a report in the Service from an Excel file on an office network drive?', options: ['Power BI Mobile', 'A DAX measure', 'On-premises data gateway', 'A bookmark'], answer: 2, explanation: 'The cloud Service cannot reach on-premises files without a gateway.' },
     { question: 'The semantic model was earlier called:', options: ['Dashboard', 'Dataset', 'Dataflow', 'Workspace'], answer: 1, explanation: 'Microsoft renamed datasets to semantic models in 2023.' },
-    { question: 'Which is the correct order of the Power BI workflow?', options: ['Visualise > Get Data > Model > Publish', 'Get Data > Transform > Model > Visualise > Publish', 'Publish > Transform > Get Data > Visualise', 'Model > Get Data > Publish > Transform'], answer: 1, explanation: 'Data is first brought in and cleaned, then modelled, visualised and published.' },
+    { question: 'Which is the correct order of the Power BI workflow?', options: ['Get Data > Transform > Model > Visualise > Publish', 'Visualise > Get Data > Model > Publish', 'Publish > Transform > Get Data > Visualise', 'Model > Get Data > Publish > Transform'], answer: 0, explanation: 'Data is first brought in and cleaned, then modelled, visualised and published.' },
   ],
 };

@@ -1,0 +1,118 @@
+export default {
+  id: 'extra-30-mobile-layout',
+  title: 'Mobile Layout',
+  module: 'Extra: Visualization & Reporting',
+  extraNo: 30,
+  level: 'Beginner',
+  duration: '1 hour',
+  summary: "Mobile layout lets you design a phone-friendly, portrait version of each report page in Power BI Desktop. When users open the report in the Power BI Mobile app on a phone, they see this optimized layout instead of a tiny, zoomed-out desktop page.",
+  objectives: [
+    "Open the mobile layout view and arrange visuals on the phone canvas",
+    "Apply mobile-specific formatting without changing the desktop layout",
+    "Understand how the Power BI Mobile app decides which layout to show",
+    "Follow good design practice for small screens",
+  ],
+  theory: [
+    {
+      heading: "Why a mobile layout?",
+      content: "A normal report page is designed for a 16:9 landscape screen. On a phone held upright, that page shrinks so much that numbers become unreadable and users must pinch and zoom.\n\nA **mobile layout** is a separate portrait arrangement of the **same visuals** on the same page. You choose which visuals to show, in which order and size. Think of it as rearranging furniture for a small apartment: the furniture is the same, but you keep only the essentials and stack them vertically.",
+    },
+    {
+      heading: "Creating a mobile layout",
+      content: "1. In Power BI Desktop, open the page you want to optimize.\n2. Go to **View > Mobile layout**. The canvas changes to a phone-shaped portrait grid.\n3. The **Page visuals** pane lists all visuals on the desktop page. Drag the ones you need onto the phone canvas.\n4. Resize and move them; visuals snap to the grid. Scroll down for more space (the phone canvas can be long).\n5. To go back, click **View > Mobile layout** again (toggle) to return to the web layout.\n\nEach page has its own mobile layout. Pages without one show the normal layout on phones.",
+      points: [
+        "Visuals already placed show a check mark in the Page visuals pane",
+        "Removing a visual from the mobile canvas does not delete it from the desktop page",
+        "Hidden visuals and visuals in groups are listed too and can be added",
+      ],
+    },
+    {
+      heading: "Mobile-specific formatting",
+      content: "In mobile layout, select a visual and open the **Format** pane. Changes you make here (font size, title, data labels, legend position, padding) apply **only to the mobile layout**. The desktop version stays unchanged.\n\nA small reset icon appears next to properties changed for mobile so you can restore the desktop setting.\n\nTypical changes: bigger card fonts, turn off legends (use data labels instead), shorter titles, fewer axis labels.",
+      tip: "Data changes (fields, measures, filters) are shared between layouts. Only layout and formatting are separate.",
+    },
+    {
+      heading: "How the mobile app shows reports",
+      content: "- **Phone, portrait:** if the page has a mobile layout, the app shows it. Otherwise it shows the desktop layout fitted to the screen.\n- **Phone, landscape:** the app shows the regular desktop layout.\n- **Tablets:** usually show the desktop layout.\n- Slicers, filters, bookmarks and drill through still work in the mobile layout.\n\nTo test without a phone, use the mobile layout preview in Desktop, or publish and open the report in the Power BI Mobile app (iOS / Android). In the Service, dashboards also have a separate **Mobile view** (dashboard ... > Mobile view) for pinned tiles.",
+    },
+    {
+      heading: "Design tips for small screens",
+      content: "- Put the most important KPI cards at the top.\n- Use one visual per row; avoid side-by-side charts.\n- Prefer bar charts (horizontal) over column charts with many categories.\n- Replace big tables with cards or Top N lists.\n- Use dropdown slicers or a button slicer; list slicers take too much space.\n- Keep 4-6 visuals per page; create another page if needed.\n- Make touch targets (buttons, slicers) large enough for fingers.",
+    },
+  ],
+  examples: [
+    {
+      title: "Build a phone layout for the Sales Overview page",
+      scenario: "The sales director checks numbers on her phone every morning. The Sales Overview page has 8 visuals; she needs only the key ones.",
+      table: {
+        headers: ['Order on phone', 'Visual', 'Size'],
+        rows: [
+          ['1', 'Year slicer (dropdown)', 'Full width, short'],
+          ['2', 'Card: Total Sales (15,05,000)', 'Half width'],
+          ['3', 'Card: Profit', 'Half width'],
+          ['4', 'Bar chart: Sales by Category', 'Full width'],
+          ['5', 'Line chart: Sales by Month', 'Full width'],
+        ],
+      },
+      steps: [
+        "Open the Sales Overview page in Power BI Desktop",
+        "View > Mobile layout",
+        "From the Page visuals pane drag the Year slicer to the top of the phone canvas and stretch it full width",
+        "Drag the Total Sales card and Profit card side by side below the slicer",
+        "Drag the Sales by Category bar chart and the Sales by Month line chart below, each full width",
+        "Click View > Mobile layout again to return to the desktop layout and confirm nothing changed there",
+        "Save and publish (Home > Publish)",
+      ],
+      result: "On a phone in portrait mode the page shows 5 stacked, readable visuals.",
+      explanation: "Mobile layout only rearranges existing visuals; the data model and desktop layout are untouched.",
+    },
+    {
+      title: "Mobile-only formatting on the cards",
+      scenario: "Card values look small on the phone; you want larger callout values only on mobile.",
+      steps: [
+        "Stay in View > Mobile layout and select the Total Sales card",
+        "Format pane > Visual > Callout value > set font size to 28",
+        "Turn off the category label and set a short Title: Sales",
+        "Notice the reset icon beside the changed properties",
+        "Switch back to the web layout and check the desktop card still has its original size",
+      ],
+      result: "The phone card shows a large 15.05L value with a short title; the desktop card is unchanged.",
+      explanation: "Formatting changes made in mobile layout are stored as mobile overrides for that visual.",
+    },
+    {
+      title: "Test on a phone and switch orientation",
+      scenario: "Verify the experience in the real app.",
+      steps: [
+        "Publish the report to a workspace you can access",
+        "Install the Power BI Mobile app on your phone and sign in with the same account",
+        "Open Workspaces > your workspace > the report",
+        "Hold the phone upright: the mobile layout appears",
+        "Rotate the phone to landscape: the desktop layout appears",
+        "Use the slicer and confirm cards update",
+      ],
+      result: "Portrait shows the optimized layout; landscape shows the full desktop page.",
+      explanation: "The app chooses the mobile layout only in portrait on phones when the page has one.",
+    },
+  ],
+  interview: [
+    { q: "How do you create a mobile layout in Power BI Desktop?", a: "View > Mobile layout, then drag visuals from the Page visuals pane onto the phone canvas and arrange them.", level: 'Easy' },
+    { q: "Does removing a visual from the mobile layout delete it from the report page?", a: "No. The mobile layout is just a different arrangement; the visual remains on the desktop page.", level: 'Easy' },
+    { q: "Can you format visuals differently on mobile?", a: "Yes. Formatting changes made while in mobile layout apply only to the mobile layout; fields and filters stay shared.", level: 'Medium' },
+    { q: "When does the Power BI Mobile app show the mobile layout?", a: "On phones in portrait orientation, when the page has a mobile layout. In landscape, or if no mobile layout exists, it shows the desktop layout.", level: 'Medium' },
+    { q: "What is the difference between a report mobile layout and a dashboard mobile view?", a: "Report mobile layout is designed in Desktop per report page. Dashboard mobile view is configured in the Service for pinned tiles (dashboard > ... > Mobile view).", level: 'Medium' },
+    { q: "Scenario: executives complain the phone report needs lots of zooming. What do you do?", a: "Create a mobile layout for each important page: put KPI cards on top, one chart per row, dropdown slicers, larger fonts with mobile-only formatting, and remove dense tables.", level: 'Hard' },
+  ],
+  practice: [
+    { task: "Create a mobile layout for a page with 3 cards, a slicer and 2 charts.", hint: "View > Mobile layout.", solution: "View > Mobile layout; drag the slicer to the top, cards in a row or stacked, then each chart full width. Toggle back to check desktop layout." },
+    { task: "Hide the legend of the line chart only on mobile.", hint: "Format while in mobile layout.", solution: "In mobile layout select the line chart > Format pane > Visual > Legend off. In web layout the legend is still on." },
+    { task: "Change a list slicer to a dropdown style for mobile.", hint: "Slicer settings > Options > Style.", solution: "In mobile layout select the slicer > Format > Visual > Slicer settings > Options > Style: Dropdown." },
+    { task: "Set up a mobile view for a dashboard in the Service.", hint: "Dashboard ... menu.", solution: "Open the dashboard in the Service > ... (More options) > Mobile view; arrange or unpin tiles for the phone view." },
+  ],
+  quiz: [
+    { question: "Where do you open the mobile layout in Power BI Desktop?", options: ["File > Options", "View > Mobile layout", "Insert > Mobile", "Modeling > Mobile"], answer: 1, explanation: "Mobile layout is in the View ribbon." },
+    { question: "Formatting changes made in mobile layout affect:", options: ["Both layouts", "Only the mobile layout", "Only the desktop layout", "The theme file"], answer: 1, explanation: "They are mobile-only overrides." },
+    { question: "On a phone in landscape orientation, the app shows:", options: ["The mobile layout", "The desktop layout", "A blank page", "Only cards"], answer: 1, explanation: "Mobile layout is used in portrait only." },
+    { question: "Which pane lists the visuals you can place on the phone canvas?", options: ["Data pane", "Page visuals pane", "Bookmarks pane", "Selection pane"], answer: 1, explanation: "The Page visuals pane appears in mobile layout." },
+    { question: "A good mobile design practice is:", options: ["Show every visual from the desktop page", "Use wide tables", "Place key KPI cards at the top and stack charts vertically", "Use many list slicers"], answer: 2, explanation: "Small screens need focus and vertical stacking." },
+  ],
+};

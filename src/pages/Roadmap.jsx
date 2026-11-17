@@ -4,31 +4,36 @@ import { tracks, topicKey, topicLabel } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 
+function addCourse(plan, trackKey, startDay) {
+  let day = startDay;
+  let lastModule = null;
+  tracks[trackKey].topics.forEach((x) => {
+    if (x.module !== lastModule) { plan.push({ type: 'heading', label: `${tracks[trackKey].short}: ${x.module}` }); lastModule = x.module; }
+    plan.push({ type: 'topic', day, track: trackKey, topic: x });
+    day += 1;
+  });
+  return day;
+}
+function addExtras(plan, trackKey, label) {
+  if (!tracks[trackKey].topics.length) return;
+  plan.push({ type: 'heading', label });
+  tracks[trackKey].topics.forEach((x, i) => plan.push({ type: 'topic', track: trackKey, topic: x, idx: i }));
+}
+
+const WEB_PLANS = { html: ['html'], css: ['css'], js: ['js'], react: ['react'], web: ['html', 'css', 'js', 'react'], javafs: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'], pyfs: ['python', 'sql', 'flask', 'django', 'drf'], pyfull: ['python', 'sql', 'html', 'css', 'js', 'flask', 'django', 'drf', 'react'], javafull: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'html', 'css', 'js', 'react'] };
+
 function buildPlan(mode) {
   const plan = [];
   let day = 1;
-  if (mode !== 'powerbi') {
-    let lastModule = null;
-    tracks.excel.topics.forEach((x) => {
-      if (x.module !== lastModule) { plan.push({ type: 'heading', label: x.module }); lastModule = x.module; }
-      plan.push({ type: 'topic', day: x.day || day, track: 'excel', topic: x });
-      day = (x.day || day) + 1;
-    });
+  if (WEB_PLANS[mode]) {
+    WEB_PLANS[mode].forEach((k) => { day = addCourse(plan, k, day); });
+    if (mode === 'html' || mode === 'web') addExtras(plan, 'htmlextra', 'HTML extra topics (must-know)');
+    return plan;
   }
-  if (mode !== 'excel') {
-    plan.push({ type: 'heading', label: 'Power BI' });
-    const topics = tracks.powerbi.topics;
-    topics.forEach((x, i) => {
-      plan.push({ type: 'topic', day: day++, track: 'powerbi', topic: x });
-      if (topics[i + 1]?.level !== x.level || i === topics.length - 1) {
-        plan.push({ type: 'revision', day: day++, label: `Power BI ${x.level} revision`, text: `Revise ${x.level.toLowerCase()} Power BI topics, retake their quizzes and go through starred interview questions.` });
-      }
-    });
-  }
-  if (mode !== 'powerbi' && tracks.extra.topics.length) {
-    plan.push({ type: 'heading', label: 'Extra practical sessions (job-oriented skills)' });
-    tracks.extra.topics.forEach((x, i) => plan.push({ type: 'topic', track: 'extra', topic: x, idx: i }));
-  }
+  if (mode !== 'powerbi') day = addCourse(plan, 'excel', day);
+  if (mode !== 'excel') day = addCourse(plan, 'powerbi', mode === 'both' ? day : 1);
+  if (mode !== 'powerbi') addExtras(plan, 'extra', 'Excel extra practical sessions (job-oriented skills)');
+  if (mode !== 'excel') addExtras(plan, 'pbiextra', 'Power BI extra topics (advanced practice)');
   return plan;
 }
 
@@ -50,7 +55,7 @@ export default function Roadmap() {
           take the quiz → revise the interview Q&amp;A. Tick "Mark as completed" on each day to track progress.
         </p>
         <div className="chips">
-          {[['excel', 'Excel 60-day course'], ['powerbi', 'Power BI'], ['both', 'Excel → Power BI (full)']].map(([k, l]) => (
+          {[['excel', 'Excel 60 days'], ['powerbi', 'Power BI 45 days'], ['both', 'Excel → Power BI (105 days)'], ['html', 'HTML 30 days'], ['css', 'CSS 30 days'], ['js', 'JavaScript 45 days'], ['react', 'React 30 days'], ['web', 'Full web dev: HTML → CSS → JS → React (135 days)'], ['javafs', 'Java Full Stack: Core Java → Collections → Adv Java → Hibernate → Spring → Spring Boot (132 days)'], ['javafull', 'Java Full Stack + Frontend (Java + HTML/CSS/JS/React)'], ['pyfs', 'Python Full Stack: Python → SQL → Flask → Django → DRF (114 days)'], ['pyfull', 'Python Full Stack + Frontend (Python, SQL, HTML/CSS/JS, Flask, Django, DRF, React)']].map(([k, l]) => (
             <button key={k} className={`chip ${mode === k ? 'active' : ''}`} onClick={() => setMode(k)}>{l}</button>
           ))}
         </div>

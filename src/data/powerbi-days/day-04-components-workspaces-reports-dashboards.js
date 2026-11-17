@@ -147,10 +147,10 @@ export default {
     { task: 'Write a 3-line explanation of semantic model vs report for a non-technical manager.', hint: 'Use the kitchen/menu analogy.', solution: 'The semantic model is the kitchen with all ingredients and recipes (data and calculations). The report is the plated dish – the charts you see. One kitchen can serve many dishes.' },
   ],
   quiz: [
-    { question: 'Which workspace role can add people to the workspace but cannot delete it?', options: ['Admin', 'Member', 'Contributor', 'Viewer'], answer: 1, explanation: 'Members can add others (except Admins) but only Admins can delete the workspace.' },
-    { question: 'A report is connected to how many semantic models?', options: ['Exactly one', 'Up to five', 'Unlimited', 'None'], answer: 0, explanation: 'A report always uses exactly one semantic model.' },
+    { question: 'Which workspace role can add people to the workspace but cannot delete it?', options: ['Admin', 'Contributor', 'Viewer', 'Member'], answer: 3, explanation: 'Members can add others (except Admins) but only Admins can delete the workspace.' },
+    { question: 'A report is connected to how many semantic models?', options: ['Up to five', 'Unlimited', 'Exactly one', 'None'], answer: 2, explanation: 'A report always uses exactly one semantic model.' },
     { question: 'Which supports slicers?', options: ['Dashboard', 'Report', 'Both', 'Neither'], answer: 1, explanation: 'Slicers are report visuals; dashboards show pinned tiles.' },
-    { question: 'The best way to distribute content to 500 read-only users is:', options: ['Add all as workspace Admin', 'Email the .pbix', 'Publish an App', 'Use My workspace'], answer: 2, explanation: 'Apps are designed for large read-only audiences.' },
-    { question: 'Paginated reports are designed in:', options: ['Power BI Mobile', 'Power BI Report Builder', 'Power Query', 'Excel'], answer: 1, explanation: 'Report Builder creates .rdl paginated reports.' },
+    { question: 'The best way to distribute content to 500 read-only users is:', options: ['Publish an App', 'Add all as workspace Admin', 'Email the .pbix', 'Use My workspace'], answer: 0, explanation: 'Apps are designed for large read-only audiences.' },
+    { question: 'Paginated reports are designed in:', options: ['Power BI Mobile', 'Power Query', 'Excel', 'Power BI Report Builder'], answer: 3, explanation: 'Report Builder creates .rdl paginated reports.' },
   ],
 };

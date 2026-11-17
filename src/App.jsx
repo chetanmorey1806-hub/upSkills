@@ -9,6 +9,11 @@ import ToolsHome from './pages/ToolsHome.jsx';
 import FormulaLab from './pages/FormulaLab.jsx';
 import DaxLab from './pages/DaxLab.jsx';
 import PowerQueryLab from './pages/PowerQueryLab.jsx';
+import CodePlayground from './pages/CodePlayground.jsx';
+import Courses from './pages/Courses.jsx';
+import JavaIDE from './pages/JavaIDE.jsx';
+import PythonIDE from './pages/PythonIDE.jsx';
+import SqlLab from './pages/SqlLab.jsx';
 import QuizArena from './pages/QuizArena.jsx';
 import Flashcards from './pages/Flashcards.jsx';
 import Shortcuts from './pages/Shortcuts.jsx';
@@ -35,6 +40,11 @@ export default function App() {
         <Route path="/tools/formula-lab" element={<FormulaLab />} />
         <Route path="/tools/dax-lab" element={<DaxLab />} />
         <Route path="/tools/power-query-lab" element={<PowerQueryLab />} />
+        <Route path="/tools/playground" element={<CodePlayground />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/tools/java-ide" element={<JavaIDE />} />
+        <Route path="/tools/python-ide" element={<PythonIDE />} />
+        <Route path="/tools/sql-lab" element={<SqlLab />} />
         <Route path="/tools/quiz" element={<QuizArena />} />
         <Route path="/tools/flashcards" element={<Flashcards />} />
         <Route path="/tools/shortcuts" element={<Shortcuts />} />

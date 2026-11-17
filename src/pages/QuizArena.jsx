@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { allTopics, tracks } from '../data/index.js';
+import { allTopics, trackOrder, tracks } from '../data/index.js';
 import Quiz from '../components/Quiz.jsx';
 
 const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
@@ -39,7 +39,7 @@ export default function QuizArena() {
         <h1>🏆 Quiz Arena</h1>
         <p className="muted">Random questions from all topics, like a real test. {pool.length} questions available with the current settings.</p>
         <div className="quiz-settings">
-          <label>Track <select value={track} onChange={(e) => setTrack(e.target.value)}><option value="both">All tracks</option><option value="excel">Excel 60-Day Course</option><option value="extra">Excel Extra Skills</option><option value="powerbi">Power BI</option><option value="guides">Excel Topic Guides</option></select></label>
+          <label>Track <select value={track} onChange={(e) => setTrack(e.target.value)}><option value="both">All courses</option>{trackOrder.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</select></label>
           <label>Level <select value={level} onChange={(e) => setLevel(e.target.value)}>{['All', 'Beginner', 'Intermediate', 'Advanced'].map((l) => <option key={l}>{l}</option>)}</select></label>
           <label>Questions <select value={count} onChange={(e) => setCount(Number(e.target.value))}>{[10, 15, 20, 30, 50].map((n) => <option key={n}>{n}</option>)}</select></label>
           <label>Timer <select value={timer} onChange={(e) => setTimer(Number(e.target.value))}><option value={0}>Off</option>{[5, 10, 15, 20, 30].map((n) => <option key={n} value={n}>{n} min</option>)}</select></label>

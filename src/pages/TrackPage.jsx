@@ -9,7 +9,7 @@ function TopicRow({ track, t, x, idx, done, quiz }) {
   return (
     <Link to={`/track/${track}/${x.id}`} className={`card topic-row ${done[k] ? 'is-done' : ''}`}>
       <div className="topic-num" style={{ background: done[k] ? 'var(--ok)' : t.color }}>
-        {done[k] ? '✓' : x.day && track === 'excel' ? x.day : x.extraNo || idx + 1}
+        {done[k] ? '✓' : x.day && t.unit === 'Day' ? x.day : x.extraNo || idx + 1}
       </div>
       <div className="topic-main">
         <div className="muted small">{topicLabel(track, x, idx)}</div>
@@ -37,7 +37,7 @@ export default function TrackPage() {
   if (!t) return <p>Track not found.</p>;
   const list = t.topics.filter((x) => level === 'All' || x.level === level);
   const completed = t.topics.filter((x) => done[topicKey(track, x.id)]).length;
-  const hasModules = t.topics.some((x) => x.module) && track === 'excel';
+  const hasModules = new Set(t.topics.map((x) => x.module).filter(Boolean)).size > 1;
 
   // group into modules (keeps order)
   const groups = [];

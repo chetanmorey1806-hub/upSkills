@@ -119,7 +119,12 @@ function parse(tokens) {
         next();
         const args = [];
         if (peek()?.type !== ')') {
-          for (;;) { args.push(expr()); if (peek()?.type === ',') { next(); continue; } break; }
+          for (;;) {
+            if (peek()?.type === ',' || peek()?.type === ')') args.push({ k: 'empty' });
+            else args.push(expr());
+            if (peek()?.type === ',') { next(); continue; }
+            break;
+          }
         }
         expect(')');
         return { k: 'call', name: tk.v.toUpperCase(), args };
@@ -219,6 +224,16 @@ export function makeEngine(measures) {
       }
     });
     return ctx;
+  };
+
+  // a date argument can be a column ('Date'[Date]) or a table of dates (e.g. SAMEPERIODLASTYEAR(...))
+  const datesArg = (node, env, fname) => {
+    if (!node) fail(`${fname} needs a date column like 'Date'[Date]`);
+    if (node.k === 'col') return { colNode: node, vis: visibleRows(node.t, env.ctx).map((r) => r[node.c]).filter(Boolean).sort() };
+    const tv = evalTable(node, env);
+    const c = tv.cols.length === 1 ? tv.cols[0] : (MODEL.dateTable && tv.table === MODEL.dateTable.table ? MODEL.dateTable.column : null);
+    if (!c) fail(`${fname} needs a date column like 'Date'[Date]`);
+    return { colNode: { k: 'col', t: tv.table, c }, vis: tv.rows.map((r) => r[c]).filter(Boolean).sort() };
   };
 
   const evalTable = (n, env) => {
@@ -379,13 +394,15 @@ export function makeEngine(measures) {
       }
       case 'call': return call(n, env);
       case '__tv': return n.tv;
+      case 'empty': return BLANK;
       default: fail('Unsupported expression');
     }
     return BLANK;
   };
 
   const call = (n, env) => {
-    const A = n.args;
+    const A = n.args.map((a) => (a.k === 'empty' ? undefined : a));
+    const kw = (node) => (node ? (node.k === 'ident' ? node.v : toText(scalarOf(ev(node, env)))).toUpperCase() : '');
     const s = (i) => scalarOf(ev(A[i], env));
     const need = (k) => { if (A.length < k) fail(`${n.name} needs at least ${k} argument(s)`); };
     switch (n.name) {
@@ -402,13 +419,26 @@ export function makeEngine(measures) {
         const vals = iterate(A[0], A[1], env).map(scalarOf);
         return { SUMX: sum, AVERAGEX: avg, MAXX: mx, MINX: mn, COUNTX: (v) => v.filter((x) => x !== null).length || BLANK }[n.name](vals);
       }
-      case 'CONCATENATEX': { need(2); const vals = iterate(A[0], A[1], env).map(scalarOf).map(toText); return vals.join(A[2] ? toText(s(2)) : ''); }
+      case 'CONCATENATEX': {
+        need(2);
+        const tv = evalTable(A[0], env);
+        const items = tv.rows.map((row) => {
+          const r = tv.partial ? { ...row, __partial: true, __cols: tv.cols } : row;
+          const e2 = { ...env, rows: { ...env.rows, [tv.table]: r } };
+          return { text: toText(scalarOf(ev(A[1], e2))), key: A[3] ? scalarOf(ev(A[3], e2)) : null };
+        });
+        if (A[3]) {
+          const desc = kw(A[4]) === 'DESC' || kw(A[4]) === '0';
+          items.sort((a, b) => { const x = a.key ?? '', y = b.key ?? ''; const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y)); return desc ? -c : c; });
+        }
+        return items.map((i) => i.text).join(A[2] ? toText(s(2)) : '');
+      }
       case 'RANKX': {
         need(2);
         const vals = iterate(A[0], A[1], env).map(scalarOf).map((v) => (v === null ? 0 : num(v)));
         const cur = A[2] ? num(s(2)) : num(scalarOf(ev(A[1], env)) ?? 0);
-        const asc = A[3] && toText(scalarOf(ev(A[3], env))).toUpperCase() === 'ASC';
-        const dense = A[4] && toText(scalarOf(ev(A[4], env))).toUpperCase() === 'DENSE';
+        const asc = kw(A[3]) === 'ASC' || kw(A[3]) === '1';
+        const dense = kw(A[4]) === 'DENSE';
         const pool = dense ? [...new Set(vals)] : vals;
         return pool.filter((v) => (asc ? v < cur : v > cur)).length + 1;
       }
@@ -478,33 +508,40 @@ export function makeEngine(measures) {
           const r = tv.partial ? { ...row, __partial: true, __cols: tv.cols } : row;
           return { row, v: num(scalarOf(ev(A[2], { ...env, rows: { ...env.rows, [tv.table]: r } })) ?? 0) };
         });
-        const asc = A[3] && toText(scalarOf(ev(A[3], env))).toUpperCase() === 'ASC';
+        const asc = kw(A[3]) === 'ASC' || kw(A[3]) === '1';
         scored.sort((a, b) => (asc ? a.v - b.v : b.v - a.v));
         const cutoff = scored[k - 1]?.v;
         return { ...tv, rows: scored.filter((x, i) => i < k || x.v === cutoff).map((x) => x.row) };
       }
       case 'DATESYTD': case 'DATESQTD': case 'DATESMTD': case 'TOTALYTD': case 'TOTALQTD': case 'TOTALMTD': {
         const isTotal = n.name.startsWith('TOTAL');
-        const colNode = isTotal ? A[1] : A[0];
-        if (!colNode || colNode.k !== 'col') fail(`${n.name} needs a date column like 'Date'[Date]`);
-        const vis = visibleRows(colNode.t, env.ctx).map((r) => r[colNode.c]).filter(Boolean).sort();
+        const { colNode, vis } = datesArg(isTotal ? A[1] : A[0], env, n.name);
+        // optional fiscal year end, e.g. "3/31" (DATESYTD arg 2, TOTALYTD arg 3 or 4)
+        const yeNodes = isTotal ? [A[2], A[3]] : [A[1]];
+        let ye = null;
+        yeNodes.forEach((nd) => { if (nd && nd.k === 'lit' && typeof nd.v === 'string' && /^\d{1,2}[/-]\d{1,2}$/.test(nd.v)) { const [mm, dd] = nd.v.split(/[/-]/).map(Number); ye = { m: mm, d: dd }; } });
+        const extraFilter = isTotal && A[2] && !(A[2].k === 'lit' && typeof A[2].v === 'string') ? A[2] : null;
         let dates = [];
         if (vis.length) {
           const last = vis[vis.length - 1];
-          const { y, m } = parseD(last);
+          const { y, m, d } = parseD(last);
           const kind = n.name.slice(-3);
-          const start = kind === 'YTD' ? fmtD(y, 1, 1) : kind === 'QTD' ? fmtD(y, Math.floor((m - 1) / 3) * 3 + 1, 1) : fmtD(y, m, 1);
+          let ytdStart = fmtD(y, 1, 1);
+          if (ye && !(ye.m === 12 && ye.d === 31)) {
+            const afterYE = m > ye.m || (m === ye.m && d > ye.d);
+            const sy = afterYE ? y : y - 1;
+            ytdStart = shiftDate(fmtD(sy, ye.m, Math.min(ye.d, daysIn(sy, ye.m))), 1, 'DAY');
+          }
+          const start = kind === 'YTD' ? ytdStart : kind === 'QTD' ? fmtD(y, Math.floor((m - 1) / 3) * 3 + 1, 1) : fmtD(y, m, 1);
           dates = T[colNode.t].filter((r) => r[colNode.c] >= start && r[colNode.c] <= last);
         }
         const tv = { table: colNode.t, cols: [colNode.c], rows: dates.map((r) => ({ [colNode.c]: r[colNode.c] })), partial: true };
         if (!isTotal) return tv;
         const fake = { k: '__tv', tv };
-        return call({ k: 'call', name: 'CALCULATE', args: [A[0], fake] }, env);
+        return call({ k: 'call', name: 'CALCULATE', args: extraFilter ? [A[0], fake, extraFilter] : [A[0], fake] }, env);
       }
       case 'SAMEPERIODLASTYEAR': case 'DATEADD': case 'PARALLELPERIOD': case 'PREVIOUSMONTH': case 'PREVIOUSYEAR': case 'PREVIOUSQUARTER': case 'NEXTMONTH': {
-        const colNode = A[0];
-        if (!colNode || colNode.k !== 'col') fail(`${n.name} needs a date column like 'Date'[Date]`);
-        const vis = visibleRows(colNode.t, env.ctx).map((r) => r[colNode.c]).filter(Boolean).sort();
+        const { colNode, vis } = datesArg(A[0], env, n.name);
         let set = new Set();
         if (vis.length) {
           if (n.name === 'SAMEPERIODLASTYEAR') set = new Set(vis.map((d) => shiftDate(d, -1, 'YEAR')));
@@ -572,6 +609,13 @@ export function makeEngine(measures) {
       case 'FORMAT': {
         need(2); const v = s(0); const f = toText(s(1));
         if (v === null) return '';
+        if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) && /[dmy]/i.test(f)) {
+          const { y, m, d } = parseD(v);
+          const MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+          const DN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+          return f.replace(/yyyy|yy|mmmm|mmm|mm|m|dddd|ddd|dd|d|q/gi, (tok) => ({ yyyy: y, yy: String(y).slice(-2), mmmm: MN[m - 1], mmm: MN[m - 1].slice(0, 3), mm: String(m).padStart(2, '0'), m, dddd: DN[w], ddd: DN[w].slice(0, 3), dd: String(d).padStart(2, '0'), d, q: Math.ceil(m / 3) }[tok.toLowerCase()]));
+        }
         if (/%/.test(f)) return (num(v) * 100).toFixed((/\.(0+)/.exec(f) || [, ''])[1].length) + '%';
         const dec = (/\.(0+)/.exec(f) || [, ''])[1].length;
         return num(v).toLocaleString('en-IN', { minimumFractionDigits: dec, maximumFractionDigits: dec });

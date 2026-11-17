@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 
 const tools = [
+  ['/tools/python-ide', '🐍', 'Python IDE (PyCharm style)', 'Write and RUN real Python 3.12 in your browser (Pyodide): multiple .py files with imports, input() support, output console, Stop button, compare with the expected output, numpy/pandas auto-loaded.'],
+  ['/tools/sql-lab', '🗄️', 'SQL Lab (Workbench style)', 'Run SQL queries in your browser on a ready sample company database (employees, departments, customers, products, orders). Result grids, setup editor, practice queries incl. joins and window functions.'],
+  ['/tools/java-ide', '☕', 'Java IDE (IntelliJ / Eclipse style)', 'Java editor with a project tree, multiple class files, syntax highlighting, IntelliJ (dark) and Eclipse (light) themes, expected output from each lesson, program-input notes, and copy/download to run in your IDE.'],
+  ['/tools/playground', '💻', 'Code Playground (VS Code style)', 'Real VS Code editor (Monaco) with index.html, style.css and script.js tabs, live preview, console panel, React (JSX) mode, templates, Ctrl+Enter to run and download as index.html. Every HTML/CSS/JS/React example opens here with one click.'],
   ['/tools/formula-lab', '🧮', 'Excel Formula Lab', 'A mini spreadsheet in your browser. Type real Excel formulas (SUM, IF, VLOOKUP, XLOOKUP, SUMIFS, TEXT functions…) and see results instantly. Includes guided challenges.'],
   ['/tools/dax-lab', '⚡', 'DAX Lab', 'Write DAX measures against a Sales star schema with a Date table and see them evaluated in a matrix with slicers. Supports CALCULATE, FILTER, ALL, SUMX, RELATED, LOOKUPVALUE and time intelligence (TOTALYTD, SAMEPERIODLASTYEAR, DATEADD). Download the CSVs to practise in Power BI Desktop.'],
   ['/tools/power-query-lab', '🧹', 'Power Query Lab', 'Clean a messy sales file step by step: promote headers, remove blanks and duplicates, fill down, split, replace, change types, custom columns, group by, merge, append and unpivot. See Applied Steps and the generated M code, and solve challenges.'],

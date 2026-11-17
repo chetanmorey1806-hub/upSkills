@@ -4,12 +4,12 @@ import Logo from './Logo.jsx';
 
 const links = [
   { to: '/', label: 'Home', end: true },
+  { to: '/courses', label: 'Courses' },
   { to: '/roadmap', label: 'Roadmap' },
-  { to: '/track/excel', label: 'Excel 60 Days' },
-  { to: '/track/extra', label: 'Extra Skills' },
-  { to: '/track/powerbi', label: 'Power BI' },
-  { to: '/track/guides', label: 'Guides' },
   { to: '/tools', label: 'Practice Tools' },
+  { to: '/tools/playground', label: '💻 Web' },
+  { to: '/tools/java-ide', label: '☕ Java' },
+  { to: '/tools/python-ide', label: '🐍 Python' },
 ];
 
 export default function Layout({ children }) {
