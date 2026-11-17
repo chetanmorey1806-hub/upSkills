@@ -35,6 +35,8 @@ const pyGlob = {
   drf: load(import.meta.glob('./drf-days/*.js', { eager: true })),
 };
 Object.values(pyGlob).forEach((l) => l.sort(byDay));
+const dotnetDays = load(import.meta.glob('./dotnet-days/*.js', { eager: true })).sort(byDay);
+const dotnetExtra = load(import.meta.glob('./dotnet-extra/*.js', { eager: true })).sort(byExtra);
 const mysqlDays = load(import.meta.glob('./mysql-days/*.js', { eager: true })).sort(byDay);
 const powerbiExtra = load(import.meta.glob('./powerbi-extra/*.js', { eager: true })).sort((a, b) => (a.extraNo || 0) - (b.extraNo || 0));
 
@@ -177,6 +179,16 @@ export const tracks = {
     tagline: '6 modules, 30 days: install MySQL & Workbench, CRUD, functions, joins, subqueries, views, indexes, procedures, triggers, transactions, window functions, EER diagrams, users and backup.',
     topics: mysqlDays,
   },
+  dotnet: {
+    key: 'dotnet', name: '.NET Full Stack (120 Days)', short: '.NET', icon: '🟣', color: '#68217a', unit: 'Day', lang: 'dotnet', group: 'dotnet',
+    tagline: '12 modules, 120 days: C#, complete OOPs, advanced C# & LINQ, SQL Server, HTML/CSS/JS, ASP.NET Core MVC, EF Core, Web API, React, security, testing, Git, deployment and 5 real-time projects.',
+    topics: dotnetDays,
+  },
+  dotnetextra: {
+    key: 'dotnetextra', name: '.NET Extra Topics (54)', short: '.NET Extra', icon: '🧱', color: '#512bd4', unit: 'Topic', lang: 'dotnet', group: 'dotnet',
+    tagline: 'OOP concepts (association → SOLID & design patterns), advanced C#, advanced SQL Server, and advanced ASP.NET Core / EF Core / Web API.',
+    topics: dotnetExtra,
+  },
   guides: {
     key: 'guides',
     name: 'Excel Topic Guides',
@@ -189,14 +201,16 @@ export const tracks = {
   },
 };
 
-export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'python', 'sql', 'flask', 'django', 'drf', 'mysql'];
+export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'python', 'sql', 'flask', 'django', 'drf', 'mysql', 'dotnet', 'dotnetextra'];
 export const trackGroups = [
   { key: 'data', name: '📈 Data Analytics', tracks: ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides'] },
   { key: 'web', name: '💻 Web Development', tracks: ['html', 'htmlextra', 'css', 'js', 'react'] },
   { key: 'java', name: '☕ Java Full Stack', tracks: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'] },
   { key: 'python', name: '🐍 Python Full Stack', tracks: ['python', 'sql', 'flask', 'django', 'drf'] },
+  { key: 'dotnet', name: '🟣 .NET Full Stack', tracks: ['dotnet', 'dotnetextra'] },
   { key: 'db', name: '🗄️ Databases', tracks: ['mysql', 'sql'] },
 ];
+export const isDotnet = (track) => tracks[track]?.lang === 'dotnet';
 export const isMySQL = (track) => tracks[track]?.lang === 'mysql';
 export const isPython = (track) => tracks[track]?.lang === 'python';
 export const isJava = (track) => tracks[track]?.lang === 'java';

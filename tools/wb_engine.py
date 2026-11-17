@@ -1,9 +1,20 @@
-# MySQL-flavoured SQL engine on top of SQLite (used by the in-browser MySQL Workbench Lab).
+# MySQL / T-SQL flavoured SQL engine on top of SQLite (used by the in-browser MySQL Workbench Lab).
 import sqlite3, re, json, time, math, random, datetime
 
 BT = chr(96)
 _dbs = {}
-_current = {'db': None}
+_current = {'db': None, 'dialect': 'mysql'}
+_STORES = {}
+
+def wb_select_store(name):
+    global _dbs, _current
+    if name not in _STORES:
+        _STORES[name] = ({}, {'db': None, 'dialect': name})
+    _dbs, _current = _STORES[name]
+    if name == 'tsql' and 'master' not in _dbs:
+        _conn('master')
+        if not _current['db']: _current['db'] = 'master'
+    return name
 
 MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
@@ -119,6 +130,35 @@ def f_str_to_date(s, fmt):
         return _fmt_date(d, any(t in str(fmt) for t in ('%H', '%i', '%s', '%T')))
     except ValueError:
         return None
+TS_PART = {'year': 'YEAR', 'yy': 'YEAR', 'yyyy': 'YEAR', 'quarter': 'QUARTER', 'qq': 'QUARTER', 'q': 'QUARTER', 'month': 'MONTH', 'mm': 'MONTH', 'm': 'MONTH',
+           'day': 'DAY', 'dd': 'DAY', 'd': 'DAY', 'dayofyear': 'DAY', 'dy': 'DAY', 'y': 'DAY', 'week': 'WEEK', 'wk': 'WEEK', 'ww': 'WEEK', 'weekday': 'DAY', 'dw': 'DAY',
+           'hour': 'HOUR', 'hh': 'HOUR', 'minute': 'MINUTE', 'mi': 'MINUTE', 'n': 'MINUTE', 'second': 'SECOND', 'ss': 'SECOND', 's': 'SECOND'}
+def f_tsql_datediff(part, a, b):
+    x, y = _to_dt(a), _to_dt(b)
+    if x is None or y is None: return None
+    u = TS_PART.get(str(part).lower(), str(part).upper())
+    if u == 'YEAR': return y.year - x.year
+    if u == 'QUARTER': return (y.year - x.year) * 4 + (y.month - 1) // 3 - (x.month - 1) // 3
+    if u == 'MONTH': return (y.year - x.year) * 12 + y.month - x.month
+    if u == 'DAY': return (y.date() - x.date()).days
+    if u == 'WEEK': return ((y.date() - x.date()).days + (x.weekday() + 1) % 7) // 7
+    secs = (y - x).total_seconds()
+    if u == 'HOUR': return int((y.replace(minute=0, second=0) - x.replace(minute=0, second=0)).total_seconds() // 3600)
+    if u == 'MINUTE': return int((y.replace(second=0) - x.replace(second=0)).total_seconds() // 60)
+    return int(secs)
+def f_tsql_format_date(v, fmt):
+    d = _to_dt(v)
+    if d is None or fmt is None: return None
+    f = str(fmt)
+    rep = [('yyyy', '%Y'), ('yy', '%y'), ('MMMM', '%B'), ('MMM', '%b'), ('MM', '%m'), ('dddd', '%A'), ('ddd', '%a'), ('dd', '%d'), ('HH', '%H'), ('hh', '%I'), ('mm', '%M'), ('ss', '%S'), ('tt', '%p')]
+    out, i = '', 0
+    while i < len(f):
+        for k, v2 in rep:
+            if f.startswith(k, i): out += d.strftime(v2); i += len(k); break
+        else:
+            out += f[i]; i += 1
+    return out
+
 def f_if(c, a, b): return a if (c not in (None, 0, '0', '') and c) else b
 def f_lpad(s, n, p):
     if s is None or n is None or p is None: return None
@@ -188,6 +228,7 @@ UDFS = {
     'SUBSTRING_INDEX': (f_substring_index, 3), 'FIELD': (f_field, -1), 'UCASE': (lambda s: None if s is None else str(s).upper(), 1), 'LCASE': (lambda s: None if s is None else str(s).lower(), 1),
     'CEIL': (f_ceil, 1), 'CEILING': (f_ceil, 1), 'FLOOR': (f_floor, 1), 'POW': (f_pow, 2), 'POWER': (f_pow, 2), 'SQRT': (f_sqrt, 1), 'MOD': (f_mod, 2),
     'TRUNCATE': (f_truncate, 2), 'ROUND': (f_round, -1), 'RAND': (f_rand, -1), 'GREATEST': (f_greatest, -1), 'LEAST': (f_least, -1), 'SIGN': (f_sign, 1),
+    'TSQL_DATEDIFF': (f_tsql_datediff, 3), 'TSQL_FORMAT': (f_tsql_format_date, 2),
     'PI': (lambda: math.pi, 0), 'DATABASE': (f_database, 0), 'SCHEMA': (f_database, 0), 'VERSION': (f_version, 0), 'USER': (f_user, 0), 'CURRENT_USER_FN': (f_user, 0), 'UUID': (f_uuid, 0),
 }
 
@@ -218,7 +259,7 @@ def _mask(sql):
             if c == '"': lit = "'" + buf[1:-1].replace("'", "''").replace('""', '"') + "'"
             lit = lit.replace("\\'", "''").replace('\\n', '\n').replace('\\t', '\t').replace('\\\\', '\\')
             out.append('\x00%d\x00' % len(lits)); lits.append(lit); i = j
-        elif c == '#' or (c == '-' and sql[i:i+3] in ('-- ', '--\t', '--\n') or sql[i:i+2] == '--' and i + 2 == n):
+        elif (c == '#' and _current.get('dialect') != 'tsql') or (c == '-' and sql[i:i+3] in ('-- ', '--\t', '--\n') or sql[i:i+2] == '--' and i + 2 == n):
             j = sql.find('\n', i); j = n if j < 0 else j
             i = j
         elif sql[i:i+2] == '/*':
@@ -237,6 +278,9 @@ def split_statements(sql):
     lines = sql.replace('\r', '').split('\n')
     text = ''
     for line in lines:
+        if _current.get('dialect') == 'tsql' and re.match(r'^\s*GO\s*(\d+)?\s*;?\s*$', line, re.I):
+            buf.append(';')
+            continue
         m = re.match(r'^\s*DELIMITER\s+(\S+)\s*$', line, re.I)
         if m:
             text_part = '\n'.join(buf)
@@ -258,7 +302,7 @@ def _split_by(text, delim):
             if c == q: q = None
             i += 1; continue
         if c in ("'", '"', BT): q = c; cur.append(c); i += 1; continue
-        if text.startswith('--', i) or c == '#':
+        if text.startswith('--', i) or (c == '#' and _current.get('dialect') != 'tsql'):
             j = text.find('\n', i); j = n if j < 0 else j
             cur.append(text[i:j]); i = j; continue
         if text.startswith('/*', i):
@@ -343,6 +387,8 @@ def translate(sql):
     # KEY idx (col) inside CREATE TABLE -> drop (SQLite doesn't support inline non-unique index)
     s = re.sub(r',\s*(?:INDEX|KEY)\s+\w*\s*\([^)]*\)', '', s, flags=re.I)
     s = re.sub(r',\s*UNIQUE\s+(?:KEY|INDEX)\s+\w+\s*\(', ', UNIQUE (', s, flags=re.I)
+    s = re.sub(r'\bDEFAULT\s*\(?\s*(NOW|CURRENT_TIMESTAMP)\s*\(\s*\)\s*\)?', 'DEFAULT CURRENT_TIMESTAMP', s, flags=re.I)
+    s = re.sub(r'\bDEFAULT\s*\(\s*(CURDATE|CURRENT_DATE)\s*\(\s*\)\s*\)', 'DEFAULT CURRENT_DATE', s, flags=re.I)
     s = re.sub(r'\bINSERT\s+IGNORE\b', 'INSERT OR IGNORE', s, flags=re.I)
     s = re.sub(r'\b(TINYINT|SMALLINT|MEDIUMINT|BIGINT|INT)\s*\(\s*\d+\s*\)', r'\1', s, flags=re.I)
     s = re.sub(r'\bDOUBLE\s+PRECISION\b', 'DOUBLE', s, flags=re.I)
@@ -373,6 +419,151 @@ def translate(sql):
     s = re.sub(r'\s+XOR\s+', ' <> ', s, flags=re.I)
     return _unmask(s, lits)
 
+
+# ---------- T-SQL (SQL Server) translation ----------
+def _top_to_limit(s):
+    # SELECT [DISTINCT] TOP (n) / TOP n  ->  remove and add LIMIT n at the end of that SELECT's scope
+    pat = re.compile(r'\bSELECT\s+(DISTINCT\s+)?TOP\s*\(?\s*(\d+)\s*\)?(\s+PERCENT)?', re.I)
+    while True:
+        m = pat.search(s)
+        if not m: return s
+        n = m.group(2)
+        # find end of scope: matching ')' at depth 0 after m, or end of string
+        depth, j = 0, m.end()
+        while j < len(s):
+            ch = s[j]
+            if ch == '(': depth += 1
+            elif ch == ')':
+                if depth == 0: break
+                depth -= 1
+            j += 1
+        s = s[:m.start()] + 'SELECT ' + (m.group(1) or '') + s[m.end():j] + ' LIMIT ' + n + s[j:]
+
+def translate_tsql(sql):
+    s, lits = _mask(sql)
+    s = re.sub(r'\bN(\x00\d+\x00)', r'\1', s)
+    s = re.sub(r'\bFOREIGN\s+KEY\s+REFERENCES\b', 'REFERENCES', s, flags=re.I)
+    s = re.sub(r'\bIDENTITY\s*(\(\s*\d+\s*,\s*\d+\s*\))?', 'AUTO_INCREMENT', s, flags=re.I)
+    s = re.sub(r'\bN?VARCHAR\s*\(\s*MAX\s*\)', 'TEXT', s, flags=re.I)
+    s = re.sub(r'\bNTEXT\b', 'TEXT', s, flags=re.I)
+    s = re.sub(r'\bDATETIME2(\s*\(\s*\d+\s*\))?', 'DATETIME', s, flags=re.I)
+    s = re.sub(r'\bUNIQUEIDENTIFIER\b', 'TEXT', s, flags=re.I)
+    s = re.sub(r'\bMONEY\b', 'DECIMAL(19,4)', s, flags=re.I)
+    s = re.sub(r'#(\w+)', r'tmp_\1', s)
+    s = re.sub(r'\bsys\.tables\b', "(SELECT name, type AS type_desc FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%')", s, flags=re.I)
+    s = re.sub(r'\bINFORMATION_SCHEMA\.TABLES\b', "(SELECT name AS TABLE_NAME, 'BASE TABLE' AS TABLE_TYPE FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%')", s, flags=re.I)
+    s = re.sub(r'\bDEFAULT\s*\(?\s*(GETDATE|SYSDATETIME|GETUTCDATE|CURRENT_TIMESTAMP)\s*\(?\s*\)?\s*\)?', 'DEFAULT CURRENT_TIMESTAMP', s, flags=re.I)
+    s = re.sub(r'\b(GETDATE|SYSDATETIME|GETUTCDATE)\s*\(\s*\)', 'NOW()', s, flags=re.I)
+    s = re.sub(r'\bISNULL\s*\(', 'IFNULL(', s, flags=re.I)
+    s = re.sub(r'\bLEN\s*\(', 'CHAR_LENGTH(', s, flags=re.I)
+    s = re.sub(r'\bCHARINDEX\s*\(', 'LOCATE(', s, flags=re.I)
+    def dateadd(a):
+        if len(a) != 3: return 'DATEADD(%s)' % ', '.join(a)
+        return "DATE_ADD(%s, %s, '%s')" % (a[2], a[1], TS_PART.get(a[0].lower(), a[0].upper()))
+    s = _replace_calls(s, 'DATEADD', dateadd)
+    s = _replace_calls(s, 'DATEDIFF', lambda a: "TSQL_DATEDIFF('%s', %s, %s)" % (a[0], a[1], a[2]) if len(a) == 3 else 'DATEDIFF(%s)' % ', '.join(a))
+    def datepart(a):
+        u = TS_PART.get(a[0].lower(), a[0].upper())
+        fn = {'YEAR': 'YEAR', 'QUARTER': 'QUARTER', 'MONTH': 'MONTH', 'DAY': 'DAY', 'WEEK': 'WEEK', 'HOUR': 'HOUR', 'MINUTE': 'MINUTE', 'SECOND': 'SECOND'}.get(u, 'DAY')
+        if a[0].lower() in ('weekday', 'dw'): fn = 'DAYOFWEEK'
+        if a[0].lower() in ('dayofyear', 'dy', 'y'): fn = 'DAYOFYEAR'
+        return '%s(%s)' % (fn, a[1])
+    s = _replace_calls(s, 'DATEPART', datepart)
+    s = _replace_calls(s, 'DATENAME', lambda a: ('MONTHNAME(%s)' if a[0].lower() in ('month', 'mm', 'm') else 'DAYNAME(%s)' if a[0].lower() in ('weekday', 'dw') else 'CAST(' + datepart(a) + ' AS TEXT)' if False else datepart(a)) % a[1] if a[0].lower() in ('month', 'mm', 'm', 'weekday', 'dw') else datepart(a))
+    s = _replace_calls(s, 'FORMAT', lambda a: 'TSQL_FORMAT(%s, %s)' % (a[0], a[1]) if len(a) >= 2 else 'FORMAT(%s)' % ', '.join(a))
+    def convert(a):
+        if len(a) < 2: return 'CONVERT(%s)' % ', '.join(a)
+        t = a[0]
+        if re.match(r'\s*DATE\s*$', t, re.I): return 'DATE_ONLY(%s)' % a[1]
+        return 'CAST(%s AS %s)' % (a[1], t)
+    s = _replace_calls(s, 'CONVERT', convert)
+    s = re.sub(r'\bCAST\s*\(([^()]*(?:\([^()]*\))?[^()]*?)\s+AS\s+DATE\s*\)', r'DATE_ONLY(\1)', s, flags=re.I)
+    s = re.sub(r'\bOFFSET\s+(\d+)\s+ROWS?\s+FETCH\s+(?:NEXT|FIRST)\s+(\d+)\s+ROWS?\s+ONLY', r'LIMIT \2 OFFSET \1', s, flags=re.I)
+    s = re.sub(r'\bOFFSET\s+(\d+)\s+ROWS?\b', r'LIMIT -1 OFFSET \1', s, flags=re.I)
+    s = _top_to_limit(s)
+    # string concatenation with +
+    for _ in range(3):
+        s = re.sub(r'(\x00\d+\x00)\s*\+', r'\1 ||', s)
+        s = re.sub(r'\+\s*(\x00\d+\x00)', r'|| \1', s)
+        s = re.sub(r'(AS\s+N?(?:VAR)?CHAR\s*(?:\(\s*\d+\s*\))?\s*\))\s*\+', r'\1 ||', s, flags=re.I)
+        s = re.sub(r'\+\s*(CAST\s*\([^()]*AS\s+N?(?:VAR)?CHAR)', r'|| \1', s, flags=re.I)
+    m = re.match(r'(\s*SELECT\s+)(.*?)\s+INTO\s+([\w."\[\]]+)\s+(FROM\b.*)$', s, re.I | re.S)
+    if m and '(' not in m.group(2)[:0]:
+        s = 'CREATE TABLE %s AS SELECT %s %s' % (m.group(3), m.group(2), m.group(4))
+    return _unmask(s, lits)
+
+TSQL_UNSUPPORTED = r'(CREATE|ALTER)\s+(OR\s+ALTER\s+)?(PROC|PROCEDURE|FUNCTION|TRIGGER|LOGIN|USER|ROLE)\b|EXEC(UTE)?\s+(?!sp_help|sp_columns|sp_tables|sp_databases)|DECLARE\s|SET\s+@|MERGE\s|OPEN\s|FETCH\s|CLOSE\s|DEALLOCATE\s|GRANT\s|REVOKE\s|DENY\s|BACKUP\s|RESTORE\s|IF\s|WHILE\s|BEGIN\s+TRY|RAISERROR|THROW\s'
+
+def _tsql_error(msg):
+    m = re.search(r"Table '[\w.]*?(\w+)' doesn't exist", msg)
+    if m: return "Msg 208, Level 16, State 1, Line 1\nInvalid object name '%s'." % m.group(1)
+    m = re.search(r"Unknown column '([\w.]+)'", msg)
+    if m: return "Msg 207, Level 16, State 1, Line 1\nInvalid column name '%s'." % m.group(1).split('.')[-1]
+    if 'Error Code: 1062' in msg: return 'Msg 2627, Level 14, State 1, Line 1\nViolation of PRIMARY KEY / UNIQUE KEY constraint. Cannot insert duplicate key. ' + msg.split('(', 1)[-1].rstrip(')')
+    if 'Error Code: 1452' in msg: return 'Msg 547, Level 16, State 0, Line 1\nThe INSERT/UPDATE statement conflicted with the FOREIGN KEY constraint.'
+    if 'Error Code: 1048' in msg: return 'Msg 515, Level 16, State 2, Line 1\nCannot insert the value NULL into column %s; column does not allow nulls.' % msg.split("'")[1] if "'" in msg else msg
+    if 'Error Code: 3819' in msg: return 'Msg 547, Level 16, State 0, Line 1\nThe statement conflicted with the CHECK constraint.'
+    if 'Error Code: 1050' in msg: return "Msg 2714, Level 16, State 6, Line 1\nThere is already an object named %s in the database." % msg.split("'")[1]
+    if 'Error Code: 1049' in msg: return "Msg 911, Level 16, State 1, Line 1\nDatabase '%s' does not exist. Make sure that the name is entered correctly." % msg.split("'")[1]
+    if 'Error Code: 1007' in msg: return "Msg 1801, Level 16, State 3, Line 1\nDatabase '%s' already exists. Choose a different database name." % msg.split("'")[1]
+    if 'Error Code: 1064' in msg: return 'Msg 102, Level 15, State 1, Line 1\nIncorrect syntax. ' + msg.split('(', 1)[-1].rstrip(')')
+    return msg
+
+def run_one_tsql(stmt):
+    raw = stmt.strip().rstrip(';').strip()
+    masked, lits = _mask(raw)
+    m0 = masked.strip()
+    m = re.match(r'PRINT\s+(.*)$', m0, re.I | re.S)
+    if m:
+        expr = _unmask(m.group(1), lits)
+        c = _conn(_current['db'] or 'master')
+        try: val = c.execute('SELECT ' + translate(translate_tsql(expr))).fetchone()[0]
+        except Exception: val = expr
+        return {'type': 'ok', 'message': str(val), 'sql': stmt, 'print': True}
+    m = re.match(r'EXEC(?:UTE)?\s+sp_(help|columns)\s+\x00?(\d*)\x00?\s*(\w*)', m0, re.I)
+    if m:
+        name = _unmask('\x00%s\x00' % m.group(2), lits).strip("'") if m.group(2) else m.group(3)
+        return _with_tsql_msgs(run_one('DESCRIBE ' + name), stmt)
+    if re.match(r'EXEC(?:UTE)?\s+sp_databases', m0, re.I): return _with_tsql_msgs(run_one('SHOW DATABASES'), stmt)
+    if re.match(r'EXEC(?:UTE)?\s+sp_tables', m0, re.I): return _with_tsql_msgs(run_one('SHOW TABLES'), stmt)
+    m = re.match(r'(BEGIN|COMMIT|ROLLBACK|SAVE)\s+TRAN(?:SACTION)?(?:\s+(\w+))?$', m0, re.I)
+    if m:
+        c = _require_db(stmt); kind = m.group(1).upper()
+        try:
+            if kind == 'BEGIN': c.execute('BEGIN')
+            elif kind == 'COMMIT': c.execute('COMMIT')
+            elif kind == 'SAVE': c.execute('SAVEPOINT %s' % (m.group(2) or 'sp'))
+            elif m.group(2): c.execute('ROLLBACK TO %s' % m.group(2))
+            else: c.execute('ROLLBACK')
+        except sqlite3.OperationalError as e:
+            raise Exception('Msg 3902, Level 16, State 1, Line 1\nThe %s TRANSACTION request has no corresponding BEGIN TRANSACTION. (%s)' % (kind, e))
+        return {'type': 'ok', 'message': 'Commands completed successfully.', 'sql': stmt}
+    if re.match(TSQL_UNSUPPORTED, m0, re.I):
+        word = ' '.join(m0.split()[:2]).upper()
+        raise Exception('Not supported in this browser lab: %s … Stored procedures, functions, T-SQL triggers, variables (DECLARE), IF/WHILE, cursors, MERGE, logins/users, BACKUP/RESTORE run only in real SQL Server. Copy this script into SSMS (New Query → F5) to practise it.' % word)
+    if re.match(r'(SELECT\s+(@@VERSION|DB_NAME\s*\(\s*\)))', m0, re.I):
+        if '@@VERSION' in m0.upper(): return _rows_result(['(No column name)'], [['Microsoft SQL Server 2022 (simulated in browser on SQLite)']], stmt)
+        return _rows_result(['(No column name)'], [[_current['db']]], stmt)
+    t = translate_tsql(raw)
+    r = _with_tsql_msgs(run_one(t, original=stmt), stmt)
+    mi = re.match(r'\s*CREATE TABLE ([\w."\[\]]+) AS SELECT', t, re.I)
+    if mi and re.match(r'\s*SELECT\b', raw, re.I) and r['type'] == 'ok':
+        n = _conn(_current['db']).execute('SELECT COUNT(*) FROM %s' % mi.group(1)).fetchone()[0]
+        r['message'] = '(%d row%s affected)' % (n, '' if n == 1 else 's')
+    return r
+
+def _with_tsql_msgs(r, stmt):
+    r['sql'] = stmt
+    if r['type'] == 'rows':
+        r['columns'] = [c if c and not re.match(r'^[A-Z_]+\(.*\)$', c) else '(No column name)' for c in r['columns']] if False else r['columns']
+        return r
+    msg = r.get('message', '')
+    m = re.match(r'(\d+) row\(s\) affected', msg)
+    if m and re.match(r'\s*(INSERT|UPDATE|DELETE|MERGE)', stmt, re.I): r['message'] = '(%s row%s affected)' % (m.group(1), '' if m.group(1) == '1' else 's')
+    elif re.match(r'\s*SELECT\b', stmt, re.I) and m: r['message'] = '(%s rows affected)' % m.group(1)
+    else: r['message'] = 'Commands completed successfully.'
+    return r
+
 # ---------- MySQL meta commands ----------
 def _rows_result(cols, rows, stmt): return {'type': 'rows', 'columns': cols, 'rows': rows, 'sql': stmt}
 def _ok(msg, stmt): return {'type': 'ok', 'message': msg, 'sql': stmt}
@@ -386,20 +577,20 @@ def _mysql_type(t):
     t = (t or '').upper()
     return t.lower() if t else ''
 
-def run_one(stmt):
+def run_one(stmt, original=None):
     raw = stmt.strip().rstrip(';').strip()
     masked, lits = _mask(raw)
     m0 = masked.strip()
     U = m0.upper()
     # CREATE DATABASE / SCHEMA
-    m = re.match(r'CREATE\s+(?:DATABASE|SCHEMA)\s+(IF\s+NOT\s+EXISTS\s+)?[' + BT + r'"]?(\w+)', m0, re.I)
+    m = re.match(r'CREATE\s+(?:DATABASE|SCHEMA)\s+(IF\s+NOT\s+EXISTS\s+)?[' + BT + r'"\[]?(\w+)', m0, re.I)
     if m:
         name = m.group(2).lower()
         if name in _dbs and not m.group(1): raise Exception("Error Code: 1007. Can't create database '%s'; database exists" % name)
         existed = name in _dbs
         _conn(name)
         return _ok('1 row(s) affected' if not existed else '0 row(s) affected, 1 warning(s): 1007 database exists', stmt)
-    m = re.match(r'DROP\s+(?:DATABASE|SCHEMA)\s+(IF\s+EXISTS\s+)?[' + BT + r'"]?(\w+)', m0, re.I)
+    m = re.match(r'DROP\s+(?:DATABASE|SCHEMA)\s+(IF\s+EXISTS\s+)?[' + BT + r'"\[]?(\w+)', m0, re.I)
     if m:
         name = m.group(2).lower()
         if name not in _dbs:
@@ -409,7 +600,7 @@ def run_one(stmt):
         _dbs[name].close(); del _dbs[name]
         if _current['db'] == name: _current['db'] = None
         return _ok('%d row(s) affected' % n, stmt)
-    m = re.match(r'USE\s+[' + BT + r'"]?(\w+)', m0, re.I)
+    m = re.match(r'USE\s+[' + BT + r'"\[]?(\w+)', m0, re.I)
     if m:
         name = m.group(1).lower()
         if name not in _dbs: raise Exception("Error Code: 1049. Unknown database '%s'" % name)
@@ -426,7 +617,7 @@ def run_one(stmt):
         rows = c.execute("SELECT name, type FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%' ORDER BY name").fetchall()
         if m.group(1): return _rows_result(['Tables_in_' + db, 'Table_type'], [[r[0], 'BASE TABLE' if r[1] == 'table' else 'VIEW'] for r in rows], stmt)
         return _rows_result(['Tables_in_' + db], [[r[0]] for r in rows], stmt)
-    m = re.match(r'(?:DESCRIBE|DESC|EXPLAIN|SHOW\s+(?:FULL\s+)?(?:COLUMNS|FIELDS)\s+(?:FROM|IN))\s+[' + BT + r'"]?(\w+)[' + BT + r'"]?\s*$', m0, re.I)
+    m = re.match(r'(?:DESCRIBE|DESC|EXPLAIN|SHOW\s+(?:FULL\s+)?(?:COLUMNS|FIELDS)\s+(?:FROM|IN))\s+[' + BT + r'"\[]?(\w+)[' + BT + r'"]?\s*$', m0, re.I)
     if m:
         c = _require_db(stmt)
         t = m.group(1)
@@ -445,13 +636,13 @@ def run_one(stmt):
             extra = 'auto_increment' if pk and re.search(r'\b%s\b[^,]*AUTOINCREMENT' % re.escape(name), sql_def, re.I) else ''
             rows.append([name, _mysql_type(typ), 'NO' if (notnull or pk) else 'YES', key, None if dflt is None else str(dflt).strip("'"), extra])
         return _rows_result(['Field', 'Type', 'Null', 'Key', 'Default', 'Extra'], rows, stmt)
-    m = re.match(r'SHOW\s+CREATE\s+TABLE\s+[' + BT + r'"]?(\w+)', m0, re.I)
+    m = re.match(r'SHOW\s+CREATE\s+TABLE\s+[' + BT + r'"\[]?(\w+)', m0, re.I)
     if m:
         c = _require_db(stmt)
         r = c.execute("SELECT sql FROM sqlite_master WHERE name=?", (m.group(1),)).fetchone()
         if not r: raise Exception("Error Code: 1146. Table '%s.%s' doesn't exist" % (_current['db'], m.group(1)))
         return _rows_result(['Table', 'Create Table'], [[m.group(1), r[0]]], stmt)
-    m = re.match(r'SHOW\s+(?:INDEX|INDEXES|KEYS)\s+(?:FROM|IN)\s+[' + BT + r'"]?(\w+)', m0, re.I)
+    m = re.match(r'SHOW\s+(?:INDEX|INDEXES|KEYS)\s+(?:FROM|IN)\s+[' + BT + r'"\[]?(\w+)', m0, re.I)
     if m:
         c = _require_db(stmt); t = m.group(1); rows = []
         for seq, name, unique, origin, partial in c.execute('PRAGMA index_list("%s")' % t).fetchall():
@@ -462,7 +653,7 @@ def run_one(stmt):
         return _rows_result(['Table', 'Non_unique', 'Key_name', 'Seq_in_index', 'Column_name'], rows, stmt)
     if re.match(r'SHOW\s+(VARIABLES|STATUS|PROCESSLIST|GRANTS|ENGINES|WARNINGS|ERRORS)', m0, re.I):
         return _ok('Server administration commands (%s) need a real MySQL server. Practise them in MySQL Workbench.' % m0.split()[1].upper(), stmt)
-    m = re.match(r'TRUNCATE\s+(?:TABLE\s+)?[' + BT + r'"]?(\w+)', m0, re.I)
+    m = re.match(r'TRUNCATE\s+(?:TABLE\s+)?[' + BT + r'"\[]?(\w+)', m0, re.I)
     if m:
         c = _require_db(stmt)
         c.execute('DELETE FROM "%s"' % m.group(1))
@@ -485,6 +676,7 @@ def run_one(stmt):
     else:
         c = _require_db(stmt)
     sql = translate(raw)
+    stmt = original or stmt
     t0 = time.time()
     try:
         cur = c.execute(sql)
@@ -520,12 +712,13 @@ def _list_tables(c):
 
 def wb_run(sql, stop_on_error=True):
     results = []
+    ts = _current.get('dialect') == 'tsql'
     for st in split_statements(sql):
         t0 = time.time()
         try:
-            r = run_one(st)
+            r = run_one_tsql(st) if ts else run_one(st)
         except Exception as e:
-            r = {'type': 'error', 'message': str(e), 'sql': st}
+            r = {'type': 'error', 'message': _tsql_error(str(e)) if ts else str(e), 'sql': st}
         r['ms'] = round((time.time() - t0) * 1000, 3)
         results.append(r)
         if r['type'] == 'error' and stop_on_error: break
@@ -555,10 +748,17 @@ def wb_load(dump_json, current=None):
         if script.strip(): c.executescript(script)
         c.execute('PRAGMA foreign_keys = ON')
     _current['db'] = current if current in _dbs else None
+    if _current.get('dialect') == 'tsql':
+        _conn('master')
+        if not _current['db']: _current['db'] = 'master'
     return json.dumps({'db': _current['db'], 'schemas': wb_schemas()})
 
 def wb_reset():
     for n in list(_dbs):
         _dbs[n].close(); del _dbs[n]
     _current['db'] = None
+    if _current.get('dialect') == 'tsql':
+        _conn('master'); _current['db'] = 'master'
     return json.dumps({'db': None, 'schemas': {}})
+
+wb_select_store('mysql')

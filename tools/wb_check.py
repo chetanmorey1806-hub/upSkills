@@ -1,10 +1,12 @@
 """Run a MySQL script through the Workbench Lab engine (same engine as the browser).
-Usage: python3 tools/wb_check.py script.sql   (or pipe SQL on stdin)
+Usage: python3 tools/wb_check.py [--tsql] script.sql   (or pipe SQL on stdin). --tsql = SQL Server (SSMS Lab) mode
 Prints each statement's result exactly like the lab's Action Output / Result Grid."""
 import sys, json, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from wb_engine import wb_run
-sql = open(sys.argv[1]).read() if len(sys.argv) > 1 else sys.stdin.read()
+from wb_engine import wb_run, wb_select_store
+args = [a for a in sys.argv[1:] if a != '--tsql']
+if '--tsql' in sys.argv: wb_select_store('tsql')
+sql = open(args[0]).read() if args else sys.stdin.read()
 for r in json.loads(wb_run(sql, stop_on_error=False))['results']:
     head = r['sql'].strip().split('\n')[0][:70]
     if r['type'] == 'rows':

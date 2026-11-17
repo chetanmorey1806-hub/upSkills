@@ -4,8 +4,7 @@ import { ensurePython, runPyExec, restartPython } from '../components/pyodideRun
 import { WB_ENGINE_PY } from '../engine/wbEngine.js';
 
 export const MYSQL_LOAD_KEY = 'xlpbi-mysql-load';
-const DUMP_KEY = 'xlpbi-wb-dump-v1';
-const TABS_KEY = 'xlpbi-wb-tabs-v1';
+export const SSMS_LOAD_KEY = 'xlpbi-ssms-load';
 
 const SAMPLE_COLLEGE = `-- Sample database: college
 CREATE DATABASE IF NOT EXISTS college;
@@ -118,6 +117,106 @@ INSERT INTO order_items (order_id, product_id, quantity) VALUES (1,1,2),(1,5,3),
 SELECT 'ecommerce database ready' AS status;
 `;
 
+const TSQL_STUDENTDB = `-- Sample database: StudentDB (SQL Server / T-SQL)
+CREATE DATABASE StudentDB;
+GO
+USE StudentDB;
+GO
+DROP TABLE IF EXISTS Enrollments;
+DROP TABLE IF EXISTS Students;
+DROP TABLE IF EXISTS Courses;
+DROP TABLE IF EXISTS Departments;
+GO
+CREATE TABLE Departments (
+  DeptId INT IDENTITY(1,1) PRIMARY KEY,
+  DeptName NVARCHAR(50) NOT NULL UNIQUE
+);
+CREATE TABLE Students (
+  StudentId INT IDENTITY(1,1) PRIMARY KEY,
+  Name NVARCHAR(100) NOT NULL,
+  Gender CHAR(1),
+  City NVARCHAR(50),
+  DeptId INT FOREIGN KEY REFERENCES Departments(DeptId),
+  Marks INT CHECK (Marks BETWEEN 0 AND 100),
+  JoinDate DATE
+);
+CREATE TABLE Courses (
+  CourseId INT IDENTITY(1,1) PRIMARY KEY,
+  Title NVARCHAR(100) NOT NULL,
+  Fees INT DEFAULT 10000
+);
+CREATE TABLE Enrollments (
+  EnrollId INT IDENTITY(1,1) PRIMARY KEY,
+  StudentId INT FOREIGN KEY REFERENCES Students(StudentId),
+  CourseId INT FOREIGN KEY REFERENCES Courses(CourseId),
+  EnrollDate DATE
+);
+GO
+INSERT INTO Departments (DeptName) VALUES (N'Computer'), (N'Mechanical'), (N'Civil');
+INSERT INTO Students (Name, Gender, City, DeptId, Marks, JoinDate) VALUES
+ (N'Asha Patil', 'F', N'Pune', 1, 88, '2023-07-15'), (N'Ravi Kumar', 'M', N'Mumbai', 2, 72, '2022-08-01'),
+ (N'Neha Shah', 'F', N'Pune', 1, 93, '2024-01-10'), (N'Imran Khan', 'M', N'Nagpur', 3, 65, '2023-03-20'),
+ (N'Priya Desai', 'F', N'Nashik', 1, 81, '2024-06-05'), (N'Rahul Joshi', 'M', N'Pune', 2, 58, '2022-11-11');
+INSERT INTO Courses (Title, Fees) VALUES (N'C# Fundamentals', 12000), (N'ASP.NET Core', 18000), (N'SQL Server', 10000), (N'React', 15000);
+INSERT INTO Enrollments (StudentId, CourseId, EnrollDate) VALUES (1,1,'2024-07-01'), (1,2,'2024-07-01'), (2,3,'2024-07-02'), (3,1,'2024-07-03'), (3,4,'2024-07-03'), (5,2,'2024-07-04');
+GO
+SELECT 'StudentDB ready' AS Status;
+`;
+const TSQL_EMPLOYEEDB = `-- Sample database: EmployeeDB (SQL Server / T-SQL)
+CREATE DATABASE EmployeeDB;
+GO
+USE EmployeeDB;
+GO
+DROP TABLE IF EXISTS Employees;
+DROP TABLE IF EXISTS Departments;
+GO
+CREATE TABLE Departments (DeptId INT IDENTITY(1,1) PRIMARY KEY, DeptName NVARCHAR(50) NOT NULL, Location NVARCHAR(50));
+CREATE TABLE Employees (
+  EmpId INT IDENTITY(101,1) PRIMARY KEY,
+  Name NVARCHAR(100) NOT NULL,
+  DeptId INT FOREIGN KEY REFERENCES Departments(DeptId),
+  Salary INT,
+  HireDate DATE,
+  ManagerId INT NULL
+);
+GO
+INSERT INTO Departments (DeptName, Location) VALUES (N'IT', N'Pune'), (N'HR', N'Mumbai'), (N'Sales', N'Pune'), (N'Finance', N'Nagpur');
+INSERT INTO Employees (Name, DeptId, Salary, HireDate, ManagerId) VALUES
+ (N'Imran Khan', 1, 88000, '2016-09-20', NULL), (N'Asha Patil', 1, 72000, '2019-04-10', 101),
+ (N'Ravi Kumar', 2, 45000, '2021-07-01', 101), (N'Neha Shah', 3, 52000, '2020-01-15', 101),
+ (N'Priya Desai', 4, 61000, '2018-03-05', 101), (N'Rahul Joshi', 3, 39000, '2023-02-11', 104),
+ (N'Sneha More', 2, 48000, '2020-11-30', 103), (N'Karan Mehta', 1, 55000, '2022-06-18', 102);
+GO
+SELECT 'EmployeeDB ready' AS Status;
+`;
+const TSQL_SNIPPETS = [
+  ['CREATE TABLE', 'CREATE TABLE TableName (\n  Id INT IDENTITY(1,1) PRIMARY KEY,\n  Name NVARCHAR(100) NOT NULL,\n  CreatedAt DATETIME DEFAULT GETDATE()\n);'],
+  ['INSERT', "INSERT INTO TableName (Name) VALUES\n  (N'Value 1'),\n  (N'Value 2');"],
+  ['SELECT TOP', 'SELECT TOP 10 *\nFROM TableName\nORDER BY Id DESC;'],
+  ['UPDATE', "UPDATE TableName\nSET Name = N'New'\nWHERE Id = 1;"],
+  ['DELETE', 'DELETE FROM TableName\nWHERE Id = 1;'],
+  ['INNER JOIN', 'SELECT s.Name, d.DeptName\nFROM Students s\nINNER JOIN Departments d ON d.DeptId = s.DeptId;'],
+  ['GROUP BY … HAVING', 'SELECT DeptId, COUNT(*) AS Total, AVG(Marks) AS AvgMarks\nFROM Students\nGROUP BY DeptId\nHAVING COUNT(*) > 1;'],
+  ['Paging (OFFSET/FETCH)', 'SELECT *\nFROM Students\nORDER BY StudentId\nOFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;'],
+  ['CASE / IIF', "SELECT Name,\n  CASE WHEN Marks >= 75 THEN 'Distinction' WHEN Marks >= 60 THEN 'First' ELSE 'Pass' END AS Result,\n  IIF(Marks >= 40, 'Pass', 'Fail') AS Status\nFROM Students;"],
+  ['CTE', 'WITH DeptAvg AS (\n  SELECT DeptId, AVG(Marks) AS AvgMarks FROM Students GROUP BY DeptId\n)\nSELECT * FROM DeptAvg WHERE AvgMarks > 70;'],
+  ['ROW_NUMBER()', 'SELECT Name, Marks,\n  ROW_NUMBER() OVER (ORDER BY Marks DESC) AS RowNum,\n  DENSE_RANK() OVER (PARTITION BY DeptId ORDER BY Marks DESC) AS RankInDept\nFROM Students;'],
+  ['CREATE VIEW', 'CREATE VIEW vw_TopStudents AS\nSELECT Name, Marks FROM Students WHERE Marks >= 80;\nGO\nSELECT * FROM vw_TopStudents;'],
+  ['SELECT INTO #temp', 'SELECT Name, Marks INTO #Toppers FROM Students WHERE Marks > 80;\nSELECT * FROM #Toppers;'],
+  ['Transaction', 'BEGIN TRAN;\nUPDATE Students SET Marks = Marks + 5 WHERE StudentId = 1;\n-- COMMIT TRAN; to save, or:\nROLLBACK TRAN;'],
+  ['Date functions', "SELECT GETDATE() AS Now, DATEADD(day, 30, '2024-01-01') AS Plus30,\n  DATEDIFF(year, '2003-05-25', '2025-01-01') AS Age, FORMAT(CAST('2024-03-05' AS DATE), 'dd-MM-yyyy') AS Formatted;"],
+];
+const TSQL_PRACTICE = [
+  ['Top 3 students by marks', 'USE StudentDB;\nSELECT TOP 3 Name, Marks FROM Students ORDER BY Marks DESC;'],
+  ['Students with department (JOIN)', 'USE StudentDB;\nSELECT s.Name, d.DeptName FROM Students s\nLEFT JOIN Departments d ON d.DeptId = s.DeptId;'],
+  ['Average marks per department', 'USE StudentDB;\nSELECT d.DeptName, COUNT(*) AS Students, AVG(s.Marks) AS AvgMarks\nFROM Students s JOIN Departments d ON d.DeptId = s.DeptId\nGROUP BY d.DeptName ORDER BY AvgMarks DESC;'],
+  ['Students not enrolled', 'USE StudentDB;\nSELECT Name FROM Students s\nWHERE NOT EXISTS (SELECT 1 FROM Enrollments e WHERE e.StudentId = s.StudentId);'],
+  ['Employees above average salary', 'USE EmployeeDB;\nSELECT Name, Salary FROM Employees\nWHERE Salary > (SELECT AVG(Salary) FROM Employees) ORDER BY Salary DESC;'],
+  ['Employee with manager (SELF JOIN)', 'USE EmployeeDB;\nSELECT e.Name AS Employee, m.Name AS Manager\nFROM Employees e LEFT JOIN Employees m ON m.EmpId = e.ManagerId;'],
+  ['Department-wise salary rank', 'USE EmployeeDB;\nSELECT Name, DeptId, Salary,\n  RANK() OVER (PARTITION BY DeptId ORDER BY Salary DESC) AS SalaryRank\nFROM Employees;'],
+  ['Years of service', "USE EmployeeDB;\nSELECT Name, HireDate, DATEDIFF(year, HireDate, '2025-01-01') AS YearsOfService FROM Employees;"],
+];
+
 const SNIPPETS = [
   ['CREATE TABLE', 'CREATE TABLE table_name (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100) NOT NULL,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);'],
   ['INSERT', "INSERT INTO table_name (col1, col2) VALUES\n  ('value1', 10),\n  ('value2', 20);"],
@@ -149,6 +248,27 @@ const PRACTICE = [
   ['Monthly orders', "USE ecommerce;\nSELECT DATE_FORMAT(order_date, '%Y-%m') AS month, COUNT(*) AS orders\nFROM orders GROUP BY month ORDER BY month;"],
 ];
 
+const CFG = {
+  mysql: {
+    store: 'mysql', dump: 'xlpbi-wb-dump-v1', tabs: 'xlpbi-wb-tabs-v1', load: 'xlpbi-mysql-load', cls: 'wb',
+    title: 'MySQL Workbench', logo: '🐬', conn: 'Local instance 3306', nav: 'Navigator', navSub: 'SCHEMAS', schemaWord: 'schema',
+    samples: [['college', SAMPLE_COLLEGE], ['ecommerce', SAMPLE_SHOP]], snippets: SNIPPETS, practice: PRACTICE,
+    resultTab: 'Result Grid', outTab: 'Output', useStmt: (s) => `USE ${s};`, selectRows: (s, t) => `USE ${s};\nSELECT * FROM ${t} LIMIT 1000;`,
+    welcome: '-- Welcome to the MySQL Workbench Lab 🐬\n-- 1) Click "Load sample DB: college" on the left (or write CREATE DATABASE ...)\n-- 2) Write a query and press Ctrl+Shift+Enter (execute all) or Ctrl+Enter (current statement)\n\nSHOW DATABASES;\n',
+    help: ['Ctrl+Shift+Enter: execute all (or selection)', 'Ctrl+Enter: execute statement under cursor', 'Double-click a schema: set as default (USE)', '⊞ next to a table: Select Rows - Limit 1000'],
+    limits: 'This lab emulates MySQL 8 on SQLite. Stored procedures, users/GRANT, ALTER … MODIFY and EXPLAIN need real MySQL Workbench; the course shows how.',
+  },
+  tsql: {
+    store: 'tsql', dump: 'xlpbi-ssms-dump-v1', tabs: 'xlpbi-ssms-tabs-v1', load: 'xlpbi-ssms-load', cls: 'wb ssms',
+    title: 'SQL Server Management Studio', logo: '🗄️', conn: '(localdb)\\MSSQLLocalDB (SQL Server 16.0)', nav: 'Object Explorer', navSub: 'DATABASES', schemaWord: 'database',
+    samples: [['StudentDB', TSQL_STUDENTDB], ['EmployeeDB', TSQL_EMPLOYEEDB]], snippets: TSQL_SNIPPETS, practice: TSQL_PRACTICE,
+    resultTab: 'Results', outTab: 'Messages', useStmt: (s) => `USE ${s};`, selectRows: (s, t) => `USE ${s};\nSELECT TOP (1000) * FROM ${t};`,
+    welcome: '-- Welcome to the SSMS Lab (SQL Server / T-SQL) 🗄️\n-- 1) Click "Load sample DB: StudentDB" on the left (or write CREATE DATABASE ... GO USE ...)\n-- 2) Write a query and press F5 / Ctrl+E (execute all or selection)\n\nSELECT name FROM sys.tables;\n',
+    help: ['F5 or Ctrl+E: execute all (or the selected text)', 'Ctrl+Enter: execute statement under cursor', 'Double-click a database: USE it', '⊞ next to a table: Select Top 1000 Rows', 'GO separates batches'],
+    limits: 'This lab emulates SQL Server T-SQL on SQLite. Stored procedures, functions, T-SQL triggers, DECLARE variables, cursors, logins and BACKUP need real SQL Server + SSMS; the course shows how.',
+  },
+};
+
 const now = () => new Date().toTimeString().slice(0, 8);
 const loadJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const saveJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
@@ -169,31 +289,41 @@ function statementAt(text, offset) {
   return hit ? text.slice(hit[0], hit[1]) : text;
 }
 
-let engineReady = null;
-function initEngine() {
-  if (!engineReady) {
-    engineReady = (async () => {
-      await ensurePython();
-      await runPyExec({ code: WB_ENGINE_PY + '\n"ok"', packages: ['sqlite3'] });
-      const saved = loadJSON(DUMP_KEY, null);
-      const r = await runPyExec({ code: 'wb_load(__d, __c)', vars: { __d: JSON.stringify(saved?.dump || {}), __c: saved?.db || null } });
+let engineLoaded = null;
+const engineReady = {};
+function loadEngineCode() {
+  if (!engineLoaded) {
+    engineLoaded = (async () => { await ensurePython(); await runPyExec({ code: WB_ENGINE_PY + '\n"ok"', packages: ['sqlite3'] }); })();
+    engineLoaded.catch(() => { engineLoaded = null; });
+  }
+  return engineLoaded;
+}
+function initEngine(cfg) {
+  if (!engineReady[cfg.store]) {
+    engineReady[cfg.store] = (async () => {
+      await loadEngineCode();
+      const saved = loadJSON(cfg.dump, null);
+      const r = await runPyExec({ code: `wb_select_store('${cfg.store}'); wb_load(__d, __c)`, vars: { __d: JSON.stringify(saved?.dump || {}), __c: saved?.db || null } });
       return JSON.parse(r);
     })();
-    engineReady.catch(() => { engineReady = null; });
+    engineReady[cfg.store].catch(() => { delete engineReady[cfg.store]; });
   }
-  return engineReady;
+  return engineReady[cfg.store];
 }
+function resetEngines() { engineLoaded = null; Object.keys(engineReady).forEach((k) => delete engineReady[k]); }
 
-export default function MySQLWorkbench() {
+export default function MySQLWorkbench({ dialect = 'mysql' }) {
+  const cfg = CFG[dialect];
   const initial = useMemo(() => {
     let loaded = null;
-    try { loaded = JSON.parse(sessionStorage.getItem(MYSQL_LOAD_KEY)); sessionStorage.removeItem(MYSQL_LOAD_KEY); } catch { /* ignore */ }
-    const tabs = loadJSON(TABS_KEY, null) || [{ name: 'Query 1', sql: '-- Welcome to the MySQL Workbench Lab 🐬\n-- 1) Click "Load sample DB: college" on the left (or write CREATE DATABASE ...)\n-- 2) Write a query and press Ctrl+Shift+Enter (execute all) or Ctrl+Enter (current statement)\n\nSHOW DATABASES;\n' }];
+    try { loaded = JSON.parse(sessionStorage.getItem(cfg.load)); sessionStorage.removeItem(cfg.load); } catch { /* ignore */ }
+    const tabs = loadJSON(cfg.tabs, null) || [{ name: 'SQLQuery1.sql', sql: cfg.welcome }];
     if (loaded?.script) {
       tabs.push({ name: (loaded.title || 'Lesson').slice(0, 28), sql: loaded.script, expected: loaded.expected || '' });
       return { tabs, active: tabs.length - 1 };
     }
     return { tabs, active: 0 };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [tabs, setTabs] = useState(initial.tabs);
@@ -214,25 +344,25 @@ export default function MySQLWorkbench() {
 
   useEffect(() => { loader.init().catch(() => setFallback(true)); }, []);
   useEffect(() => {
-    initEngine().then((r) => { setSchemas(r.schemas); setCurrentDb(r.db); setStatus('ready'); setOpen(Object.fromEntries(Object.keys(r.schemas).map((k) => [k, true]))); })
+    initEngine(cfg).then((r) => { setSchemas(r.schemas); setCurrentDb(r.db); setStatus('ready'); setOpen(Object.fromEntries(Object.keys(r.schemas).map((k) => [k, true]))); })
       .catch((e) => { setStatus('error'); setOutput([{ n: 1, time: now(), action: 'Connect', message: String(e.message || e), ok: false }]); });
   }, []);
-  useEffect(() => { saveJSON(TABS_KEY, tabs.map(({ name, sql }) => ({ name, sql }))); }, [tabs]);
+  useEffect(() => { saveJSON(cfg.tabs, tabs.map(({ name, sql }) => ({ name, sql }))); }, [tabs, cfg.tabs]);
 
   const persist = async () => {
-    try { const d = await runPyExec({ code: 'wb_dump()' }); saveJSON(DUMP_KEY, { dump: JSON.parse(d), db: null }); } catch { /* ignore */ }
+    try { const d = await runPyExec({ code: `wb_select_store('${cfg.store}'); wb_dump()` }); return JSON.parse(d); } catch { return null; }
   };
 
   const execute = useCallback(async (sql) => {
     if (status !== 'ready' || !sql.trim()) return;
     setStatus('running');
     try {
-      await initEngine();
-      const raw = await runPyExec({ code: 'wb_run(__sql)', vars: { __sql: sql } });
+      await initEngine(cfg);
+      const raw = await runPyExec({ code: `wb_select_store('${cfg.store}'); wb_run(__sql)`, vars: { __sql: sql } });
       const r = JSON.parse(raw);
       const out = r.results.map((x) => ({
         n: ++counter.current, time: now(), action: x.sql.replace(/\s+/g, ' ').slice(0, 120),
-        message: x.type === 'rows' ? `${x.rows.length} row(s) returned` : x.message, ok: x.type !== 'error', ms: x.ms,
+        message: x.type === 'rows' ? (dialect === 'tsql' ? `(${x.rows.length} row${x.rows.length === 1 ? '' : 's'} affected)` : `${x.rows.length} row(s) returned`) : x.message, ok: x.type !== 'error', ms: x.ms,
       }));
       setOutput((o) => [...o, ...out].slice(-300));
       const grids = r.results.filter((x) => x.type === 'rows');
@@ -241,14 +371,14 @@ export default function MySQLWorkbench() {
       setBottom(r.results.some((x) => x.type === 'error') || !grids.length ? 'output' : 'result');
       setSchemas(r.schemas); setCurrentDb(r.db);
       setOpen((o) => ({ ...Object.fromEntries(Object.keys(r.schemas).map((k) => [k, o[k] ?? true])) }));
-      saveJSON(DUMP_KEY, null);
-      persist().then(() => { const cur = loadJSON(DUMP_KEY, null); if (cur) saveJSON(DUMP_KEY, { ...cur, db: r.db }); });
+      persist().then((dump) => { if (dump) saveJSON(cfg.dump, { dump, db: r.db }); });
     } catch (e) {
       setOutput((o) => [...o, { n: ++counter.current, time: now(), action: 'Execute', message: String(e.message || e), ok: false }]);
       setBottom('output');
     }
     setStatus('ready');
-  }, [status]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, cfg]);
 
   const cur = tabs[active] || tabs[0];
   const setSql = (v) => setTabs((t) => t.map((x, i) => (i === active ? { ...x, sql: v } : x)));
@@ -271,21 +401,25 @@ export default function MySQLWorkbench() {
     editorRef.current = editor;
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => runRef.current.runAll());
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current.runCurrent());
+    if (dialect === 'tsql') {
+      editor.addCommand(monaco.KeyCode.F5, () => runRef.current.runAll());
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyE, () => runRef.current.runAll());
+    }
   };
   const insert = (text) => {
     const ed = editorRef.current;
     if (ed) { ed.executeEdits('snippet', [{ range: ed.getSelection(), text: text + '\n' }]); ed.focus(); }
     else setSql(cur.sql + '\n' + text + '\n');
   };
-  const newTab = (sql = '', name) => { setTabs((t) => [...t, { name: name || `Query ${t.length + 1}`, sql }]); setActive(tabs.length); };
+  const newTab = (sql = '', name) => { setTabs((t) => [...t, { name: name || (dialect === 'tsql' ? `SQLQuery${t.length + 1}.sql` : `Query ${t.length + 1}`), sql }]); setActive(tabs.length); };
   const closeTab = (i) => { if (tabs.length === 1) return; setTabs((t) => t.filter((_, j) => j !== i)); setActive((a) => (a >= i && a > 0 ? a - 1 : a)); };
   const resetAll = async () => {
     if (!window.confirm('Delete ALL databases you created in this lab?')) return;
-    const r = JSON.parse(await runPyExec({ code: 'wb_reset()' }));
-    setSchemas(r.schemas); setCurrentDb(null); saveJSON(DUMP_KEY, null); setResults([]);
+    const r = JSON.parse(await runPyExec({ code: `wb_select_store('${cfg.store}'); wb_reset()` }));
+    setSchemas(r.schemas); setCurrentDb(r.db); saveJSON(cfg.dump, null); setResults([]);
     setOutput((o) => [...o, { n: ++counter.current, time: now(), action: 'Reset', message: 'All schemas dropped', ok: true }]);
   };
-  const stop = async () => { engineReady = null; await restartPython(); setStatus('loading'); const r = await initEngine(); setSchemas(r.schemas); setCurrentDb(r.db); setStatus('ready'); };
+  const stop = async () => { resetEngines(); await restartPython(); setStatus('loading'); const r = await initEngine(cfg); setSchemas(r.schemas); setCurrentDb(r.db); setStatus('ready'); };
   const openFile = (e) => {
     const f = e.target.files?.[0]; if (!f) return;
     f.text().then((t) => newTab(t, f.name));
@@ -301,32 +435,34 @@ export default function MySQLWorkbench() {
   const schemaNames = Object.keys(schemas).filter((s) => !filter || s.includes(filter.toLowerCase()) || Object.keys(schemas[s]).some((t) => t.toLowerCase().includes(filter.toLowerCase())));
 
   return (
-    <div className="wb">
+    <div className={cfg.cls}>
       <div className="wb-top">
-        <div className="wb-brand"><span className="wb-logo">🐬</span><b>MySQL Workbench</b><span className="wb-conn">Local instance 3306 · {status === 'loading' ? 'connecting…' : status === 'error' ? 'not connected' : 'connected'}</span></div>
+        <div className="wb-brand"><span className="wb-logo">{cfg.logo}</span><b>{cfg.title}</b><span className="wb-conn">{cfg.conn} · {status === 'loading' ? 'connecting…' : status === 'error' ? 'not connected' : 'connected'}</span></div>
         <div className="wb-tools">
           <label className="wb-btn" title="Open SQL script">📂<input type="file" accept=".sql,.txt" hidden onChange={openFile} /></label>
           <button className="wb-btn" title="Save script" onClick={saveFile}>💾</button>
           <span className="wb-sep" />
-          <button className="wb-btn exec" title="Execute all / selection (Ctrl+Shift+Enter)" disabled={status !== 'ready'} onClick={runAll}>⚡</button>
+          {dialect === 'tsql'
+            ? <button className="wb-btn exec ssms-exec" title="Execute (F5)" disabled={status !== 'ready'} onClick={runAll}>▶ Execute</button>
+            : <button className="wb-btn exec" title="Execute all / selection (Ctrl+Shift+Enter)" disabled={status !== 'ready'} onClick={runAll}>⚡</button>}
           <button className="wb-btn exec" title="Execute the statement under the cursor (Ctrl+Enter)" disabled={status !== 'ready'} onClick={runCurrent}>⚡<small>I</small></button>
           <button className="wb-btn" title="Stop" disabled={status !== 'running'} onClick={stop}>⛔</button>
           <span className="wb-sep" />
-          <button className="wb-btn" title="New query tab" onClick={() => newTab('')}>＋SQL</button>
-          <span className="wb-db">Default schema: <b>{currentDb || 'none'}</b></span>
+          <button className="wb-btn" title="New query tab" onClick={() => newTab('')}>{dialect === 'tsql' ? '📄 New Query' : '＋SQL'}</button>
+          <span className="wb-db">{dialect === 'tsql' ? 'Available Databases' : 'Default schema'}: <b>{currentDb || 'none'}</b></span>
         </div>
       </div>
 
       <div className="wb-body">
         <aside className="wb-nav">
-          <div className="wb-nav-head">Navigator</div>
-          <div className="wb-nav-sub">SCHEMAS</div>
+          <div className="wb-nav-head">{cfg.nav}</div>
+          <div className="wb-nav-sub">{cfg.navSub}</div>
           <input className="wb-filter" placeholder="Filter objects" value={filter} onChange={(e) => setFilter(e.target.value)} />
           <div className="wb-tree">
             {schemaNames.length === 0 && <div className="wb-muted">No schemas yet.</div>}
             {schemaNames.map((s) => (
               <div key={s}>
-                <div className={`wb-schema ${currentDb === s ? 'cur' : ''}`} onClick={() => setOpen({ ...open, [s]: !open[s] })} onDoubleClick={() => execute(`USE ${s};`)} title="Double-click to set as default schema">
+                <div className={`wb-schema ${currentDb === s ? 'cur' : ''}`} onClick={() => setOpen({ ...open, [s]: !open[s] })} onDoubleClick={() => execute(cfg.useStmt(s))} title={`Double-click to set as default ${cfg.schemaWord}`}>
                   {open[s] ? '▾' : '▸'} 🛢 {s}
                 </div>
                 {open[s] && (
@@ -336,7 +472,7 @@ export default function MySQLWorkbench() {
                       <div key={t}>
                         <div className="wb-table" onClick={() => setOpen({ ...open, [`${s}.${t}`]: !open[`${s}.${t}`] })}>
                           {open[`${s}.${t}`] ? '▾' : '▸'} ▦ {t}
-                          <button className="wb-mini" title="Select Rows - Limit 1000" onClick={(e) => { e.stopPropagation(); const q = `SELECT * FROM ${s}.${t} LIMIT 1000;`; newTab(q, t); setTimeout(() => execute(`USE ${s};\nSELECT * FROM ${t} LIMIT 1000;`), 50); }}>⊞</button>
+                          <button className="wb-mini" title={dialect === 'tsql' ? 'Select Top 1000 Rows' : 'Select Rows - Limit 1000'} onClick={(e) => { e.stopPropagation(); const q = cfg.selectRows(s, t); newTab(q, t); setTimeout(() => execute(q), 50); }}>⊞</button>
                         </div>
                         {open[`${s}.${t}`] && v.columns.map(([c, ty, pk]) => <div key={c} className="wb-col">{pk ? '🔑' : '◆'} {c} <span>{ty}</span></div>)}
                       </div>
@@ -351,9 +487,10 @@ export default function MySQLWorkbench() {
             ))}
           </div>
           <div className="wb-nav-actions">
-            <button className="wb-act" onClick={() => { newTab(SAMPLE_COLLEGE, 'college_setup'); setTimeout(() => execute(SAMPLE_COLLEGE), 50); }}>⬇ Load sample DB: college</button>
-            <button className="wb-act" onClick={() => { newTab(SAMPLE_SHOP, 'ecommerce_setup'); setTimeout(() => execute(SAMPLE_SHOP), 50); }}>⬇ Load sample DB: ecommerce</button>
-            <button className="wb-act danger" onClick={resetAll}>🗑 Drop all schemas</button>
+            {cfg.samples.map(([n, sql]) => (
+              <button key={n} className="wb-act" onClick={() => { newTab(sql, `${n}_setup.sql`); setTimeout(() => execute(dialect === 'tsql' ? sql.replace(/CREATE DATABASE (\w+);/, (m, db) => (schemas[db.toLowerCase()] || schemas[db] ? '' : m)) : sql), 50); }}>⬇ Load sample DB: {n}</button>
+            ))}
+            <button className="wb-act danger" onClick={resetAll}>🗑 Drop all {cfg.schemaWord}s</button>
           </div>
         </aside>
 
@@ -386,21 +523,18 @@ export default function MySQLWorkbench() {
             <button className={side === 'help' ? 'on' : ''} onClick={() => setSide('help')}>Help</button>
           </div>
           <div className="wb-side-body">
-            {side === 'snippets' && SNIPPETS.map(([n, s]) => <button key={n} className="wb-snip" onClick={() => insert(s)} title={s}>{n}</button>)}
+            {side === 'snippets' && cfg.snippets.map(([n, s]) => <button key={n} className="wb-snip" onClick={() => insert(s)} title={s}>{n}</button>)}
             {side === 'practice' && (
               <>
                 <div className="wb-muted">Load the sample DBs first, then try:</div>
-                {PRACTICE.map(([n, s]) => <button key={n} className="wb-snip" onClick={() => newTab(s, n.slice(0, 24))}>{n}</button>)}
+                {cfg.practice.map(([n, s]) => <button key={n} className="wb-snip" onClick={() => newTab(s, n.slice(0, 24))}>{n}</button>)}
               </>
             )}
             {side === 'help' && (
               <div className="wb-help">
-                <p><b>Ctrl+Shift+Enter</b>: execute all (or selection)</p>
-                <p><b>Ctrl+Enter</b>: execute statement under cursor</p>
-                <p><b>Double-click a schema</b>: set as default (USE)</p>
-                <p><b>⊞ next to a table</b>: Select Rows - Limit 1000</p>
+                {cfg.help.map((h) => <p key={h}>{h}</p>)}
                 <p>Your databases are saved in this browser.</p>
-                <p className="wb-muted">This lab emulates MySQL 8 on SQLite. Stored procedures, users/GRANT, ALTER … MODIFY and EXPLAIN need real MySQL Workbench; the course shows how.</p>
+                <p className="wb-muted">{cfg.limits}</p>
               </div>
             )}
           </div>
@@ -409,9 +543,9 @@ export default function MySQLWorkbench() {
 
       <div className="wb-bottom">
         <div className="wb-btabs">
-          <button className={bottom === 'result' ? 'on' : ''} onClick={() => setBottom('result')}>Result Grid</button>
+          <button className={bottom === 'result' ? 'on' : ''} onClick={() => setBottom('result')}>{cfg.resultTab}</button>
           {bottom === 'result' && results.length > 1 && results.map((_, i) => <button key={i} className={`sub ${resTab === i ? 'on' : ''}`} onClick={() => setResTab(i)}>Result {i + 1}</button>)}
-          <button className={bottom === 'output' ? 'on' : ''} onClick={() => setBottom('output')}>Output {output.some((o) => !o.ok) ? '⚠' : ''}</button>
+          <button className={bottom === 'output' ? 'on' : ''} onClick={() => setBottom('output')}>{cfg.outTab} {output.some((o) => !o.ok) ? '⚠' : ''}</button>
           {bottom === 'output' && <button className="sub" onClick={() => setOutput([])}>Clear</button>}
         </div>
         <div className="wb-bbody">

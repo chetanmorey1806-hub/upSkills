@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 
 const tools = [
+  ['/tools/csharp-ide', '🟣', 'C# IDE (Visual Studio style)', 'Visual Studio–like editor for C#: menu bar, Solution Explorer with Program.cs and extra classes (Add > Class), C# syntax highlighting and IntelliSense-style suggestions, Output / Error List panes, expected output from each lesson, .csproj and copy/download to run in Visual Studio (Ctrl+F5).'],
+  ['/tools/ssms-lab', '🗄️', 'SSMS Lab (SQL Server style)', 'SQL Server Management Studio–style T-SQL practice: Object Explorer, New Query, ▶ Execute (F5), Results and Messages ("(3 rows affected)", Msg 208 …). Supports TOP, IDENTITY, GO, GETDATE, DATEADD/DATEDIFF, CONVERT, OFFSET-FETCH, SELECT INTO #temp, CTEs, window functions, views and transactions. Sample StudentDB and EmployeeDB.'],
   ['/tools/mysql-workbench', '🐬', 'MySQL Workbench Lab', 'A MySQL Workbench–style practice tool: Navigator with schemas/tables/columns, query tabs, ⚡ execute all (Ctrl+Shift+Enter) or current statement (Ctrl+Enter), Result Grid and Action Output. Understands MySQL syntax (CREATE DATABASE, USE, SHOW TABLES, DESCRIBE, AUTO_INCREMENT, DATE_FORMAT, IF, CONCAT…). Sample college & ecommerce databases; your databases are saved in the browser.'],
   ['/tools/python-ide', '🐍', 'Python IDE (PyCharm style)', 'Write and RUN real Python 3.12 in your browser (Pyodide): multiple .py files with imports, input() support, output console, Stop button, compare with the expected output, numpy/pandas auto-loaded.'],
   ['/tools/sql-lab', '🗄️', 'SQL Lab (Workbench style)', 'Run SQL queries in your browser on a ready sample company database (employees, departments, customers, products, orders). Result grids, setup editor, practice queries incl. joins and window functions.'],

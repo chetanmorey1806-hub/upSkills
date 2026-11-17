@@ -1,7 +1,9 @@
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { openInPlayground } from '../components/playgroundRuntime.js';
 import { useState } from 'react';
-import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL } from '../data/index.js';
+import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL, isDotnet } from '../data/index.js';
+import { CS_LOAD_KEY } from './CSharpIDE.jsx';
+import { SSMS_LOAD_KEY } from './MySQLWorkbench.jsx';
 import { MYSQL_LOAD_KEY } from './MySQLWorkbench.jsx';
 import { PY_LOAD_KEY } from './PythonIDE.jsx';
 import { SQL_LOAD_KEY } from './SqlLab.jsx';
@@ -32,6 +34,7 @@ function Reveal({ label, children }) {
 
 function looksLikeCode(s) {
   if (/^\s*(def |from |import |print\(|#|class |for |if |with )/.test(s) && /\n/.test(s)) return true;
+  if (/^\s*(using |namespace |Console\.|var |int |string |static |interface |abstract |sealed |\[|dotnet |Add-Migration)/.test(s) && /\n/.test(s)) return true;
   if (/^\s*(public |class |import java|package |@|<\?xml|<dependency|spring\.|SELECT |CREATE |INSERT )/.test(s)) return true;
   if (/^\s*(<[a-zA-Z!]|[.#]?[a-z-]+\s*\{|const |let |function |import |export |document\.|console\.)/.test(s)) return true;
   return /^\s*(=|let\b|Sub\b|Function\b|[A-Za-z ]+\s*=\s*[A-Z]|EVALUATE|VAR\b|Dim\b|'|\/\/)/.test(s) && !/^\s*\d+\./.test(s);
@@ -64,14 +67,20 @@ export default function TopicPage() {
   const java = isJava(track);
   const py = isPython(track);
   const my = isMySQL(track);
-  const isExcel = !isPbi(track) && !web && !java && !py && !my;
+  const dn = isDotnet(track);
+  const dnMod = `${t.module || ''} ${t.title}`;
+  const dnSql = dn && /SQL Server/i.test(dnMod);
+  const dnWeb = dn && /Frontend|React/i.test(t.module || '');
+  const isExcel = !isPbi(track) && !web && !java && !py && !my && !dn;
+  const openCs = (payload) => { try { sessionStorage.setItem(CS_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/csharp-ide'); };
+  const openSsms = (payload) => { try { sessionStorage.setItem(SSMS_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/ssms-lab'); };
   const openWb = (payload) => { try { sessionStorage.setItem(MYSQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/mysql-workbench'); };
   const openPy = (payload) => { try { sessionStorage.setItem(PY_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/python-ide'); };
   const openSql = (payload) => { try { sessionStorage.setItem(SQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/sql-lab'); };
   const openJava = (payload) => { try { sessionStorage.setItem(JAVA_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/java-ide'); };
-  const codeLabel = my ? 'MySQL' : py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
+  const codeLabel = dn ? (dnSql ? 'T-SQL / Code' : dnWeb ? 'Code' : 'C# / Code') : my ? 'MySQL' : py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
   const pqTopic = !isExcel && /power query|\bM\b|m language|dataflow/i.test(`${t.module || ''} ${t.title}`);
-  const lab = my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
+  const lab = dnSql ? ['/tools/ssms-lab', 'SSMS Lab'] : dnWeb ? ['/tools/playground', 'Code Playground'] : dn ? ['/tools/csharp-ide', 'C# IDE'] : my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
 
   const setTab = (k) => setParams({ tab: k }, { replace: true });
 
@@ -156,6 +165,16 @@ export default function TopicPage() {
                 </div>
               )}
               <CodeBlock code={ex.code} label={codeLabel} />
+              {ex.csharp?.files && (
+                <button className="btn small primary try-btn" onClick={() => openCs({ files: ex.csharp.files, stdin: ex.csharp.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
+                  🟣 Open in C# IDE
+                </button>
+              )}
+              {ex.tsql && (
+                <button className="btn small primary try-btn" onClick={() => openSsms({ script: ex.tsql, expected: ex.result || '', title: ex.title })}>
+                  🗄️ Open in SSMS Lab
+                </button>
+              )}
               {ex.mysql && (
                 <button className="btn small primary try-btn" onClick={() => openWb({ script: ex.mysql, expected: ex.result || '', title: ex.title })}>
                   🐬 Open in Workbench Lab
@@ -225,7 +244,7 @@ export default function TopicPage() {
       {tab === 'practice' && (
         <div>
           <div className="card info">
-            Do these exercises in {my ? 'MySQL Workbench' : track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
+            Do these exercises in {dnSql ? 'SQL Server Management Studio' : dn ? 'Visual Studio' : my ? 'MySQL Workbench' : track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
             {!isExcel && <> (the DAX Lab has a download button for the practice CSV files)</>}.
             Try first, then use the hint, then check the solution. Tick an exercise once you've solved it.
           </div>
@@ -240,6 +259,18 @@ export default function TopicPage() {
               <RichText text={ex.task} />
               {ex.hint && <Reveal label="hint"><div className="tip">💡 <Inline text={ex.hint} /></div></Reveal>}
               {ex.solution && <Reveal label="solution"><SolutionText text={ex.solution} /></Reveal>}
+              {dn && !dnWeb && (
+                <button className="btn small" onClick={() => (dnSql
+                  ? openSsms({ script: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n-- Tip: load StudentDB / EmployeeDB from Object Explorer first\n\n', expected: '', title: `Exercise ${i + 1}` })
+                  : openCs({ files: { 'Program.cs': '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n\nConsole.WriteLine("Start here");\n' }, expected: '', title: `Exercise ${i + 1}` }))}>
+                  ✍ Solve in {dnSql ? 'SSMS Lab' : 'C# IDE'}
+                </button>
+              )}
+              {(dnWeb) && (
+                <button className="btn small" onClick={() => openInPlayground(navigate, /React/i.test(t.module || '') ? { jsx: '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + '\nconst { useState } = React;\n\nfunction App() {\n  return <div>Start here</div>;\n}\n' } : { html: '<!-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + ' -->\n' }, `Exercise ${i + 1}`)}>
+                  ✍ Solve in Code Playground
+                </button>
+              )}
               {my && (
                 <button className="btn small" onClick={() => openWb({ script: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n-- Tip: load a sample DB from the Navigator first (college / ecommerce)\n\n', expected: '', title: `Exercise ${i + 1}` })}>
                   ✍ Solve in Workbench Lab

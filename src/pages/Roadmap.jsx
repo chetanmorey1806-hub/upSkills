@@ -20,7 +20,7 @@ function addExtras(plan, trackKey, label) {
   tracks[trackKey].topics.forEach((x, i) => plan.push({ type: 'topic', track: trackKey, topic: x, idx: i }));
 }
 
-const WEB_PLANS = { html: ['html'], css: ['css'], js: ['js'], react: ['react'], web: ['html', 'css', 'js', 'react'], javafs: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'], mysql: ['mysql'], pyfs: ['python', 'sql', 'flask', 'django', 'drf'], pyfull: ['python', 'sql', 'html', 'css', 'js', 'flask', 'django', 'drf', 'react'], javafull: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'html', 'css', 'js', 'react'] };
+const WEB_PLANS = { html: ['html'], css: ['css'], js: ['js'], react: ['react'], web: ['html', 'css', 'js', 'react'], javafs: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'], mysql: ['mysql'], dotnet: ['dotnet'], pyfs: ['python', 'sql', 'flask', 'django', 'drf'], pyfull: ['python', 'sql', 'html', 'css', 'js', 'flask', 'django', 'drf', 'react'], javafull: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'html', 'css', 'js', 'react'] };
 
 function buildPlan(mode) {
   const plan = [];
@@ -28,6 +28,7 @@ function buildPlan(mode) {
   if (WEB_PLANS[mode]) {
     WEB_PLANS[mode].forEach((k) => { day = addCourse(plan, k, day); });
     if (mode === 'html' || mode === 'web') addExtras(plan, 'htmlextra', 'HTML extra topics (must-know)');
+    if (mode === 'dotnet') addExtras(plan, 'dotnetextra', '.NET extra topics: OOP concepts, advanced C#, SQL Server, ASP.NET Core / EF Core / Web API');
     return plan;
   }
   if (mode !== 'powerbi') day = addCourse(plan, 'excel', day);
@@ -55,7 +56,7 @@ export default function Roadmap() {
           take the quiz → revise the interview Q&amp;A. Tick "Mark as completed" on each day to track progress.
         </p>
         <div className="chips">
-          {[['excel', 'Excel 60 days'], ['powerbi', 'Power BI 45 days'], ['both', 'Excel → Power BI (105 days)'], ['html', 'HTML 30 days'], ['css', 'CSS 30 days'], ['js', 'JavaScript 45 days'], ['react', 'React 30 days'], ['web', 'Full web dev: HTML → CSS → JS → React (135 days)'], ['javafs', 'Java Full Stack: Core Java → Collections → Adv Java → Hibernate → Spring → Spring Boot (132 days)'], ['javafull', 'Java Full Stack + Frontend (Java + HTML/CSS/JS/React)'], ['mysql', 'MySQL with Workbench (30 days)'], ['pyfs', 'Python Full Stack: Python → SQL → Flask → Django → DRF (114 days)'], ['pyfull', 'Python Full Stack + Frontend (Python, SQL, HTML/CSS/JS, Flask, Django, DRF, React)']].map(([k, l]) => (
+          {[['excel', 'Excel 60 days'], ['powerbi', 'Power BI 45 days'], ['both', 'Excel → Power BI (105 days)'], ['html', 'HTML 30 days'], ['css', 'CSS 30 days'], ['js', 'JavaScript 45 days'], ['react', 'React 30 days'], ['web', 'Full web dev: HTML → CSS → JS → React (135 days)'], ['javafs', 'Java Full Stack: Core Java → Collections → Adv Java → Hibernate → Spring → Spring Boot (132 days)'], ['javafull', 'Java Full Stack + Frontend (Java + HTML/CSS/JS/React)'], ['mysql', 'MySQL with Workbench (30 days)'], ['dotnet', '.NET Full Stack (120 days)'], ['pyfs', 'Python Full Stack: Python → SQL → Flask → Django → DRF (114 days)'], ['pyfull', 'Python Full Stack + Frontend (Python, SQL, HTML/CSS/JS, Flask, Django, DRF, React)']].map(([k, l]) => (
             <button key={k} className={`chip ${mode === k ? 'active' : ''}`} onClick={() => setMode(k)}>{l}</button>
           ))}
         </div>

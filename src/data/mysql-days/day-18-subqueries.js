@@ -346,7 +346,7 @@ WHERE s.marks > (SELECT AVG(s2.marks)
                  WHERE s2.dept_id = s.dept_id)
 ORDER BY s.dept_id;`,
       result: ">> SELECT dept_id, AVG(marks) AS dept_avg FROM students WHERE dept_id IS \n+---------+-------------------+\n| dept_id | dept_avg          |\n+---------+-------------------+\n| 1       | 91.66666666666667 |\n| 2       | 78.0              |\n| 3       | 62.5              |\n| 4       | 72.0              |\n+---------+-------------------+\n4 row(s) returned\n>> SELECT s.name, s.dept_id, s.marks\n+-------------+---------+-------+\n| name        | dept_id | marks |\n+-------------+---------+-------+\n| Diya Patel  | 1       | 92    |\n| Ananya Rao  | 1       | 95    |\n| Sneha Iyer  | 2       | 81    |\n| Kabir Singh | 3       | 67    |\n+-------------+---------+-------+\n4 row(s) returned",
-      explanation: 'For Aarav (dept 1) the inner query computes AVG for dept 1 = 91.67; 88 is not above it. Ananya (95) and Diya (92) are. Civil has only Meera, whose marks equal the average, so nobody from dept 4 appears. Students with NULL dept never match because s2.dept_id = NULL is unknown.',
+      explanation: 'For Aarav (dept 1) the inner query computes AVG for dept 1 = 91.67; 88 is not above it. Ananya (95) and Diya (92) are. Sneha (81 > 78.0) and Kabir (67 > 62.5) also qualify. Civil has only Meera, whose marks equal the average, so nobody from dept 4 appears. Students with NULL dept never match because s2.dept_id = NULL is unknown.',
     },
     {
       title: 'Subquery in SELECT and derived table in FROM',
