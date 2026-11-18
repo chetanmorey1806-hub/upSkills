@@ -1494,5 +1494,2157 @@ public class LoginFilter implements Filter {
       'Add a "remember me" cookie',
     ],
   },
-  /*__MORE__*/
+
+  // ------------------------------------------------------------------
+  // 5. Online Exam / Quiz Portal (Spring MVC + Hibernate)
+  // ------------------------------------------------------------------
+  {
+    id: 'quiz-spring-mvc',
+    title: 'Online Exam / Quiz Portal',
+    level: 'Intermediate',
+    duration: '8 days',
+    track: 'Spring MVC & Hibernate',
+    stack: ['Java 17', 'Spring MVC 6', 'Hibernate 6 (JPA)', 'Thymeleaf / JSP', 'MySQL 8', 'Tomcat 10', 'Maven'],
+    summary:
+      'An exam portal where an admin creates tests with multiple-choice questions and students log in, attempt tests with a timer and see their result and leaderboard. It proves you can build a Spring MVC app with controllers, services, Hibernate entities and relationships (one-to-many, many-to-one).',
+    features: [
+      'Admin and Student login (role stored in users table)',
+      'Admin: create, edit, publish and delete tests',
+      'Admin: add MCQ questions with 4 options and one correct answer',
+      'Student: see list of published tests',
+      'Student: attempt a test with a countdown timer (auto submit on time up)',
+      'Automatic evaluation, score, percentage and PASS/FAIL',
+      'Student: view past results and answer review',
+      'Leaderboard per test (top 10 scores)',
+      'Prevent a student from attempting the same test twice',
+    ],
+    roles: [
+      'Admin: manages tests and questions, views all results',
+      'Student: attempts tests, views own results and leaderboard',
+    ],
+    architecture:
+      'Spring MVC layered design. DispatcherServlet sends requests to @Controller classes. Controllers call @Service classes, which use Hibernate (JPA EntityManager or Spring Data repositories) to talk to MySQL. Views are Thymeleaf templates.\n\n' +
+      '  Browser\n' +
+      '     |\n' +
+      '  DispatcherServlet\n' +
+      '     |\n' +
+      '  AdminController / ExamController / AuthController\n' +
+      '     |\n' +
+      '  TestService / ExamService / ResultService  (@Transactional)\n' +
+      '     |\n' +
+      '  Repositories (Hibernate 6 / JPA)\n' +
+      '     |\n' +
+      '  MySQL: users, test, question, result, answer',
+    folderStructure: `quiz-portal/
+├── pom.xml
+└── src/main/
+    ├── java/com/quiz/
+    │   ├── config/WebConfig.java
+    │   ├── config/PersistenceConfig.java
+    │   ├── entity/User.java
+    │   ├── entity/Test.java
+    │   ├── entity/Question.java
+    │   ├── entity/Result.java
+    │   ├── repository/TestRepository.java
+    │   ├── repository/ResultRepository.java
+    │   ├── service/TestService.java
+    │   ├── service/ExamService.java
+    │   ├── controller/AuthController.java
+    │   ├── controller/AdminController.java
+    │   └── controller/ExamController.java
+    ├── resources/
+    │   └── application.properties
+    └── webapp/WEB-INF/templates/
+        ├── login.html
+        ├── admin/tests.html
+        ├── admin/question-form.html
+        ├── student/tests.html
+        ├── student/attempt.html
+        └── student/result.html`,
+    database: `CREATE DATABASE quiz_db;
+USE quiz_db;
+
+CREATE TABLE users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(100) NOT NULL,
+  role ENUM('ADMIN','STUDENT') NOT NULL
+);
+
+CREATE TABLE test (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(150) NOT NULL,
+  duration_min INT NOT NULL,
+  pass_percent INT NOT NULL DEFAULT 40,
+  published BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE question (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  test_id BIGINT NOT NULL,
+  text VARCHAR(500) NOT NULL,
+  option_a VARCHAR(200), option_b VARCHAR(200),
+  option_c VARCHAR(200), option_d VARCHAR(200),
+  correct_option CHAR(1) NOT NULL,
+  FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE
+);
+
+CREATE TABLE result (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  test_id BIGINT NOT NULL,
+  score INT NOT NULL,
+  total INT NOT NULL,
+  attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, test_id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (test_id) REFERENCES test(id)
+);`,
+    apis: [
+      { method: 'GET', path: '/login', desc: 'Login page' },
+      { method: 'GET', path: '/admin/tests', desc: 'Admin: list all tests' },
+      { method: 'POST', path: '/admin/tests', desc: 'Admin: create a test' },
+      { method: 'POST', path: '/admin/tests/{id}/questions', desc: 'Admin: add question to a test' },
+      { method: 'POST', path: '/admin/tests/{id}/publish', desc: 'Admin: publish a test' },
+      { method: 'GET', path: '/student/tests', desc: 'Student: list published tests' },
+      { method: 'GET', path: '/student/tests/{id}/attempt', desc: 'Student: show questions with timer' },
+      { method: 'POST', path: '/student/tests/{id}/submit', desc: 'Student: submit answers, evaluate and save result' },
+      { method: 'GET', path: '/student/results', desc: 'Student: my results' },
+      { method: 'GET', path: '/tests/{id}/leaderboard', desc: 'Top 10 scores of a test' },
+    ],
+    milestones: [
+      {
+        title: 'Milestone 1: Setup',
+        tasks: [
+          'Create Maven war project with spring-webmvc, hibernate-core, mysql-connector-j, thymeleaf-spring6',
+          'Configure DispatcherServlet using WebApplicationInitializer',
+          'Configure DataSource, EntityManagerFactory and TransactionManager',
+          'Run a Hello controller on Tomcat 10',
+        ],
+      },
+      {
+        title: 'Milestone 2: Entities and relationships',
+        tasks: [
+          'Create User, Test, Question, Result entities with @Entity',
+          'Map Test 1-to-many Question with @OneToMany(mappedBy) and cascade',
+          'Map Result many-to-one User and Test',
+          'Let Hibernate validate schema (hbm2ddl validate) against your SQL',
+        ],
+      },
+      {
+        title: 'Milestone 3: Login and roles',
+        tasks: [
+          'Build AuthController with login form and session',
+          'Write a HandlerInterceptor that blocks /admin/** for non-admin users',
+          'Redirect admin and student to different home pages',
+        ],
+      },
+      {
+        title: 'Milestone 4: Admin features',
+        tasks: [
+          'Create and list tests',
+          'Add questions using a form backed by a DTO',
+          'Publish / unpublish and delete test',
+          'Validate input using @Valid and BindingResult',
+        ],
+      },
+      {
+        title: 'Milestone 5: Exam attempt',
+        tasks: [
+          'Show questions of a published test with radio buttons',
+          'Add JavaScript countdown timer that auto submits the form',
+          'Evaluate answers in ExamService (@Transactional) and save Result',
+          'Block second attempt using the unique (user_id, test_id) rule',
+        ],
+      },
+      {
+        title: 'Milestone 6: Results and leaderboard',
+        tasks: [
+          'Show result page with score, percent and answer review',
+          'Show my results history',
+          'Leaderboard query: ORDER BY score DESC LIMIT 10 using JPQL',
+        ],
+      },
+      {
+        title: 'Milestone 7: Polish and submit',
+        tasks: [
+          'Add Bootstrap styling',
+          'Global exception handler using @ControllerAdvice',
+          'Write README with DB setup, users to log in and screenshots',
+        ],
+      },
+    ],
+    starter: {
+      files: {
+        'Main.java': `public class Main {
+    public static void main(String[] args) {
+        System.out.println("=== Online Quiz Portal (service simulation) ===");
+        Test t = new Test("Java Basics");
+        t.addQuestion(new Question("Which keyword is used to inherit a class?",
+                new String[]{"implements", "extends", "super", "this"}, 1));
+        t.addQuestion(new Question("Size of int in Java?",
+                new String[]{"2 bytes", "4 bytes", "8 bytes", "Depends on OS"}, 1));
+        t.addQuestion(new Question("Which collection does not allow duplicates?",
+                new String[]{"List", "ArrayList", "Set", "Vector"}, 2));
+        t.addQuestion(new Question("Default value of a boolean field?",
+                new String[]{"true", "false", "null", "0"}, 1));
+        System.out.println("Test: " + t.getTitle() + " (" + t.getQuestions().size() + " questions)");
+
+        QuizService service = new QuizService();
+        int[] answers = {1, 1, 0, 1};
+        for (int i = 0; i < t.getQuestions().size(); i++) {
+            Question q = t.getQuestions().get(i);
+            String status = q.isCorrect(answers[i]) ? "correct" : "wrong (answer: " + q.getCorrectOption() + ")";
+            System.out.println("Q" + (i + 1) + ": " + status);
+        }
+        Result r1 = service.evaluate("Pooja", t, answers);
+        System.out.println(r1);
+
+        Result r2 = service.evaluate("Vikram", t, new int[]{0, 2, 2, 0});
+        System.out.println(r2);
+
+        System.out.println("--- Leaderboard ---");
+        int rank = 1;
+        for (Result r : service.leaderboard()) {
+            System.out.println(rank + ". " + r.getStudentName() + " - " + r.getScore() + "/" + r.getTotal());
+            rank++;
+        }
+        System.out.println("TODO: block second attempt, add timer and admin features");
+    }
+}
+`,
+        'Question.java': `public class Question {
+    private final String text;
+    private final String[] options;
+    private final int correctIndex;
+
+    public Question(String text, String[] options, int correctIndex) {
+        this.text = text;
+        this.options = options;
+        this.correctIndex = correctIndex;
+    }
+
+    public String getText() { return text; }
+    public String[] getOptions() { return options; }
+
+    public boolean isCorrect(int chosenIndex) {
+        return chosenIndex == correctIndex;
+    }
+
+    public String getCorrectOption() {
+        return options[correctIndex];
+    }
+}
+`,
+        'Test.java': `import java.util.ArrayList;
+import java.util.List;
+
+// In the real project this is a JPA @Entity with @OneToMany questions
+public class Test {
+    private final String title;
+    private final List<Question> questions = new ArrayList<>();
+
+    public Test(String title) {
+        this.title = title;
+    }
+
+    public void addQuestion(Question q) {
+        questions.add(q);
+    }
+
+    public String getTitle() { return title; }
+    public List<Question> getQuestions() { return questions; }
+}
+`,
+        'Result.java': `public class Result {
+    private final String studentName;
+    private final int score;
+    private final int total;
+
+    public Result(String studentName, int score, int total) {
+        this.studentName = studentName;
+        this.score = score;
+        this.total = total;
+    }
+
+    public String getStudentName() { return studentName; }
+    public int getScore() { return score; }
+    public int getTotal() { return total; }
+
+    public int getPercent() {
+        return score * 100 / total;
+    }
+
+    public boolean isPassed() {
+        return getPercent() >= 40;
+    }
+
+    @Override
+    public String toString() {
+        return studentName + " scored " + score + "/" + total + " (" + getPercent() + "%) - "
+                + (isPassed() ? "PASS" : "FAIL");
+    }
+}
+`,
+        'QuizService.java': `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class QuizService {
+    private final List<Result> results = new ArrayList<>();
+
+    public Result evaluate(String studentName, Test test, int[] answers) {
+        int score = 0;
+        List<Question> qs = test.getQuestions();
+        for (int i = 0; i < qs.size(); i++) {
+            if (i < answers.length && qs.get(i).isCorrect(answers[i])) {
+                score++;
+            }
+        }
+        Result r = new Result(studentName, score, qs.size());
+        results.add(r);
+        return r;
+    }
+
+    public List<Result> leaderboard() {
+        return results.stream()
+                .sorted(Comparator.comparingInt(Result::getScore).reversed())
+                .collect(Collectors.toList());
+    }
+
+    // TODO: hasAttempted(studentName, test) to block second attempt
+}
+`,
+      },
+      stdin: '',
+      expected: `=== Online Quiz Portal (service simulation) ===
+Test: Java Basics (4 questions)
+Q1: correct
+Q2: correct
+Q3: wrong (answer: Set)
+Q4: correct
+Pooja scored 3/4 (75%) - PASS
+Vikram scored 1/4 (25%) - FAIL
+--- Leaderboard ---
+1. Pooja - 3/4
+2. Vikram - 1/4
+TODO: block second attempt, add timer and admin features`,
+      note:
+        'Done: Test/Question/Result models and QuizService that evaluates answers and builds a leaderboard. You must add: one-attempt rule, then build the Spring MVC app - Hibernate entities, repositories, controllers, Thymeleaf pages and timer (see key code).',
+    },
+    keyCode: [
+      {
+        title: 'Test.java and Question.java (Hibernate entities)',
+        lang: 'java',
+        code: `@Entity
+@Table(name = "test")
+public class Test {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(name = "duration_min")
+    private int durationMin;
+
+    private boolean published;
+
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Question> questions = new ArrayList<>();
+
+    public void addQuestion(Question q) {
+        questions.add(q);
+        q.setTest(this);
+    }
+    // getters and setters
+}
+
+@Entity
+@Table(name = "question")
+public class Question {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String text;
+    private String optionA, optionB, optionC, optionD;
+
+    @Column(name = "correct_option")
+    private String correctOption;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "test_id")
+    private Test test;
+    // getters and setters
+}`,
+      },
+      {
+        title: 'ExamController.java',
+        lang: 'java',
+        code: `@Controller
+@RequestMapping("/student/tests")
+public class ExamController {
+    private final ExamService examService;
+
+    public ExamController(ExamService examService) {
+        this.examService = examService;
+    }
+
+    @GetMapping
+    public String list(Model model) {
+        model.addAttribute("tests", examService.publishedTests());
+        return "student/tests";
+    }
+
+    @GetMapping("/{id}/attempt")
+    public String attempt(@PathVariable Long id, HttpSession session, Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (examService.hasAttempted(userId, id)) {
+            return "redirect:/student/results?already=true";
+        }
+        model.addAttribute("test", examService.getTestWithQuestions(id));
+        return "student/attempt";
+    }
+
+    @PostMapping("/{id}/submit")
+    public String submit(@PathVariable Long id, @RequestParam Map<String, String> answers,
+                         HttpSession session, Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+        model.addAttribute("result", examService.evaluateAndSave(userId, id, answers));
+        return "student/result";
+    }
+}`,
+      },
+      {
+        title: 'ExamService.evaluateAndSave (@Transactional)',
+        lang: 'java',
+        code: `@Service
+public class ExamService {
+    private final TestRepository testRepo;
+    private final ResultRepository resultRepo;
+    private final UserRepository userRepo;
+
+    public ExamService(TestRepository t, ResultRepository r, UserRepository u) {
+        this.testRepo = t; this.resultRepo = r; this.userRepo = u;
+    }
+
+    @Transactional
+    public Result evaluateAndSave(Long userId, Long testId, Map<String, String> answers) {
+        Test test = testRepo.findById(testId).orElseThrow();
+        int score = 0;
+        for (Question q : test.getQuestions()) {
+            String chosen = answers.get("q" + q.getId());
+            if (q.getCorrectOption().equals(chosen)) score++;
+        }
+        Result r = new Result(userRepo.getReferenceById(userId), test, score, test.getQuestions().size());
+        return resultRepo.save(r);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Result> leaderboard(Long testId) {
+        return resultRepo.findTop10ByTestIdOrderByScoreDesc(testId);
+    }
+}`,
+      },
+      {
+        title: 'Countdown timer in attempt.html',
+        lang: 'jsx',
+        code: `<form id="examForm" method="post" th:action="@{/student/tests/{id}/submit(id=\${test.id})}">
+  <div th:each="q : \${test.questions}">
+    <p th:text="\${q.text}"></p>
+    <label><input type="radio" th:name="'q' + \${q.id}" value="A"/> <span th:text="\${q.optionA}"></span></label>
+    <label><input type="radio" th:name="'q' + \${q.id}" value="B"/> <span th:text="\${q.optionB}"></span></label>
+  </div>
+  <button>Submit</button>
+</form>
+<p>Time left: <span id="timer"></span></p>
+<script th:inline="javascript">
+  let seconds = /*[[\${test.durationMin * 60}]]*/ 600;
+  const t = setInterval(function () {
+    seconds--;
+    document.getElementById('timer').innerText = Math.floor(seconds / 60) + ':' + (seconds % 60);
+    if (seconds <= 0) { clearInterval(t); document.getElementById('examForm').submit(); }
+  }, 1000);
+</script>`,
+      },
+    ],
+    rubric: [
+      { criterion: 'Functionality', points: 25, desc: 'Admin and student flows work end to end, evaluation is correct.' },
+      { criterion: 'Spring MVC Design', points: 20, desc: 'Controllers thin, logic in services, DI via constructors.' },
+      { criterion: 'Hibernate Mapping', points: 20, desc: 'Correct entities, relationships, transactions and queries.' },
+      { criterion: 'Security & Validation', points: 15, desc: 'Role checks, one attempt rule, @Valid on forms.' },
+      { criterion: 'UI & README', points: 10, desc: 'Usable pages, timer works, clear README.' },
+      { criterion: 'Viva', points: 10, desc: 'Explains MVC flow and ORM concepts.' },
+    ],
+    viva: [
+      { q: 'What is the role of DispatcherServlet?', a: 'It is the front controller of Spring MVC. Every request comes to it first; it finds the right controller method using handler mappings, calls it and then resolves the view name to a template.' },
+      { q: 'Difference between @Controller and @RestController?', a: '@Controller returns view names (HTML pages). @RestController = @Controller + @ResponseBody, so it returns data like JSON directly.' },
+      { q: 'What is Hibernate and what is ORM?', a: 'ORM (Object Relational Mapping) maps Java classes to tables and objects to rows. Hibernate is the most popular ORM and also the default JPA implementation.' },
+      { q: 'Explain the mapping between Test and Question.', a: 'One Test has many Questions. Test has @OneToMany(mappedBy = "test") and Question has @ManyToOne with @JoinColumn(test_id). The question table owns the foreign key.' },
+      { q: 'What does cascade = CascadeType.ALL do?', a: 'Operations on the parent (save, delete) are also applied to the children. Saving a Test saves its Questions; deleting a Test deletes its Questions.' },
+      { q: 'What is lazy loading and LazyInitializationException?', a: 'With LAZY fetch, related data loads only when accessed. If you access it after the session/transaction is closed, Hibernate throws LazyInitializationException. Fix with JOIN FETCH or by loading inside the transaction.' },
+      { q: 'Why use @Transactional on evaluateAndSave?', a: 'Reading the test and saving the result should be one unit of work. If anything fails, the transaction rolls back, so no half-saved data.' },
+      { q: 'How do you stop a student from attempting twice?', a: 'The service checks hasAttempted() before showing the test, and the DB has a UNIQUE (user_id, test_id) constraint as a final safety net.' },
+      { q: 'What is the difference between get() and load() / getReferenceById()?', a: 'get/findById hits the DB immediately and returns null/empty if not found. load/getReferenceById returns a proxy and only hits the DB when a field is used; it throws if the row does not exist.' },
+      { q: 'What is the N+1 select problem?', a: 'Loading N parents and then firing one extra query for each parent children. It is solved with JOIN FETCH, @EntityGraph or batch fetching.' },
+      { q: 'How is the timer made safe if the user changes the JavaScript?', a: 'The server also stores the start time and rejects or marks late submissions after duration + small grace time. Client timer is only for user experience.' },
+      { q: 'What is @ControllerAdvice?', a: 'A global class to handle exceptions from all controllers in one place using @ExceptionHandler methods.' },
+    ],
+    extensions: [
+      'Random question order and option shuffling',
+      'Negative marking and question-wise marks',
+      'Upload questions from a CSV file',
+      'Email result to the student',
+      'Migrate the project to Spring Boot and compare setup',
+    ],
+  },
+
+  // ------------------------------------------------------------------
+  // 6. E-Commerce REST API (Spring Boot + JPA + JWT + Swagger)
+  // ------------------------------------------------------------------
+  {
+    id: 'ecommerce-rest-api',
+    title: 'E-Commerce REST API',
+    level: 'Intermediate',
+    duration: '10 days',
+    track: 'Spring Boot & REST',
+    stack: ['Java 17', 'Spring Boot 3', 'Spring Data JPA', 'Spring Security 6', 'JWT', 'MySQL 8', 'Swagger (springdoc-openapi)', 'Lombok', 'JUnit 5'],
+    summary:
+      'A secure backend for an online shop with products, categories, cart and orders. Users register and log in to get a JWT, customers place orders and admins manage products. It proves you can design REST APIs, use Spring Data JPA, secure endpoints with JWT and document them with Swagger.',
+    features: [
+      'User registration and login returning a JWT token',
+      'Role based access: ADMIN manages products, CUSTOMER shops',
+      'Product and Category CRUD with validation (@Valid)',
+      'Product search by name, category and price range with pagination and sorting',
+      'Add to cart, update quantity, remove from cart',
+      'Place order from cart with stock check and stock reduction (@Transactional)',
+      'Order history for customer and order status update for admin',
+      'Global exception handling with proper HTTP status codes (400, 401, 403, 404)',
+      'Swagger UI with JWT Authorize button',
+      'DTOs so entities are never exposed directly',
+    ],
+    roles: [
+      'Admin: manage categories, products, see all orders, update status',
+      'Customer: browse products, manage cart, place and view own orders',
+    ],
+    architecture:
+      'Spring Boot layered REST architecture. Requests pass the JwtAuthFilter, then reach @RestController classes. Controllers use DTOs and call services. Services hold business rules and call Spring Data JPA repositories.\n\n' +
+      '  Client (Postman / React)\n' +
+      '     |  Authorization: Bearer <jwt>\n' +
+      '  SecurityFilterChain + JwtAuthFilter\n' +
+      '     |\n' +
+      '  AuthController / ProductController / CartController / OrderController\n' +
+      '     |  DTOs\n' +
+      '  AuthService / ProductService / CartService / OrderService\n' +
+      '     |\n' +
+      '  JpaRepository interfaces\n' +
+      '     |\n' +
+      '  MySQL (ecommerce_db)\n\n' +
+      '  GlobalExceptionHandler (@RestControllerAdvice) handles errors for all controllers.',
+    folderStructure: `ecommerce-api/
+├── pom.xml
+└── src/
+    ├── main/java/com/shop/
+    │   ├── EcommerceApplication.java
+    │   ├── config/SecurityConfig.java
+    │   ├── config/OpenApiConfig.java
+    │   ├── security/JwtService.java
+    │   ├── security/JwtAuthFilter.java
+    │   ├── entity/ (User, Category, Product, CartItem, Order, OrderItem)
+    │   ├── dto/ (ProductRequest, ProductResponse, LoginRequest, AuthResponse, OrderResponse)
+    │   ├── repository/ (UserRepository, ProductRepository, OrderRepository ...)
+    │   ├── service/ (AuthService, ProductService, CartService, OrderService)
+    │   ├── controller/ (AuthController, ProductController, CartController, OrderController)
+    │   └── exception/ (ResourceNotFoundException, GlobalExceptionHandler)
+    ├── main/resources/application.properties
+    └── test/java/com/shop/service/OrderServiceTest.java`,
+    database: `CREATE DATABASE ecommerce_db;
+USE ecommerce_db;
+
+CREATE TABLE users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE category (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE product (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(150) NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  stock INT NOT NULL DEFAULT 0,
+  category_id BIGINT,
+  FOREIGN KEY (category_id) REFERENCES category(id)
+);
+
+CREATE TABLE cart_item (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  quantity INT NOT NULL,
+  UNIQUE (user_id, product_id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (product_id) REFERENCES product(id)
+);
+
+CREATE TABLE orders (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  total DECIMAL(12,2) NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE order_item (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  quantity INT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(id),
+  FOREIGN KEY (product_id) REFERENCES product(id)
+);`,
+    apis: [
+      { method: 'POST', path: '/api/auth/register', desc: 'Register a new customer' },
+      { method: 'POST', path: '/api/auth/login', desc: 'Login and get JWT token' },
+      { method: 'GET', path: '/api/products?page=0&size=10&sort=price,asc', desc: 'List products (public, paginated)' },
+      { method: 'GET', path: '/api/products/{id}', desc: 'Get one product (public)' },
+      { method: 'GET', path: '/api/products/search?name=&categoryId=&min=&max=', desc: 'Search products' },
+      { method: 'POST', path: '/api/products', desc: 'ADMIN: create product' },
+      { method: 'PUT', path: '/api/products/{id}', desc: 'ADMIN: update product' },
+      { method: 'DELETE', path: '/api/products/{id}', desc: 'ADMIN: delete product' },
+      { method: 'GET', path: '/api/cart', desc: 'CUSTOMER: view my cart' },
+      { method: 'POST', path: '/api/cart', desc: 'CUSTOMER: add item {productId, quantity}' },
+      { method: 'DELETE', path: '/api/cart/{itemId}', desc: 'CUSTOMER: remove item from cart' },
+      { method: 'POST', path: '/api/orders', desc: 'CUSTOMER: place order from cart' },
+      { method: 'GET', path: '/api/orders/my', desc: 'CUSTOMER: my orders' },
+      { method: 'GET', path: '/api/admin/orders', desc: 'ADMIN: all orders' },
+      { method: 'PATCH', path: '/api/admin/orders/{id}/status', desc: 'ADMIN: update order status' },
+    ],
+    milestones: [
+      {
+        title: 'Milestone 1: Project setup',
+        tasks: [
+          'Create project on start.spring.io: Web, Data JPA, Security, Validation, MySQL, Lombok',
+          'Add springdoc-openapi-starter-webmvc-ui dependency',
+          'Configure application.properties for MySQL',
+          'Run the app and open /swagger-ui.html',
+        ],
+      },
+      {
+        title: 'Milestone 2: Product catalog',
+        tasks: [
+          'Create Category and Product entities and repositories',
+          'Create ProductRequest/ProductResponse DTOs with validation',
+          'Build ProductService and ProductController CRUD',
+          'Add pagination and sorting with Pageable',
+        ],
+      },
+      {
+        title: 'Milestone 3: Exception handling',
+        tasks: [
+          'Create ResourceNotFoundException and InsufficientStockException',
+          'Create GlobalExceptionHandler with @RestControllerAdvice',
+          'Return a standard ErrorResponse (timestamp, status, message, path)',
+        ],
+      },
+      {
+        title: 'Milestone 4: Security with JWT',
+        tasks: [
+          'Create User entity with role and BCrypt password',
+          'Write JwtService (generate, validate, extract username) using jjwt',
+          'Write JwtAuthFilter (OncePerRequestFilter)',
+          'Configure SecurityFilterChain: stateless, public GET products, role rules',
+          'Build register and login endpoints',
+        ],
+      },
+      {
+        title: 'Milestone 5: Cart and orders',
+        tasks: [
+          'CartItem entity and CartService (add, update, remove, view)',
+          'OrderService.placeOrder: check stock, create Order + OrderItems, reduce stock, clear cart in one @Transactional method',
+          'My orders and admin order status update',
+        ],
+      },
+      {
+        title: 'Milestone 6: Docs and testing',
+        tasks: [
+          'Add JWT security scheme in OpenApiConfig so Swagger has Authorize button',
+          'Write JUnit 5 + Mockito tests for OrderService',
+          'Export a Postman collection',
+        ],
+      },
+      {
+        title: 'Milestone 7: Submission',
+        tasks: [
+          'Move secrets to environment variables',
+          'Write README with endpoints table and sample requests',
+          'Push to GitHub with a clean commit history',
+        ],
+      },
+    ],
+    starter: {
+      files: {
+        'Main.java': `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("=== E-Commerce API (service layer simulation) ===");
+        ProductRepository repo = new ProductRepository();
+        repo.save(new Product("Laptop", 55000, 5));
+        repo.save(new Product("Headphones", 1500, 20));
+        repo.save(new Product("Mouse", 499, 2));
+
+        System.out.println("GET /api/products");
+        repo.findAll().forEach(p -> System.out.println("  " + p));
+
+        OrderService orders = new OrderService(repo);
+        Map<Long, Integer> cart = new LinkedHashMap<>();
+        cart.put(1L, 1);
+        cart.put(2L, 2);
+        System.out.println("POST /api/orders (user: neha)");
+        Order o = orders.placeOrder("neha", cart);
+        System.out.println("  201 Created: " + o);
+
+        System.out.println("POST /api/orders (user: neha)");
+        try {
+            Map<Long, Integer> cart2 = new LinkedHashMap<>();
+            cart2.put(3L, 5);
+            orders.placeOrder("neha", cart2);
+        } catch (IllegalStateException e) {
+            System.out.println("  400 Bad Request: " + e.getMessage());
+        }
+
+        System.out.println("GET /api/products/99");
+        try {
+            repo.findById(99L);
+        } catch (ResourceNotFoundException e) {
+            System.out.println("  404 Not Found: " + e.getMessage());
+        }
+
+        System.out.println("GET /api/products (after order)");
+        repo.findAll().forEach(p -> System.out.println("  " + p));
+        System.out.println("TODO: add cart, order history and admin status update");
+    }
+}
+`,
+        'Product.java': `public class Product {
+    private Long id;
+    private final String name;
+    private final int price;
+    private int stock;
+
+    public Product(String name, int price, int stock) {
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
+
+    @Override
+    public String toString() {
+        return "{id:" + id + ", name:" + name + ", price:" + price + ", stock:" + stock + "}";
+    }
+}
+`,
+        'Order.java': `public class Order {
+    private final Long id;
+    private final String user;
+    private final int total;
+    private String status = "PLACED";
+
+    public Order(Long id, String user, int total) {
+        this.id = id;
+        this.user = user;
+        this.total = total;
+    }
+
+    public Long getId() { return id; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    @Override
+    public String toString() {
+        return "{orderId:" + id + ", user:" + user + ", total:" + total + ", status:" + status + "}";
+    }
+}
+`,
+        'ResourceNotFoundException.java': `public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+`,
+        'ProductRepository.java': `import java.util.*;
+
+// Simulates: interface ProductRepository extends JpaRepository<Product, Long>
+public class ProductRepository {
+    private final Map<Long, Product> store = new LinkedHashMap<>();
+    private long nextId = 1;
+
+    public Product save(Product p) {
+        if (p.getId() == null) {
+            p.setId(nextId++);
+        }
+        store.put(p.getId(), p);
+        return p;
+    }
+
+    public Product findById(Long id) {
+        Product p = store.get(id);
+        if (p == null) {
+            throw new ResourceNotFoundException("Product not found with id " + id);
+        }
+        return p;
+    }
+
+    public List<Product> findAll() {
+        return new ArrayList<>(store.values());
+    }
+}
+`,
+        'OrderService.java': `import java.util.*;
+
+public class OrderService {
+    private final ProductRepository productRepo;
+    private final List<Order> orders = new ArrayList<>();
+    private long nextOrderId = 1;
+
+    public OrderService(ProductRepository productRepo) {
+        this.productRepo = productRepo;
+    }
+
+    // In Spring this method is @Transactional: all or nothing
+    public Order placeOrder(String user, Map<Long, Integer> items) {
+        // 1. validate stock for ALL items first
+        for (Map.Entry<Long, Integer> e : items.entrySet()) {
+            Product p = productRepo.findById(e.getKey());
+            if (p.getStock() < e.getValue()) {
+                throw new IllegalStateException("Insufficient stock for " + p.getName()
+                        + ". Available: " + p.getStock());
+            }
+        }
+        // 2. reduce stock and calculate total
+        int total = 0;
+        for (Map.Entry<Long, Integer> e : items.entrySet()) {
+            Product p = productRepo.findById(e.getKey());
+            p.setStock(p.getStock() - e.getValue());
+            productRepo.save(p);
+            total += p.getPrice() * e.getValue();
+        }
+        Order order = new Order(nextOrderId++, user, total);
+        orders.add(order);
+        return order;
+    }
+
+    // TODO: List<Order> findByUser(String user), updateStatus(Long orderId, String status)
+}
+`,
+      },
+      stdin: '',
+      expected: `=== E-Commerce API (service layer simulation) ===
+GET /api/products
+  {id:1, name:Laptop, price:55000, stock:5}
+  {id:2, name:Headphones, price:1500, stock:20}
+  {id:3, name:Mouse, price:499, stock:2}
+POST /api/orders (user: neha)
+  201 Created: {orderId:1, user:neha, total:58000, status:PLACED}
+POST /api/orders (user: neha)
+  400 Bad Request: Insufficient stock for Mouse. Available: 2
+GET /api/products/99
+  404 Not Found: Product not found with id 99
+GET /api/products (after order)
+  {id:1, name:Laptop, price:55000, stock:4}
+  {id:2, name:Headphones, price:1500, stock:18}
+  {id:3, name:Mouse, price:499, stock:2}
+TODO: add cart, order history and admin status update`,
+      note:
+        'Done: Product/Order models, in-memory repository that throws ResourceNotFoundException, OrderService with all-or-nothing stock check. You must add: cart, order history, status update; then build the real Spring Boot app with JPA entities, DTOs, JWT security and Swagger (see key code).',
+    },
+    keyCode: [
+      {
+        title: 'ProductController.java',
+        lang: 'java',
+        code: `@RestController
+@RequestMapping("/api/products")
+@RequiredArgsConstructor
+@Tag(name = "Products")
+public class ProductController {
+    private final ProductService productService;
+
+    @GetMapping
+    public Page<ProductResponse> list(@PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return productService.findAll(pageable);
+    }
+
+    @GetMapping("/{id}")
+    public ProductResponse get(@PathVariable Long id) {
+        return productService.findById(id);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(req));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductRequest req) {
+        return productService.update(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}`,
+      },
+      {
+        title: 'SecurityConfig.java (Spring Security 6, stateless JWT)',
+        lang: 'java',
+        code: `@Configuration
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+    private final JwtAuthFilter jwtAuthFilter;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated())
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+}`,
+      },
+      {
+        title: 'JwtAuthFilter.java',
+        lang: 'java',
+        code: `@Component
+@RequiredArgsConstructor
+public class JwtAuthFilter extends OncePerRequestFilter {
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
+        String token = header.substring(7);
+        String email = jwtService.extractUsername(token);
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails user = userDetailsService.loadUserByUsername(email);
+            if (jwtService.isValid(token, user)) {
+                var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+        }
+        chain.doFilter(request, response);
+    }
+}`,
+      },
+      {
+        title: 'GlobalExceptionHandler.java',
+        lang: 'java',
+        code: `@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> notFound(ResourceNotFoundException ex, HttpServletRequest req) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponse> stock(InsufficientStockException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> invalid(MethodArgumentNotValidException ex, HttpServletRequest req) {
+        String msg = ex.getBindingResult().getFieldErrors().stream()
+                .map(f -> f.getField() + ": " + f.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return build(HttpStatus.BAD_REQUEST, msg, req);
+    }
+
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String msg, HttpServletRequest req) {
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(LocalDateTime.now(), status.value(), msg, req.getRequestURI()));
+    }
+}`,
+      },
+      {
+        title: 'application.properties',
+        lang: 'properties',
+        code: `spring.datasource.url=jdbc:mysql://localhost:3306/ecommerce_db
+spring.datasource.username=root
+spring.datasource.password=change_me
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+app.jwt.secret=put-a-long-random-base64-secret-here
+app.jwt.expiration-ms=86400000
+springdoc.swagger-ui.path=/swagger-ui.html`,
+      },
+    ],
+    rubric: [
+      { criterion: 'API Functionality', points: 25, desc: 'All endpoints work with correct status codes.' },
+      { criterion: 'Security (JWT & Roles)', points: 20, desc: 'Stateless JWT, BCrypt passwords, role rules enforced.' },
+      { criterion: 'JPA & Transactions', points: 15, desc: 'Good entity design, relationships, @Transactional order flow.' },
+      { criterion: 'Code Structure & DTOs', points: 15, desc: 'Layered packages, DTOs, validation, global exception handler.' },
+      { criterion: 'Docs & Tests', points: 15, desc: 'Swagger with Authorize, Postman collection, unit tests.' },
+      { criterion: 'Viva', points: 10, desc: 'Explains REST, JWT and Spring Boot internals.' },
+    ],
+    viva: [
+      { q: 'What is REST and what makes an API RESTful?', a: 'REST is an architecture style using resources identified by URLs, standard HTTP methods (GET, POST, PUT, DELETE), stateless requests and representations like JSON.' },
+      { q: 'Explain the JWT login flow in your project.', a: 'User sends email/password to /api/auth/login. AuthenticationManager verifies with BCrypt. JwtService creates a signed token with email and role. The client sends it as Authorization: Bearer <token>, and JwtAuthFilter validates it on every request.' },
+      { q: 'What are the three parts of a JWT?', a: 'Header (algorithm), Payload (claims like sub, role, exp) and Signature. They are Base64URL encoded and joined with dots.' },
+      { q: 'Why is CSRF disabled in this API?', a: 'CSRF attacks use browser cookies. Our API is stateless and uses a token in the Authorization header, not cookies, so CSRF protection is not needed.' },
+      { q: 'Why use DTOs instead of returning entities?', a: 'DTOs hide internal fields like password, avoid lazy loading and infinite recursion issues in JSON, and let the API change independently of the DB.' },
+      { q: 'How does placeOrder stay consistent?', a: 'It is @Transactional. Stock check, order insert, stock reduction and cart clearing happen in one transaction; if any step throws, everything rolls back.' },
+      { q: 'Difference between PUT and PATCH?', a: 'PUT replaces the whole resource. PATCH updates only some fields, like order status.' },
+      { q: 'What does @SpringBootApplication do?', a: 'It combines @Configuration, @EnableAutoConfiguration and @ComponentScan. It sets up beans automatically based on dependencies in the classpath.' },
+      { q: 'What is the difference between 401 and 403?', a: '401 Unauthorized means not logged in or invalid token. 403 Forbidden means logged in but does not have permission, e.g. a customer calling an admin API.' },
+      { q: 'How does pagination work with Spring Data?', a: 'The controller takes a Pageable (page, size, sort) and the repository method returns a Page with content, totalElements and totalPages. It uses LIMIT/OFFSET in SQL.' },
+      { q: 'Why store passwords using BCrypt?', a: 'BCrypt is a slow one-way hash with a salt, so even if the DB leaks, the real passwords are hard to recover.' },
+      { q: 'How would you handle two users buying the last item at the same time?', a: 'Use optimistic locking with @Version on Product, or a conditional update (UPDATE product SET stock = stock - ? WHERE id = ? AND stock >= ?) and check rows affected.' },
+    ],
+    extensions: [
+      'Refresh tokens and logout with token blacklist',
+      'Product images upload to local disk or S3',
+      'Payment gateway sandbox (Razorpay test mode)',
+      'Redis caching for product list',
+      'Dockerize the API with MySQL using docker-compose',
+    ],
+  },
+
+  // ------------------------------------------------------------------
+  // 7. Hospital Management System (Spring Boot + React + MySQL)
+  // ------------------------------------------------------------------
+  {
+    id: 'hospital-fullstack',
+    title: 'Hospital Management System',
+    level: 'Advanced',
+    duration: '12 days',
+    track: 'Full Stack (Spring Boot + React)',
+    stack: ['Java 17', 'Spring Boot 3', 'Spring Data JPA', 'Spring Security + JWT', 'MySQL 8', 'React 18', 'React Router', 'Axios', 'Bootstrap / Tailwind'],
+    summary:
+      'A full stack web app for a small hospital: receptionists register patients, patients book appointments with doctors, doctors see their schedule and add prescriptions, and admins manage doctors. It proves you can build a secure Spring Boot API and a React frontend that talk to each other, with real business rules like slot conflicts.',
+    features: [
+      'JWT login for ADMIN, DOCTOR and PATIENT roles with role-based React routes',
+      'Admin: add, edit, delete doctors with specialization and fee',
+      'Patient registration and profile',
+      'Book appointment: choose doctor, date and time slot',
+      'Prevent double booking of the same doctor slot',
+      'Cancel appointment (patient) and complete appointment (doctor)',
+      'Doctor dashboard: today\'s appointments',
+      'Doctor adds prescription / notes to a completed appointment',
+      'Admin dashboard with counts (doctors, patients, today\'s appointments)',
+      'Search doctors by specialization',
+    ],
+    roles: [
+      'Admin: manages doctors and sees dashboard stats',
+      'Doctor: views schedule, completes appointments, writes prescriptions',
+      'Patient: registers, books and cancels appointments, sees prescriptions',
+    ],
+    architecture:
+      'Two separate apps. React (Vite) frontend calls the Spring Boot REST API using Axios with the JWT in the Authorization header. Spring Boot follows Controller -> Service -> Repository and stores data in MySQL. CORS is enabled for the React dev URL.\n\n' +
+      '  React SPA (localhost:5173)\n' +
+      '    pages: Login, AdminDashboard, Doctors, BookAppointment, MyAppointments, DoctorSchedule\n' +
+      '    api/axios.js (adds Bearer token)\n' +
+      '        |  JSON over HTTP\n' +
+      '  Spring Boot API (localhost:8080)\n' +
+      '    controller -> service -> repository\n' +
+      '    security: JwtAuthFilter + roles\n' +
+      '        |\n' +
+      '  MySQL (hospital_db): users, doctor, patient, appointment, prescription',
+    folderStructure: `hospital-management/
+├── backend/
+│   ├── pom.xml
+│   └── src/main/java/com/hms/
+│       ├── HospitalApplication.java
+│       ├── config/ (SecurityConfig, CorsConfig)
+│       ├── security/ (JwtService, JwtAuthFilter)
+│       ├── entity/ (User, Doctor, Patient, Appointment, Prescription)
+│       ├── dto/ (AppointmentRequest, AppointmentResponse, DoctorDto ...)
+│       ├── repository/
+│       ├── service/ (DoctorService, PatientService, AppointmentService)
+│       ├── controller/ (AuthController, DoctorController, AppointmentController, DashboardController)
+│       └── exception/
+└── frontend/
+    ├── package.json
+    └── src/
+        ├── main.jsx
+        ├── App.jsx
+        ├── api/axios.js
+        ├── context/AuthContext.jsx
+        ├── components/ (Navbar, ProtectedRoute)
+        └── pages/ (Login, AdminDashboard, Doctors, BookAppointment, MyAppointments, DoctorSchedule)`,
+    database: `CREATE DATABASE hospital_db;
+USE hospital_db;
+
+CREATE TABLE users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE doctor (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  specialization VARCHAR(100) NOT NULL,
+  fee DECIMAL(8,2) NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE patient (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  age INT,
+  gender VARCHAR(10),
+  phone VARCHAR(15) NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE appointment (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  doctor_id BIGINT NOT NULL,
+  patient_id BIGINT NOT NULL,
+  appt_date DATE NOT NULL,
+  slot TIME NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'BOOKED',
+  reason VARCHAR(255),
+  FOREIGN KEY (doctor_id) REFERENCES doctor(id),
+  FOREIGN KEY (patient_id) REFERENCES patient(id),
+  INDEX idx_doctor_date (doctor_id, appt_date)
+);
+
+CREATE TABLE prescription (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  appointment_id BIGINT NOT NULL UNIQUE,
+  diagnosis VARCHAR(255),
+  medicines TEXT,
+  advice TEXT,
+  FOREIGN KEY (appointment_id) REFERENCES appointment(id)
+);`,
+    apis: [
+      { method: 'POST', path: '/api/auth/login', desc: 'Login (all roles), returns JWT + role' },
+      { method: 'POST', path: '/api/auth/register', desc: 'Patient self registration' },
+      { method: 'GET', path: '/api/doctors?specialization=', desc: 'List/search doctors' },
+      { method: 'POST', path: '/api/doctors', desc: 'ADMIN: add doctor' },
+      { method: 'PUT', path: '/api/doctors/{id}', desc: 'ADMIN: update doctor' },
+      { method: 'DELETE', path: '/api/doctors/{id}', desc: 'ADMIN: delete doctor' },
+      { method: 'GET', path: '/api/doctors/{id}/slots?date=2026-12-01', desc: 'Free slots of a doctor on a date' },
+      { method: 'POST', path: '/api/appointments', desc: 'PATIENT: book appointment {doctorId, date, slot, reason}' },
+      { method: 'GET', path: '/api/appointments/my', desc: 'PATIENT: my appointments' },
+      { method: 'PATCH', path: '/api/appointments/{id}/cancel', desc: 'PATIENT: cancel appointment' },
+      { method: 'GET', path: '/api/appointments/doctor/today', desc: 'DOCTOR: today\'s schedule' },
+      { method: 'PATCH', path: '/api/appointments/{id}/complete', desc: 'DOCTOR: mark completed' },
+      { method: 'POST', path: '/api/appointments/{id}/prescription', desc: 'DOCTOR: add prescription' },
+      { method: 'GET', path: '/api/dashboard/stats', desc: 'ADMIN: counts for dashboard' },
+    ],
+    milestones: [
+      {
+        title: 'Milestone 1: Backend setup & entities',
+        tasks: [
+          'Create Spring Boot project (Web, JPA, Security, Validation, MySQL, Lombok)',
+          'Create entities: User, Doctor, Patient, Appointment, Prescription',
+          'Create repositories and seed an admin user with CommandLineRunner',
+        ],
+      },
+      {
+        title: 'Milestone 2: Security',
+        tasks: [
+          'Add JWT login reusing your E-Commerce JwtService/JwtAuthFilter',
+          'Return role in login response',
+          'Protect endpoints with hasRole rules',
+          'Configure CORS for http://localhost:5173',
+        ],
+      },
+      {
+        title: 'Milestone 3: Doctor & patient APIs',
+        tasks: [
+          'Doctor CRUD (admin) and search by specialization',
+          'Patient registration and profile',
+          'Test all APIs in Postman',
+        ],
+      },
+      {
+        title: 'Milestone 4: Appointment business rules',
+        tasks: [
+          'Book API with slot conflict check (ignore cancelled)',
+          'Do not allow booking in the past',
+          'Cancel and complete endpoints with status checks',
+          'Free slots API (9:00 to 17:00, 30 minute slots, minus booked)',
+        ],
+      },
+      {
+        title: 'Milestone 5: React setup & auth',
+        tasks: [
+          'Create React app with Vite, install react-router-dom and axios',
+          'Create axios instance with interceptor that adds the token',
+          'AuthContext storing token and role in localStorage',
+          'ProtectedRoute component that checks role',
+        ],
+      },
+      {
+        title: 'Milestone 6: React pages',
+        tasks: [
+          'Doctors page with search and admin add/edit form',
+          'BookAppointment page: pick doctor, date, then free slot',
+          'MyAppointments page with cancel button',
+          'DoctorSchedule page with complete + prescription form',
+          'AdminDashboard with stat cards',
+        ],
+      },
+      {
+        title: 'Milestone 7: Polish, test & submit',
+        tasks: [
+          'Loading and error messages on every page',
+          'Unit tests for AppointmentService conflict logic',
+          'README with run steps for backend and frontend, plus screenshots',
+          'Record a 3 minute demo video',
+        ],
+      },
+    ],
+    starter: {
+      files: {
+        'Main.java': `public class Main {
+    public static void main(String[] args) {
+        System.out.println("=== Hospital Management (service simulation) ===");
+        HospitalService h = new HospitalService();
+        Doctor d1 = h.addDoctor("Dr. Suresh Rao", "Cardiology");
+        Doctor d2 = h.addDoctor("Dr. Kavya Nair", "Dermatology");
+        Patient p1 = h.addPatient("Manoj Gupta", 45, "9876543210");
+        Patient p2 = h.addPatient("Sita Devi", 32, "9123456780");
+        System.out.println("Doctors: " + h.getDoctors().size() + ", Patients: " + h.getPatients().size());
+
+        System.out.println(h.book(p1.getId(), d1.getId(), "2026-12-01", "10:00"));
+        System.out.println(h.book(p2.getId(), d1.getId(), "2026-12-01", "10:00"));
+        System.out.println(h.book(p2.getId(), d1.getId(), "2026-12-01", "10:30"));
+        System.out.println(h.book(p2.getId(), d2.getId(), "2026-12-02", "11:00"));
+
+        System.out.println("Cancelled appointment 2: " + h.cancel(2));
+        System.out.println("--- Appointments of " + d1.getName() + " ---");
+        h.appointmentsOfDoctor(d1.getId()).forEach(System.out::println);
+        System.out.println("Active appointments: " + h.activeCount());
+        System.out.println("TODO: complete appointment, prescriptions, free slots API");
+    }
+}
+`,
+        'Doctor.java': `public class Doctor {
+    private final long id;
+    private final String name;
+    private final String specialization;
+
+    public Doctor(long id, String name, String specialization) {
+        this.id = id;
+        this.name = name;
+        this.specialization = specialization;
+    }
+
+    public long getId() { return id; }
+    public String getName() { return name; }
+    public String getSpecialization() { return specialization; }
+}
+`,
+        'Patient.java': `public class Patient {
+    private final long id;
+    private final String name;
+    private final int age;
+    private final String phone;
+
+    public Patient(long id, String name, int age, String phone) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.phone = phone;
+    }
+
+    public long getId() { return id; }
+    public String getName() { return name; }
+    public int getAge() { return age; }
+    public String getPhone() { return phone; }
+}
+`,
+        'Appointment.java': `public class Appointment {
+    private final long id;
+    private final Patient patient;
+    private final Doctor doctor;
+    private final String date;
+    private final String slot;
+    private String status = "BOOKED";
+
+    public Appointment(long id, Patient patient, Doctor doctor, String date, String slot) {
+        this.id = id;
+        this.patient = patient;
+        this.doctor = doctor;
+        this.date = date;
+        this.slot = slot;
+    }
+
+    public long getId() { return id; }
+    public Patient getPatient() { return patient; }
+    public Doctor getDoctor() { return doctor; }
+    public String getDate() { return date; }
+    public String getSlot() { return slot; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    @Override
+    public String toString() {
+        return "#" + id + " " + patient.getName() + " | " + date + " " + slot + " | " + status;
+    }
+}
+`,
+        'HospitalService.java': `import java.util.*;
+import java.util.stream.Collectors;
+
+public class HospitalService {
+    private final Map<Long, Doctor> doctors = new LinkedHashMap<>();
+    private final Map<Long, Patient> patients = new LinkedHashMap<>();
+    private final List<Appointment> appointments = new ArrayList<>();
+    private long doctorSeq = 1, patientSeq = 1, apptSeq = 1;
+
+    public Doctor addDoctor(String name, String specialization) {
+        Doctor d = new Doctor(doctorSeq++, name, specialization);
+        doctors.put(d.getId(), d);
+        return d;
+    }
+
+    public Patient addPatient(String name, int age, String phone) {
+        Patient p = new Patient(patientSeq++, name, age, phone);
+        patients.put(p.getId(), p);
+        return p;
+    }
+
+    public Collection<Doctor> getDoctors() { return doctors.values(); }
+    public Collection<Patient> getPatients() { return patients.values(); }
+
+    public String book(long patientId, long doctorId, String date, String slot) {
+        Patient p = patients.get(patientId);
+        Doctor d = doctors.get(doctorId);
+        if (p == null || d == null) {
+            return "Rejected: patient or doctor not found";
+        }
+        boolean busy = appointments.stream().anyMatch(a ->
+                a.getDoctor().getId() == doctorId
+                        && a.getDate().equals(date)
+                        && a.getSlot().equals(slot)
+                        && !a.getStatus().equals("CANCELLED"));
+        if (busy) {
+            return "Rejected: " + d.getName() + " is not free on " + date + " at " + slot;
+        }
+        Appointment a = new Appointment(apptSeq++, p, d, date, slot);
+        appointments.add(a);
+        return "Booked: Appointment#" + a.getId() + " " + p.getName() + " with " + d.getName()
+                + " on " + date + " at " + slot;
+    }
+
+    public boolean cancel(long appointmentId) {
+        for (Appointment a : appointments) {
+            if (a.getId() == appointmentId && a.getStatus().equals("BOOKED")) {
+                a.setStatus("CANCELLED");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Appointment> appointmentsOfDoctor(long doctorId) {
+        return appointments.stream()
+                .filter(a -> a.getDoctor().getId() == doctorId)
+                .collect(Collectors.toList());
+    }
+
+    public long activeCount() {
+        return appointments.stream().filter(a -> a.getStatus().equals("BOOKED")).count();
+    }
+
+    // TODO: complete(appointmentId), addPrescription(...), freeSlots(doctorId, date)
+}
+`,
+      },
+      stdin: '',
+      expected: `=== Hospital Management (service simulation) ===
+Doctors: 2, Patients: 2
+Booked: Appointment#1 Manoj Gupta with Dr. Suresh Rao on 2026-12-01 at 10:00
+Rejected: Dr. Suresh Rao is not free on 2026-12-01 at 10:00
+Booked: Appointment#2 Sita Devi with Dr. Suresh Rao on 2026-12-01 at 10:30
+Booked: Appointment#3 Sita Devi with Dr. Kavya Nair on 2026-12-02 at 11:00
+Cancelled appointment 2: true
+--- Appointments of Dr. Suresh Rao ---
+#1 Manoj Gupta | 2026-12-01 10:00 | BOOKED
+#2 Sita Devi | 2026-12-01 10:30 | CANCELLED
+Active appointments: 2
+TODO: complete appointment, prescriptions, free slots API`,
+      note:
+        'Done: Doctor/Patient/Appointment models and HospitalService with booking, slot-conflict check, cancel and doctor schedule. You must add: complete, prescription, free slots; then build the Spring Boot API (JPA + JWT) and the React frontend (see key code).',
+    },
+    keyCode: [
+      {
+        title: 'AppointmentService.book (Spring Boot)',
+        lang: 'java',
+        code: `@Service
+@RequiredArgsConstructor
+public class AppointmentService {
+    private final AppointmentRepository apptRepo;
+    private final DoctorRepository doctorRepo;
+    private final PatientRepository patientRepo;
+
+    @Transactional
+    public AppointmentResponse book(String patientEmail, AppointmentRequest req) {
+        if (req.date().isBefore(LocalDate.now())) {
+            throw new BadRequestException("Cannot book an appointment in the past");
+        }
+        Doctor doctor = doctorRepo.findById(req.doctorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
+        Patient patient = patientRepo.findByUserEmail(patientEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
+
+        boolean busy = apptRepo.existsByDoctorIdAndApptDateAndSlotAndStatusNot(
+                doctor.getId(), req.date(), req.slot(), AppointmentStatus.CANCELLED);
+        if (busy) {
+            throw new ConflictException("Slot already booked for " + doctor.getName());
+        }
+
+        Appointment a = new Appointment();
+        a.setDoctor(doctor);
+        a.setPatient(patient);
+        a.setApptDate(req.date());
+        a.setSlot(req.slot());
+        a.setReason(req.reason());
+        a.setStatus(AppointmentStatus.BOOKED);
+        return AppointmentResponse.from(apptRepo.save(a));
+    }
+}`,
+      },
+      {
+        title: 'CorsConfig.java',
+        lang: 'java',
+        code: `@Configuration
+public class CorsConfig {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
+}
+// In SecurityConfig: http.cors(Customizer.withDefaults())`,
+      },
+      {
+        title: 'api/axios.js (React)',
+        lang: 'jsx',
+        code: `import axios from 'axios';
+
+const api = axios.create({ baseURL: 'http://localhost:8080/api' });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = 'Bearer ' + token;
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response && err.response.status === 401) {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default api;`,
+      },
+      {
+        title: 'BookAppointment.jsx (React page)',
+        lang: 'jsx',
+        code: `import { useEffect, useState } from 'react';
+import api from '../api/axios';
+
+export default function BookAppointment() {
+  const [doctors, setDoctors] = useState([]);
+  const [doctorId, setDoctorId] = useState('');
+  const [date, setDate] = useState('');
+  const [slots, setSlots] = useState([]);
+  const [slot, setSlot] = useState('');
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    api.get('/doctors').then((res) => setDoctors(res.data));
+  }, []);
+
+  useEffect(() => {
+    if (doctorId && date) {
+      api.get('/doctors/' + doctorId + '/slots', { params: { date } })
+        .then((res) => setSlots(res.data));
+    }
+  }, [doctorId, date]);
+
+  const book = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/appointments', { doctorId, date, slot, reason: 'Checkup' });
+      setMsg('Appointment booked!');
+    } catch (err) {
+      setMsg(err.response?.data?.message || 'Booking failed');
+    }
+  };
+
+  return (
+    <form onSubmit={book} className="card">
+      <h2>Book Appointment</h2>
+      <select value={doctorId} onChange={(e) => setDoctorId(e.target.value)} required>
+        <option value="">Select doctor</option>
+        {doctors.map((d) => (
+          <option key={d.id} value={d.id}>{d.name} - {d.specialization}</option>
+        ))}
+      </select>
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+      <div className="slots">
+        {slots.map((s) => (
+          <button type="button" key={s} className={s === slot ? 'active' : ''} onClick={() => setSlot(s)}>{s}</button>
+        ))}
+      </div>
+      <button disabled={!slot}>Book</button>
+      {msg && <p>{msg}</p>}
+    </form>
+  );
+}`,
+      },
+      {
+        title: 'ProtectedRoute.jsx',
+        lang: 'jsx',
+        code: `import { Navigate } from 'react-router-dom';
+
+export default function ProtectedRoute({ role, children }) {
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('role');
+  if (!token) return <Navigate to="/login" replace />;
+  if (role && role !== userRole) return <Navigate to="/unauthorized" replace />;
+  return children;
+}
+
+// Usage in App.jsx:
+// <Route path="/doctor/schedule" element={<ProtectedRoute role="DOCTOR"><DoctorSchedule /></ProtectedRoute>} />`,
+      },
+    ],
+    rubric: [
+      { criterion: 'Backend Functionality', points: 20, desc: 'All APIs work with business rules (conflicts, statuses).' },
+      { criterion: 'Frontend Functionality', points: 20, desc: 'React pages for all roles work and handle errors.' },
+      { criterion: 'Security', points: 15, desc: 'JWT, role-based APIs and protected React routes, CORS set correctly.' },
+      { criterion: 'Database & JPA', points: 15, desc: 'Good schema, relationships, indexes, transactions.' },
+      { criterion: 'Code Quality, Tests & README', points: 20, desc: 'Clean layers, DTOs, unit tests, README, demo video.' },
+      { criterion: 'Viva', points: 10, desc: 'Explains full request flow from React to MySQL.' },
+    ],
+    viva: [
+      { q: 'Explain what happens when a patient clicks "Book".', a: 'React calls api.post("/appointments") with the JWT. JwtAuthFilter validates the token, AppointmentController receives the DTO, AppointmentService checks past date and slot conflict, saves the entity using JPA and returns a response DTO. React shows the success message.' },
+      { q: 'What is CORS and why did you need it?', a: 'Browsers block calls from one origin (localhost:5173) to another (localhost:8080) unless the server allows it. We configured CORS in Spring to allow the React origin.' },
+      { q: 'How do you prevent double booking?', a: 'Before saving, the service checks if an appointment exists for the same doctor, date and slot that is not cancelled. For full safety under concurrency, a unique index or locking can be added.' },
+      { q: 'Where do you store the JWT in React and what is the risk?', a: 'In localStorage for simplicity. The risk is XSS can read it. A safer option is an HttpOnly cookie.' },
+      { q: 'What are useState and useEffect?', a: 'useState stores component data that causes re-render when changed. useEffect runs side effects like API calls after render, depending on the dependency array.' },
+      { q: 'How does role-based access work on both sides?', a: 'Backend: hasRole rules and @PreAuthorize - this is the real security. Frontend: ProtectedRoute hides pages for other roles - this is only for user experience.' },
+      { q: 'Why did you use an enum for appointment status?', a: 'An enum (BOOKED, COMPLETED, CANCELLED) prevents invalid values and makes status checks type safe. With @Enumerated(EnumType.STRING) it is stored as text in MySQL.' },
+      { q: 'What is the relationship between Appointment and Doctor?', a: 'Many appointments belong to one doctor, so Appointment has @ManyToOne Doctor with a doctor_id foreign key.' },
+      { q: 'Why is there an index on (doctor_id, appt_date)?', a: 'Most queries search appointments of a doctor on a date (schedule, conflict check, free slots). The composite index makes those queries fast.' },
+      { q: 'What is an Axios interceptor?', a: 'A function that runs before every request or after every response. We use it to add the Bearer token and to redirect to login on 401.' },
+      { q: 'How would you deploy this project?', a: 'Build the React app (npm run build) and host on Netlify/Vercel or serve from Nginx; package Spring Boot as a jar and run on a VM or container with a managed MySQL; set environment variables for secrets and the allowed CORS origin.' },
+      { q: 'What does @Transactional do on the book method?', a: 'The check and the insert run in one database transaction, so if saving fails nothing partial is stored.' },
+    ],
+    extensions: [
+      'Email/SMS reminder one day before the appointment (scheduled job)',
+      'Download prescription as PDF',
+      'Online fee payment in test mode',
+      'Doctor availability calendar with leave days',
+      'Dockerize backend, frontend and MySQL with docker-compose',
+    ],
+  },
+
+  // ------------------------------------------------------------------
+  // 8. Food Delivery Microservices (Spring Cloud + Kafka + Docker)
+  // ------------------------------------------------------------------
+  {
+    id: 'food-delivery-microservices',
+    title: 'Food Delivery Microservices',
+    level: 'Advanced',
+    duration: '15 days',
+    track: 'Microservices & DevOps',
+    stack: ['Java 17', 'Spring Boot 3', 'Spring Cloud Gateway', 'Eureka', 'OpenFeign', 'Resilience4j', 'Apache Kafka', 'MySQL 8', 'Docker Compose'],
+    summary:
+      'A Swiggy/Zomato-style backend split into small services: user, restaurant, order, payment and delivery. Services find each other with Eureka, clients enter through an API Gateway, services call each other with OpenFeign, and order status flows through Kafka events. It proves you understand microservice design, service discovery, async messaging and containerization.',
+    features: [
+      'API Gateway as single entry point with route config and JWT check',
+      'Eureka service registry - all services register and discover each other',
+      'Restaurant service: restaurants and menu items',
+      'Order service: place order, calls Restaurant service with OpenFeign to get prices',
+      'Order service publishes order-placed event to Kafka',
+      'Payment service consumes order-placed, publishes payment-completed or payment-failed',
+      'Delivery service consumes payment-completed, assigns a rider, publishes delivery-assigned',
+      'Order service listens to events and updates order status (Saga choreography)',
+      'Circuit breaker with Resilience4j fallback when Restaurant service is down',
+      'Each service has its own MySQL database; everything runs with docker compose up',
+    ],
+    roles: [
+      'Customer: browses restaurants, places orders, tracks status',
+      'Restaurant Owner: manages menu',
+      'Rider (simulated): gets assigned deliveries',
+    ],
+    architecture:
+      'Microservices with database-per-service. Synchronous calls use OpenFeign through Eureka; long running flow (payment, delivery) is asynchronous using Kafka topics. The gateway routes /api/** to services by name (lb://SERVICE-NAME).\n\n' +
+      '                 Client\n' +
+      '                   |\n' +
+      '            API Gateway :8080 ----- Eureka Server :8761\n' +
+      '        /        |          \\\n' +
+      '  user-svc  restaurant-svc  order-svc ---Feign---> restaurant-svc\n' +
+      '                               |\n' +
+      '                     Kafka: order-placed\n' +
+      '                               |\n' +
+      '                         payment-svc\n' +
+      '              Kafka: payment-completed / payment-failed\n' +
+      '                               |\n' +
+      '                         delivery-svc\n' +
+      '                  Kafka: delivery-assigned --> order-svc (status update)\n\n' +
+      '  Each service -> its own MySQL schema. All containers in docker-compose.yml.',
+    folderStructure: `food-delivery/
+├── docker-compose.yml
+├── eureka-server/
+├── api-gateway/
+│   └── src/main/resources/application.yml
+├── user-service/
+├── restaurant-service/
+│   └── src/main/java/com/food/restaurant/ (entity, repository, service, controller)
+├── order-service/
+│   └── src/main/java/com/food/order/
+│       ├── client/RestaurantClient.java      (OpenFeign)
+│       ├── event/OrderPlacedEvent.java
+│       ├── kafka/OrderEventPublisher.java
+│       ├── kafka/OrderStatusListener.java
+│       ├── service/OrderService.java
+│       └── controller/OrderController.java
+├── payment-service/
+│   └── src/main/java/com/food/payment/PaymentListener.java
+└── delivery-service/
+    └── src/main/java/com/food/delivery/DeliveryListener.java`,
+    database: `-- restaurant_db (restaurant-service)
+CREATE TABLE restaurant (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  city VARCHAR(50) NOT NULL,
+  is_open BOOLEAN DEFAULT TRUE
+);
+CREATE TABLE menu_item (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  restaurant_id BIGINT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  price DECIMAL(8,2) NOT NULL,
+  available BOOLEAN DEFAULT TRUE,
+  FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
+);
+
+-- order_db (order-service)
+CREATE TABLE orders (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  restaurant_id BIGINT NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
+  status VARCHAR(30) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE order_item (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL,
+  menu_item_id BIGINT NOT NULL,
+  quantity INT NOT NULL,
+  price DECIMAL(8,2) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+-- payment_db (payment-service)
+CREATE TABLE payment (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL UNIQUE,
+  amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  paid_at DATETIME
+);
+
+-- delivery_db (delivery-service)
+CREATE TABLE delivery (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL UNIQUE,
+  rider_name VARCHAR(100),
+  status VARCHAR(20) NOT NULL
+);`,
+    apis: [
+      { method: 'POST', path: '/api/users/register', desc: 'user-service: register customer' },
+      { method: 'POST', path: '/api/users/login', desc: 'user-service: login, returns JWT' },
+      { method: 'GET', path: '/api/restaurants?city=Pune', desc: 'restaurant-service: list restaurants' },
+      { method: 'GET', path: '/api/restaurants/{id}/menu', desc: 'restaurant-service: menu of a restaurant' },
+      { method: 'GET', path: '/api/restaurants/menu-items/{id}', desc: 'restaurant-service: one menu item (used by Feign)' },
+      { method: 'POST', path: '/api/orders', desc: 'order-service: place order, publishes order-placed' },
+      { method: 'GET', path: '/api/orders/{id}', desc: 'order-service: track order status' },
+      { method: 'GET', path: '/api/payments/order/{orderId}', desc: 'payment-service: payment status' },
+      { method: 'GET', path: '/api/deliveries/order/{orderId}', desc: 'delivery-service: rider and delivery status' },
+    ],
+    milestones: [
+      {
+        title: 'Milestone 1: Design',
+        tasks: [
+          'Draw the service diagram and list each service\'s database and APIs',
+          'Define Kafka topics and event JSON (order-placed, payment-completed, payment-failed, delivery-assigned)',
+          'Define order status flow: CREATED -> PAID -> OUT_FOR_DELIVERY or CANCELLED',
+        ],
+      },
+      {
+        title: 'Milestone 2: Eureka & Gateway',
+        tasks: [
+          'Create eureka-server with @EnableEurekaServer',
+          'Create api-gateway with routes lb://RESTAURANT-SERVICE etc.',
+          'Register a sample service and see it on the Eureka dashboard (:8761)',
+        ],
+      },
+      {
+        title: 'Milestone 3: Restaurant & User services',
+        tasks: [
+          'Restaurant service with restaurant and menu_item CRUD',
+          'User service with register/login and JWT',
+          'Validate JWT at the gateway using a GlobalFilter',
+        ],
+      },
+      {
+        title: 'Milestone 4: Order service with Feign',
+        tasks: [
+          'Create RestaurantClient Feign interface to fetch menu item prices',
+          'Place order: calculate total, save with status CREATED',
+          'Add Resilience4j circuit breaker with a fallback',
+        ],
+      },
+      {
+        title: 'Milestone 5: Kafka events',
+        tasks: [
+          'Run Kafka in Docker and create topics',
+          'Order service publishes OrderPlacedEvent with KafkaTemplate',
+          'Payment service @KafkaListener on order-placed and publishes result',
+          'Delivery service listens to payment-completed and publishes delivery-assigned',
+          'Order service listens to payment-failed and delivery-assigned to update status',
+        ],
+      },
+      {
+        title: 'Milestone 6: Docker Compose',
+        tasks: [
+          'Write a Dockerfile for each service (eclipse-temurin:17-jre)',
+          'Write docker-compose.yml with mysql, kafka, eureka, gateway and all services',
+          'Use service names as hostnames in config (mysql, kafka, eureka-server)',
+          'Run the full flow with docker compose up',
+        ],
+      },
+      {
+        title: 'Milestone 7: Observability & submission',
+        tasks: [
+          'Add Spring Boot Actuator health endpoints',
+          'Add correlation id (orderId) in all logs',
+          'README with architecture diagram, how to run and sample requests',
+          'Record a demo showing order status change through events',
+        ],
+      },
+    ],
+    starter: {
+      files: {
+        'Main.java': `public class Main {
+    public static void main(String[] args) {
+        System.out.println("=== Food Delivery Microservices (event simulation) ===");
+        EventBus bus = new EventBus();               // acts like Kafka
+        RestaurantService restaurant = new RestaurantService();
+        OrderService orderService = new OrderService(bus, restaurant);
+        new PaymentService(bus);
+        new DeliveryService(bus);
+
+        Order o1 = orderService.placeOrder("user-7", "Paneer Biryani", 2);
+        System.out.println("Final status: " + o1.getStatus());
+        System.out.println("---");
+        Order o2 = orderService.placeOrder("user-9", "Masala Dosa", 12);
+        System.out.println("Final status: " + o2.getStatus());
+        System.out.println("---");
+        System.out.println("Orders in system: " + orderService.count());
+        System.out.println("TODO: add Feign fallback when restaurant is down and a refund event");
+    }
+}
+`,
+        'Event.java': `public class Event {
+    private final long orderId;
+    private final int amount;
+
+    public Event(long orderId, int amount) {
+        this.orderId = orderId;
+        this.amount = amount;
+    }
+
+    public long getOrderId() { return orderId; }
+    public int getAmount() { return amount; }
+
+    @Override
+    public String toString() {
+        return "{orderId:" + orderId + ", amount:" + amount + "}";
+    }
+}
+`,
+        'EventBus.java': `import java.util.*;
+import java.util.function.Consumer;
+
+// Very small in-memory replacement for Kafka topics
+public class EventBus {
+    private final Map<String, List<Consumer<Event>>> subscribers = new HashMap<>();
+
+    public void subscribe(String topic, Consumer<Event> listener) {
+        subscribers.computeIfAbsent(topic, k -> new ArrayList<>()).add(listener);
+    }
+
+    public void publish(String topic, Event event) {
+        System.out.println("[kafka] " + topic + " <- " + event);
+        for (Consumer<Event> listener : subscribers.getOrDefault(topic, List.of())) {
+            listener.accept(event);
+        }
+    }
+}
+`,
+        'Order.java': `public class Order {
+    private final long id;
+    private final String userId;
+    private final int total;
+    private String status = "CREATED";
+
+    public Order(long id, String userId, int total) {
+        this.id = id;
+        this.userId = userId;
+        this.total = total;
+    }
+
+    public long getId() { return id; }
+    public String getUserId() { return userId; }
+    public int getTotal() { return total; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+}
+`,
+        'RestaurantService.java': `import java.util.HashMap;
+import java.util.Map;
+
+// In the real project the order-service calls this using OpenFeign
+public class RestaurantService {
+    private final Map<String, Integer> menu = new HashMap<>();
+
+    public RestaurantService() {
+        menu.put("Paneer Biryani", 220);
+        menu.put("Masala Dosa", 90);
+    }
+
+    public int priceOf(String item) {
+        Integer price = menu.get(item);
+        if (price == null) {
+            throw new IllegalArgumentException("Menu item not found: " + item);
+        }
+        return price;
+    }
+}
+`,
+        'OrderService.java': `import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class OrderService {
+    private final EventBus bus;
+    private final RestaurantService restaurant;
+    private final Map<Long, Order> orders = new LinkedHashMap<>();
+    private long nextId = 101;
+
+    public OrderService(EventBus bus, RestaurantService restaurant) {
+        this.bus = bus;
+        this.restaurant = restaurant;
+        bus.subscribe("delivery-assigned", e -> updateStatus(e.getOrderId(), "OUT_FOR_DELIVERY"));
+        bus.subscribe("payment-failed", e -> updateStatus(e.getOrderId(), "CANCELLED"));
+    }
+
+    public Order placeOrder(String userId, String item, int qty) {
+        int total = restaurant.priceOf(item) * qty;
+        Order order = new Order(nextId++, userId, total);
+        orders.put(order.getId(), order);
+        System.out.println("[order-service] Order " + order.getId() + " created: "
+                + qty + " x " + item + " = Rs." + total);
+        bus.publish("order-placed", new Event(order.getId(), total));
+        return order;
+    }
+
+    private void updateStatus(long orderId, String status) {
+        Order o = orders.get(orderId);
+        o.setStatus(status);
+        System.out.println("[order-service] Order " + orderId + " status -> " + status);
+    }
+
+    public int count() {
+        return orders.size();
+    }
+}
+`,
+        'PaymentService.java': `public class PaymentService {
+    private static final int WALLET_LIMIT = 1000;
+
+    public PaymentService(EventBus bus) {
+        bus.subscribe("order-placed", e -> {
+            if (e.getAmount() <= WALLET_LIMIT) {
+                System.out.println("[payment-service] Payment OK for order " + e.getOrderId());
+                bus.publish("payment-completed", e);
+            } else {
+                System.out.println("[payment-service] Payment FAILED for order " + e.getOrderId()
+                        + " (wallet limit Rs." + WALLET_LIMIT + ")");
+                bus.publish("payment-failed", e);
+            }
+        });
+    }
+}
+`,
+        'DeliveryService.java': `public class DeliveryService {
+    public DeliveryService(EventBus bus) {
+        bus.subscribe("payment-completed", e -> {
+            System.out.println("[delivery-service] Rider assigned to order " + e.getOrderId());
+            bus.publish("delivery-assigned", e);
+        });
+    }
+}
+`,
+      },
+      stdin: '',
+      expected: `=== Food Delivery Microservices (event simulation) ===
+[order-service] Order 101 created: 2 x Paneer Biryani = Rs.440
+[kafka] order-placed <- {orderId:101, amount:440}
+[payment-service] Payment OK for order 101
+[kafka] payment-completed <- {orderId:101, amount:440}
+[delivery-service] Rider assigned to order 101
+[kafka] delivery-assigned <- {orderId:101, amount:440}
+[order-service] Order 101 status -> OUT_FOR_DELIVERY
+Final status: OUT_FOR_DELIVERY
+---
+[order-service] Order 102 created: 12 x Masala Dosa = Rs.1080
+[kafka] order-placed <- {orderId:102, amount:1080}
+[payment-service] Payment FAILED for order 102 (wallet limit Rs.1000)
+[kafka] payment-failed <- {orderId:102, amount:1080}
+[order-service] Order 102 status -> CANCELLED
+Final status: CANCELLED
+---
+Orders in system: 2
+TODO: add Feign fallback when restaurant is down and a refund event`,
+      note:
+        'Done: an in-memory EventBus that behaves like Kafka topics, and Order, Payment and Delivery services that react to events (Saga choreography). You must add: fallback for a missing restaurant, PAID status, refund event; then build real Spring Boot services with Eureka, Gateway, Feign, Kafka and Docker Compose (see key code).',
+    },
+    keyCode: [
+      {
+        title: 'api-gateway application.yml',
+        lang: 'yaml',
+        code: `server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+        - id: restaurant-service
+          uri: lb://RESTAURANT-SERVICE
+          predicates:
+            - Path=/api/restaurants/**
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/orders/**
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka`,
+      },
+      {
+        title: 'RestaurantClient.java (OpenFeign + Resilience4j)',
+        lang: 'java',
+        code: `@FeignClient(name = "RESTAURANT-SERVICE", fallback = RestaurantClientFallback.class)
+public interface RestaurantClient {
+    @GetMapping("/api/restaurants/menu-items/{id}")
+    MenuItemDto getMenuItem(@PathVariable("id") Long id);
+}
+
+@Component
+class RestaurantClientFallback implements RestaurantClient {
+    @Override
+    public MenuItemDto getMenuItem(Long id) {
+        throw new ServiceUnavailableException("Restaurant service is down. Please try again later.");
+    }
+}
+
+// order-service application.yml:
+// spring.cloud.openfeign.circuitbreaker.enabled: true
+// main class: @EnableFeignClients`,
+      },
+      {
+        title: 'Kafka publisher and listener',
+        lang: 'java',
+        code: `// order-service
+@Service
+@RequiredArgsConstructor
+public class OrderEventPublisher {
+    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
+
+    public void publishOrderPlaced(Order order) {
+        OrderPlacedEvent event = new OrderPlacedEvent(order.getId(), order.getUserId(), order.getTotal());
+        kafkaTemplate.send("order-placed", String.valueOf(order.getId()), event);
+    }
+}
+
+// payment-service
+@Component
+@RequiredArgsConstructor
+public class PaymentListener {
+    private final PaymentService paymentService;
+    private final KafkaTemplate<String, PaymentEvent> kafkaTemplate;
+
+    @KafkaListener(topics = "order-placed", groupId = "payment-group")
+    public void onOrderPlaced(OrderPlacedEvent event) {
+        boolean ok = paymentService.charge(event.orderId(), event.amount());
+        String topic = ok ? "payment-completed" : "payment-failed";
+        kafkaTemplate.send(topic, String.valueOf(event.orderId()),
+                new PaymentEvent(event.orderId(), event.amount(), ok));
+    }
+}`,
+      },
+      {
+        title: 'docker-compose.yml (main parts)',
+        lang: 'yaml',
+        code: `services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports: ["3306:3306"]
+
+  kafka:
+    image: bitnami/kafka:3.7
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+    ports: ["9092:9092"]
+
+  eureka-server:
+    build: ./eureka-server
+    ports: ["8761:8761"]
+
+  api-gateway:
+    build: ./api-gateway
+    ports: ["8080:8080"]
+    depends_on: [eureka-server]
+
+  order-service:
+    build: ./order-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/order_db?createDatabaseIfNotExist=true
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    depends_on: [mysql, kafka, eureka-server]
+
+  # restaurant-service, payment-service, delivery-service, user-service: same pattern`,
+      },
+      {
+        title: 'Dockerfile (each service)',
+        lang: 'yaml',
+        code: `FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]`,
+      },
+    ],
+    rubric: [
+      { criterion: 'Service Design', points: 20, desc: 'Clear service boundaries, database per service, clean APIs.' },
+      { criterion: 'Discovery, Gateway & Feign', points: 15, desc: 'Eureka registration, gateway routes, Feign calls with fallback.' },
+      { criterion: 'Kafka Event Flow', points: 20, desc: 'Events published and consumed correctly; status updates via saga.' },
+      { criterion: 'Docker & Run Experience', points: 15, desc: 'Whole system starts with docker compose up.' },
+      { criterion: 'Code Quality, Logs & README', points: 20, desc: 'Layered code, logs with orderId, diagram and README.' },
+      { criterion: 'Viva', points: 10, desc: 'Explains trade-offs of microservices and async messaging.' },
+    ],
+    viva: [
+      { q: 'What is a microservice architecture? When should you not use it?', a: 'An app split into small, independently deployable services, each owning its data. For small teams or simple apps a monolith is better because microservices add network, deployment and debugging complexity.' },
+      { q: 'What does Eureka do?', a: 'Eureka is a service registry. Each service registers its name and address; other services and the gateway look up the name (lb://ORDER-SERVICE) instead of hard-coding IPs.' },
+      { q: 'Why do we need an API Gateway?', a: 'It is the single entry point: routing, authentication, rate limiting and CORS in one place, so clients do not need to know every service address.' },
+      { q: 'What is OpenFeign?', a: 'A declarative HTTP client. You write an interface with @FeignClient and Spring MVC annotations; Spring creates the implementation and load-balances using Eureka.' },
+      { q: 'Why use Kafka instead of calling Payment service directly?', a: 'Async events decouple services: the order service does not wait or fail if payment is slow or down. Kafka stores events so consumers can process them later and new consumers can be added easily.' },
+      { q: 'What is the Saga pattern?', a: 'A way to manage a business transaction across services without a distributed DB transaction. Each service does its local transaction and publishes an event; on failure, compensating actions (like cancelling the order) undo earlier steps. We used choreography (services react to events).' },
+      { q: 'What is a circuit breaker?', a: 'It stops calling a failing service after repeated errors and returns a fallback quickly. After some time it lets a few test calls through (half-open) and closes again if they succeed. We used Resilience4j.' },
+      { q: 'What is a Kafka consumer group?', a: 'Consumers with the same groupId share the partitions of a topic, so each message is processed by only one consumer in the group. Different groups each get all messages.' },
+      { q: 'Why does each service have its own database?', a: 'So services are loosely coupled and can change schema or scale independently. Other services get data through APIs or events, not by joining tables.' },
+      { q: 'How do you make event processing idempotent?', a: 'Kafka can deliver a message more than once, so consumers check if they already processed that orderId (e.g. UNIQUE order_id in payment table) before doing the work again.' },
+      { q: 'Difference between a Docker image and a container?', a: 'An image is a read-only template (app + JRE). A container is a running instance of an image.' },
+      { q: 'How do services find MySQL and Kafka inside Docker Compose?', a: 'Compose creates a network where each service name is a hostname, so we use jdbc:mysql://mysql:3306 and kafka:9092.' },
+    ],
+    extensions: [
+      'Add a notification-service that sends email/SMS on status change',
+      'Distributed tracing with Micrometer Tracing + Zipkin',
+      'Centralized config with Spring Cloud Config Server',
+      'Deploy to Kubernetes with Deployments and Services',
+      'Real-time order tracking on a React page using WebSocket',
+    ],
+  },
 ];

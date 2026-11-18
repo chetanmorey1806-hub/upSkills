@@ -29,6 +29,9 @@ import SearchPage from './pages/SearchPage.jsx';
 import JavaInterview from './pages/JavaInterview.jsx';
 import JavaProjects from './pages/JavaProjects.jsx';
 import SoftSkills from './pages/SoftSkills.jsx';
+import TestSeries from './pages/TestSeries.jsx';
+import Projects from './pages/Projects.jsx';
+import ProjectWorkspace from './pages/ProjectWorkspace.jsx';
 
 function ScrollTop() {
   const { pathname } = useLocation();
@@ -71,6 +74,9 @@ export default function App() {
         <Route path="/tools/java-projects" element={<JavaProjects />} />
         <Route path="/tools/java-projects/:id" element={<JavaProjects />} />
         <Route path="/tools/soft-skills" element={<SoftSkills />} />
+        <Route path="/tools/test-series" element={<TestSeries />} />
+        <Route path="/tools/python-projects" element={<Projects />} />
+        <Route path="/tools/python-projects/:id" element={<ProjectWorkspace />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="*" element={<Home />} />
       </Routes>

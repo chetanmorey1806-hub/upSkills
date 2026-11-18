@@ -28,9 +28,31 @@ const CONSOLE_HOOK = `<script>
 
 const esc = (s) => String(s || '').replace(/<\/script/gi, '<\\/script');
 
-export function buildWebDoc({ html = '', css = '', js = '' }) {
-  const style = `<style>${css}</style>`;
-  const script = `<script>\n${esc(js)}\n<\/script>`;
+// CDN libraries a playground can request (versions pinned)
+export const LIBS = {
+  bootstrap: {
+    label: 'Bootstrap 5',
+    head: '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">',
+    body: '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"><\/script>',
+  },
+  'bootstrap-icons': {
+    label: 'Bootstrap Icons',
+    head: '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">',
+    body: '',
+  },
+  vue: {
+    label: 'Vue 3',
+    head: '',
+    body: '<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"><\/script>',
+  },
+};
+
+export function buildWebDoc({ html = '', css = '', js = '', libs = [] }) {
+  const use = (libs || []).filter((l) => LIBS[l]);
+  const libHead = use.map((l) => LIBS[l].head).join('');
+  const libBody = use.map((l) => LIBS[l].body).join('');
+  const style = `${libHead}<style>${css}</style>`;
+  const script = `${libBody}<script>\n${esc(js)}\n<\/script>`;
   if (/<html[\s>]/i.test(html)) {
     let doc = html;
     doc = /<\/head>/i.test(doc) ? doc.replace(/<\/head>/i, `${CONSOLE_HOOK}${style}</head>`) : doc.replace(/<html[^>]*>/i, (m) => `${m}<head>${CONSOLE_HOOK}${style}</head>`);

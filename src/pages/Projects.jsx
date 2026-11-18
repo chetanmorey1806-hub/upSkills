@@ -29,7 +29,7 @@ export default function Projects() {
   return (
     <div>
       <div className="page-head">
-        <h1>🏁 Final Projects</h1>
+        <h1>🏁 Python Final Projects</h1>
         <p className="muted">Build a complete Python project inside UpSkillr: real starter code, automated tests that run in your browser, milestones, hints and a final score you can show in interviews.</p>
       </div>
 
@@ -51,7 +51,7 @@ export default function Projects() {
           const started = pr.tasksDone > 0 || pr.testsTotal > 0 || !!st.files;
           const pct = p.tests ? (pr.testsTotal ? pr.passed / pr.testsTotal : 0) : (pr.tasks ? pr.tasksDone / pr.tasks : 0);
           return (
-            <Link key={p.id} to={`/projects/${p.id}`} className="card track-card proj-card">
+            <Link key={p.id} to={`/tools/python-projects/${p.id}`} className="card track-card proj-card">
               <div className="proj-card-top">
                 <span className="track-icon">{p.icon}</span>
                 {pr.submitted ? <span className="badge ok">✓ Submitted · {projectScore(p, st)}/100</span>

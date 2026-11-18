@@ -110,9 +110,9 @@ df = iris.frame                      # features + target in one DataFrame
 
 print("Shape:", df.shape)
 print("Features:", iris.feature_names)
-print("Classes:", list(iris.target_names))
+print("Classes:", iris.target_names.tolist())
 print(df["target"].value_counts().sort_index().to_dict())
-print(df.head(3))
+print(df.head(3).to_string())
 `,
       python: {
         files: {
@@ -124,13 +124,13 @@ df = iris.frame                      # features + target in one DataFrame
 
 print("Shape:", df.shape)
 print("Features:", iris.feature_names)
-print("Classes:", list(iris.target_names))
+print("Classes:", iris.target_names.tolist())
 print(df["target"].value_counts().sort_index().to_dict())
-print(df.head(3))
+print(df.head(3).to_string())
 `,
         },
       },
-      result: "__RUN__",
+      result: "Shape: (150, 5)\nFeatures: ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']\nClasses: ['setosa', 'versicolor', 'virginica']\n{0: 50, 1: 50, 2: 50}\n   sepal length (cm)  sepal width (cm)  petal length (cm)  petal width (cm)  target\n0                5.1               3.5                1.4               0.2       0\n1                4.9               3.0                1.4               0.2       0\n2                4.7               3.2                1.3               0.2       0",
       explanation: "The dataset has 150 rows and 4 numeric features plus a target column. Classes 0, 1, 2 map to setosa, versicolor and virginica, with 50 flowers each — a perfectly balanced multi-class classification problem.",
     },
     {
@@ -184,7 +184,7 @@ print("Same via score():", round(model.score(X_test, y_test), 3))
 `,
         },
       },
-      result: "__RUN__",
+      result: "Train size: 112 Test size: 38\nFirst 10 predictions: [0 1 1 1 0 1 1 2 2 2]\nFirst 10 actual     : [0 1 1 1 0 1 2 2 2 2]\nAccuracy: 0.895\nSame via score(): 0.895",
       explanation: "fit() learned decision rules from 112 flowers. predict() applied those rules to 38 unseen flowers. Accuracy is the fraction of correct predictions. model.score() gives the same number because accuracy is the default score for classifiers. stratify=y keeps the same class proportions in train and test.",
     },
     {
@@ -233,7 +233,7 @@ print("R2 on test:", round(reg.score(X_test, y_test), 3))
 `,
         },
       },
-      result: "__RUN__",
+      result: "X shape: (442, 10) | y sample: [151.  75. 141.]\nPredicted: [139.5 179.5 134. ]\nActual   : [219.  70. 202.]\nR2 on test: 0.453",
       explanation: "The target is a continuous number, so this is regression. The API is identical: create, fit, predict, score. For regressors, score() returns R² (1.0 is perfect, 0 means no better than predicting the mean). An R² around 0.45 is typical for this noisy medical dataset.",
     },
     {
@@ -255,8 +255,8 @@ scaler = StandardScaler()
 X_train_s = scaler.fit_transform(X_train)
 X_test_s = scaler.transform(X_test)
 
-print("Learned mean_:", scaler.mean_)
-print("Learned scale_:", scaler.scale_.round(2))
+print("Learned mean_:", scaler.mean_.tolist())
+print("Learned scale_:", scaler.scale_.round(2).tolist())
 print("Scaled train:\\n", X_train_s.round(3))
 print("Scaled test:", X_test_s.round(3))
 `,
@@ -272,14 +272,14 @@ scaler = StandardScaler()
 X_train_s = scaler.fit_transform(X_train)
 X_test_s = scaler.transform(X_test)
 
-print("Learned mean_:", scaler.mean_)
-print("Learned scale_:", scaler.scale_.round(2))
+print("Learned mean_:", scaler.mean_.tolist())
+print("Learned scale_:", scaler.scale_.round(2).tolist())
 print("Scaled train:\\n", X_train_s.round(3))
 print("Scaled test:", X_test_s.round(3))
 `,
         },
       },
-      result: "__RUN__",
+      result: "Learned mean_: [30.0, 50000.0]\nLearned scale_: [8.16, 16329.93]\nScaled train:\n [[-1.225 -1.225]\n [ 0.     0.   ]\n [ 1.225  1.225]]\nScaled test: [[0.612 0.612]]",
       explanation: "StandardScaler computes z = (x - mean) / std for each column. The mean and std are learned only from training data (stored in mean_ and scale_). The test row is scaled with those same values. Re-fitting on test data would leak test information and give a slightly different, inconsistent scale.",
     },
     {
@@ -324,7 +324,7 @@ print("Logistic accuracy:", round(model.score(X_test, y_test), 3))
 `,
         },
       },
-      result: "__RUN__",
+      result: "Baseline accuracy: 0.629\nLogistic accuracy: 0.958",
       explanation: "About 63% of tumours are benign, so a model that always says 'benign' already gets ~63% accuracy. Logistic regression reaches ~95%, a real improvement. Always report your model next to a baseline so the number has context.",
     },
   ],

@@ -1,6 +1,6 @@
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import { Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search, ClipboardCheck, MessageCircle } from 'lucide-react';
+import { Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search, ClipboardCheck, MessageCircle, Trophy, Hammer } from 'lucide-react';
 import Logo from './Logo.jsx';
 
 const ic = (I) => <I size={16} strokeWidth={2} />;
@@ -15,6 +15,8 @@ const links = [
   { to: '/tools/java-ide', label: 'Java', icon: ic(Coffee) },
   { to: '/tools/java-interview', label: 'Interview Prep', icon: ic(ClipboardCheck) },
   { to: '/tools/soft-skills', label: 'Soft Skills', icon: ic(MessageCircle) },
+  { to: '/tools/test-series', label: 'Test Series', icon: ic(Trophy) },
+  { to: '/tools/python-projects', label: 'Python Projects', icon: ic(Hammer) },
   { to: '/tools/python-ide', label: 'Python', icon: ic(Terminal) },
   { to: '/tools/mysql-workbench', label: 'MySQL', icon: ic(Database) },
   { to: '/tools/csharp-ide', label: 'C#', icon: ic(Cpu) },
@@ -66,6 +68,11 @@ export default function Layout({ children }) {
   useScrollReveal(mainRef, pathname);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    const el = document.querySelector('.nav-links a.active');
+    const box = el?.parentElement;
+    if (el && box && box.scrollWidth > box.clientWidth) box.scrollTo({ left: el.offsetLeft - box.clientWidth / 2 + el.offsetWidth / 2 });
+  }, [pathname]);
 
   useEffect(() => {
     document.body.classList.toggle('no-scroll', open);

@@ -180,6 +180,7 @@ print("Saved sales_report.xlsx with", ws.max_row, "rows")
 
 df = pd.read_excel("sales_report.xlsx", sheet_name="Sales")
 df = df[df["Region"] != "Total"]          # drop the total row
+df = df.astype({"Qty": int, "Price": int})  # blanks in the total row made them float
 df["Revenue"] = df["Qty"] * df["Price"]   # formulas are not calculated by pandas, so compute here
 
 summary = (
@@ -193,11 +194,11 @@ with pd.ExcelWriter("sales_report.xlsx", engine="openpyxl", mode="a",
                     if_sheet_exists="replace") as writer:
     summary.to_excel(writer, sheet_name="Summary", index=False)
 `,
-      result: ` Product  Units  Revenue
-  Laptop     21  1155000
-  Mobile     40   720000
-  Tablet     15   375000`,
-      explanation: "read_excel() loads the sheet. Because the file was created by openpyxl and never opened in Excel, the Revenue formulas have no cached values, so pandas reads them as NaN; we recompute Revenue in pandas. groupby + named aggregation builds the summary. ExcelWriter with mode='a' appends a new sheet to the existing workbook and if_sheet_exists='replace' lets you rerun the script safely.",
+      result: `Product  Units  Revenue
+ Laptop     21  1155000
+ Mobile     40   720000
+ Tablet     15   375000`,
+      explanation: "read_excel() loads the sheet. Because the file was created by openpyxl and never opened in Excel, the Revenue formulas have no cached values, so pandas reads them as NaN; we recompute Revenue in pandas. The blank cells in the Total row also turned Qty and Price into floats, so astype(int) converts them back after the row is removed. groupby + named aggregation builds the summary. ExcelWriter with mode='a' appends a new sheet to the existing workbook and if_sheet_exists='replace' lets you rerun the script safely.",
     },
     {
       title: "Combine Many Branch Files into One Master File",

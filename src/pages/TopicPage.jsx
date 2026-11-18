@@ -1,6 +1,6 @@
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { openInPlayground } from '../components/playgroundRuntime.js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL, isDotnet, isAI, isSoft } from '../data/index.js';
 import { AI_LOAD_KEY } from './AiPromptLab.jsx';
 import { ExternalLink, Sparkles } from 'lucide-react';
@@ -57,6 +57,10 @@ export default function TopicPage() {
   const [qaFilter, setQaFilter] = useState('All');
   const [openAll, setOpenAll] = useState(false);
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!found) return;
+    try { localStorage.setItem('xlpbi-last-topic', JSON.stringify({ track, id, at: new Date().toISOString() })); } catch { /* ignore */ }
+  }, [track, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!found) return <p>Topic not found. <Link to="/">Go home</Link></p>;
   const { topic: t, index, list } = found;

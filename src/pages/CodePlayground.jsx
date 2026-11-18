@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
-import { buildWebDoc, buildReactDoc, PLAYGROUND_LOAD_KEY } from '../components/playgroundRuntime.js';
+import { buildWebDoc, buildReactDoc, PLAYGROUND_LOAD_KEY, LIBS } from '../components/playgroundRuntime.js';
 
 const TEMPLATES = {
   web: {
@@ -23,6 +23,18 @@ const TEMPLATES = {
       html: '<p>Open the Console panel below to see the output.</p>',
       css: '',
       js: "const students = [\n  { name: 'Asha', marks: 82 },\n  { name: 'Ravi', marks: 67 },\n  { name: 'Neha', marks: 91 },\n];\n\nconst passed = students.filter(s => s.marks >= 70);\nconsole.log('Passed:', passed.map(s => s.name));\n\nconst avg = students.reduce((sum, s) => sum + s.marks, 0) / students.length;\nconsole.log('Average:', avg.toFixed(2));",
+    },
+    'Bootstrap 5 page': {
+      libs: ['bootstrap', 'bootstrap-icons'],
+      html: '<nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">\n  <div class="container">\n    <a class="navbar-brand" href="#"><i class="bi bi-mortarboard"></i> UpSkillr</a>\n    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>\n    <div class="collapse navbar-collapse" id="nav">\n      <ul class="navbar-nav ms-auto">\n        <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>\n        <li class="nav-item"><a class="nav-link" href="#">Courses</a></li>\n      </ul>\n    </div>\n  </div>\n</nav>\n<main class="container py-5">\n  <div class="row g-4">\n    <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body"><h5 class="card-title">HTML</h5><p class="card-text">Structure of web pages.</p><a href="#" class="btn btn-primary">Start</a></div></div></div>\n    <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body"><h5 class="card-title">CSS</h5><p class="card-text">Style and layout.</p><a href="#" class="btn btn-success">Start</a></div></div></div>\n    <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body"><h5 class="card-title">JavaScript</h5><p class="card-text">Make it interactive.</p><button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#m">Open modal</button></div></div></div>\n  </div>\n</main>\n<div class="modal fade" id="m" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Hello Bootstrap</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">Modals work because the Bootstrap JS bundle is loaded.</div></div></div></div>',
+      css: '',
+      js: "console.log('Bootstrap version:', bootstrap.Tooltip.VERSION);",
+    },
+    'Vue 3 app': {
+      libs: ['vue'],
+      html: '<div id="app">\n  <h1>{{ title }}</h1>\n  <input v-model="newTask" @keyup.enter="add" placeholder="Add a task">\n  <button @click="add">Add</button>\n  <p>{{ remaining }} of {{ tasks.length }} left</p>\n  <ul>\n    <li v-for="t in tasks" :key="t.id" @click="t.done = !t.done" :class="{ done: t.done }">{{ t.text }}</li>\n  </ul>\n</div>',
+      css: 'body { font-family: system-ui; padding: 16px; }\n.done { text-decoration: line-through; color: #888; }\nli { cursor: pointer; }',
+      js: "const { createApp, ref, computed } = Vue;\n\ncreateApp({\n  setup() {\n    const title = ref('My Vue Tasks');\n    const newTask = ref('');\n    const tasks = ref([{ id: 1, text: 'Learn Vue', done: false }]);\n    const remaining = computed(() => tasks.value.filter((t) => !t.done).length);\n    function add() {\n      if (!newTask.value.trim()) return;\n      tasks.value.push({ id: Date.now(), text: newTask.value, done: false });\n      newTask.value = '';\n    }\n    return { title, newTask, tasks, remaining, add };\n  },\n}).mount('#app');",
     },
     'Fetch API demo': {
       html: '<h2>Users</h2>\n<ul id="list">Loading…</ul>',
@@ -61,7 +73,7 @@ export default function CodePlayground() {
     try { loaded = JSON.parse(sessionStorage.getItem(PLAYGROUND_LOAD_KEY)); sessionStorage.removeItem(PLAYGROUND_LOAD_KEY); } catch { /* ignore */ }
     if (loaded) {
       const mode = loaded.jsx ? 'react' : 'web';
-      return { mode, title: loaded.title, files: mode === 'react' ? { jsx: loaded.jsx || '', css: loaded.css || '' } : { html: loaded.html || '', css: loaded.css || '', js: loaded.js || '' } };
+      return { mode, title: loaded.title, files: mode === 'react' ? { jsx: loaded.jsx || '', css: loaded.css || '' } : { html: loaded.html || '', css: loaded.css || '', js: loaded.js || '', libs: loaded.libs || [] } };
     }
     const st = readStore();
     const mode = st.mode || 'web';
@@ -169,6 +181,11 @@ export default function CodePlayground() {
             <option value="">📂 Load template…</option>
             {Object.keys(TEMPLATES[mode]).map((t) => <option key={t}>{t}</option>)}
           </select>
+          {mode === 'web' && Object.entries(LIBS).map(([k, l]) => (
+            <label key={k} className="check" title={`Load ${l.label} from CDN`}>
+              <input type="checkbox" checked={(files.libs || []).includes(k)} onChange={(e) => setFiles((f) => ({ ...f, libs: e.target.checked ? [...(f.libs || []), k] : (f.libs || []).filter((x) => x !== k) }))} /> {l.label}
+            </label>
+          ))}
           <label className="check"><input type="checkbox" checked={autoRun} onChange={(e) => setAutoRun(e.target.checked)} /> Auto run</label>
           <button className="btn small primary" onClick={run} title="Ctrl + Enter">▶ Run</button>
           <button className="btn small" onClick={() => setLayout(layout === 'side' ? 'bottom' : 'side')} title="Toggle layout">{layout === 'side' ? '⬓' : '◫'} Layout</button>

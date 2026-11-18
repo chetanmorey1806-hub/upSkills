@@ -17,6 +17,11 @@ const GROUPS = [
     ['/tools/java-projects', Hammer, 'Final Project Studio', '8 Java final projects from console apps to Spring Boot microservices: milestones, DB design, APIs, starter code, viva Q&A and a downloadable project report.'],
     ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Self-introduction builder, speaking practice with filler-word and speed analysis, HR answers, STAR stories, group discussion and email writing.'],
   ]],
+  ['Python career & placement', [
+    ['/tools/test-series', Trophy, 'Interview Test Series (all courses)', 'Numbered tests for every course (Python, FastAPI, DSA, ML, Django …): timed MCQ tests plus mock interviews where you speak or type answers and get key-point feedback, a grand test, pass marks and attempt history.'],
+    ['/tools/python-projects', Hammer, 'Python Final Projects', '6 guided Python projects (Student Management, Bank OOP, Library, Expense Tracker, Inventory on SQLite, Log Analyzer) plus your own idea: starter code, automated tests that run in the browser, milestones, score and certificate.'],
+    ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Practise self-introduction, HR answers, STAR stories, group discussion and email writing. Pair it with the 15-day Soft Skills & HR Interview course.'],
+  ]],
   ['Code editors & IDEs', [
     ['/tools/playground', Code2, 'Web Code Editor (VS Code style)', 'HTML / CSS / JavaScript and React with live preview and console.'],
     ['/tools/python-ide', Terminal, 'Python IDE (PyCharm style)', 'Runs real Python 3.12 in your browser: input(), multiple files, numpy, pandas, scikit-learn.'],

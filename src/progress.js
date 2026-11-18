@@ -33,6 +33,9 @@ export function useProgress() {
 
   const update = useCallback((fn) => {
     const next = fn(read());
+    // count one activity per change for today (powers the dashboard activity chart)
+    const day = new Date().toISOString().slice(0, 10);
+    next.activity = { ...(next.activity || {}), [day]: ((next.activity || {})[day] || 0) + 1 };
     write(next);
   }, []);
 
@@ -58,6 +61,7 @@ export function useProgress() {
     quiz: data.quiz || {},
     practice: data.practice || {},
     bookmarks: data.bookmarks || {},
+    activity: data.activity || {},
     toggleDone,
     setQuiz,
     togglePractice,

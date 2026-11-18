@@ -41,7 +41,7 @@ export default function ProjectWorkspace() {
   useEffect(() => { loader.init().catch(() => setFallback(true)); }, []);
   useEffect(() => { ensurePython().then((m) => setStatus(m.type === 'ready' ? 'ready' : 'error')); }, []);
 
-  if (!project) return <p>Project not found. <Link to="/projects">All projects</Link></p>;
+  if (!project) return <p>Project not found. <Link to="/tools/python-projects">All projects</Link></p>;
 
   const setFiles = (fn) => update((s) => ({ ...s, files: typeof fn === 'function' ? fn(s.files || project.files) : fn }));
   const stdin = st.stdin ?? project.stdin ?? '';
@@ -110,7 +110,7 @@ export default function ProjectWorkspace() {
 
   return (
     <div className="project">
-      <div className="crumbs"><Link to="/projects">Final Projects</Link> › {project.title}</div>
+      <div className="crumbs"><Link to="/tools/python-projects">Final Projects</Link> › {project.title}</div>
       <div className="page-head">
         <h1>{project.icon} {project.title}</h1>
         <p className="muted">{project.summary}</p>
