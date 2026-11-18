@@ -438,6 +438,114 @@ function App() {
       explanation:
         'One form component checks whether an id param exists to choose PUT or POST. After the API call succeeds, navigate moves to the list and passes state; the list reads it from location.state (useLocation in real code). The flash message disappears on the next navigation because the state belongs to that history entry only.',
     },
+    {
+      title: 'Second-level nesting: student tabs with Outlet context and two params',
+      scenario: 'The student details page has tabs (Profile, Marks) as nested routes /admin/students/:id/profile and /admin/students/:id/marks. The parent loads the student once and shares it with the tabs through <Outlet context>. The marks tab also reads a second param :term.',
+      steps: [
+        'Make students/:id a layout route (StudentShell) with its own <Outlet />',
+        'Add child routes: index -> Navigate to "profile", "profile", "marks/:term"',
+        'Load the student in StudentShell and pass it with <Outlet context={{ student }} />',
+        'In the tabs use useOutletContext() and useParams() (child sees both :id and :term)',
+      ],
+      code: `// App.jsx (inside the /admin layout route)
+<Route path="students/:id" element={<StudentShell />}>
+  <Route index element={<Navigate to="profile" replace />} />
+  <Route path="profile" element={<ProfileTab />} />
+  <Route path="marks/:term" element={<MarksTab />} />
+</Route>
+
+// src/pages/admin/StudentShell.jsx
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useParams } from "react-router-dom";
+import api from "../../api/axiosClient";
+
+export default function StudentShell() {
+  const { id } = useParams();
+  const [student, setStudent] = useState(null);
+  useEffect(() => { api.get("/students/" + id).then(r => setStudent(r.data)); }, [id]);
+  if (!student) return <p>Loading...</p>;
+  const tab = ({ isActive }) => "nav-link" + (isActive ? " active" : "");
+  return (
+    <>
+      <h3>{student.fullName}</h3>
+      <ul className="nav nav-tabs mb-3">
+        <li className="nav-item"><NavLink to="profile" className={tab}>Profile</NavLink></li>
+        <li className="nav-item"><NavLink to="marks/term1" className={tab}>Term 1</NavLink></li>
+        <li className="nav-item"><NavLink to="marks/term2" className={tab}>Term 2</NavLink></li>
+      </ul>
+      <Outlet context={{ student }} />
+    </>
+  );
+}
+
+// src/pages/admin/MarksTab.jsx
+import { useOutletContext, useParams } from "react-router-dom";
+export default function MarksTab() {
+  const { student } = useOutletContext();
+  const { id, term } = useParams();              // params of all parent routes are visible
+  // GET /api/students/{id}/marks?term=term1  (API: [HttpGet("{id:int}/marks")] with [FromQuery] string term)
+  return <p>Marks of {student.fullName} (id {id}) for {term}</p>;
+}`,
+      playground: {
+        jsx: `const { useState, useEffect, createContext, useContext } = React;
+
+const OutletCtx = createContext(null);
+const useOutletContext = () => useContext(OutletCtx);
+
+const STUDENTS = { 1: { id: 1, fullName: "Asha Patil", email: "asha@test.com", course: "C#" }, 2: { id: 2, fullName: "Ravi Kumar", email: "ravi@test.com", course: "React" } };
+const MARKS = { 1: { term1: { "C#": 82, SQL: 75 }, term2: { "C#": 91, SQL: 80 } }, 2: { term1: { React: 30, JS: 41 }, term2: { React: 55, JS: 60 } } };
+let loads = 0;
+const fakeGetStudent = id => new Promise(r => { loads++; setTimeout(() => r(STUDENTS[id]), 400); });
+
+// URL: /admin/students/:id/<tab>  where tab = "profile" | "marks/term1" | "marks/term2"
+function StudentShell({ id, tab, go }) {
+  const [student, setStudent] = useState(null);
+  useEffect(() => { setStudent(null); fakeGetStudent(id).then(setStudent); }, [id]);   // depends on id only, not tab
+  if (!student) return <p>Loading student {id}...</p>;
+  const tabs = [["profile", "Profile"], ["marks/term1", "Term 1"], ["marks/term2", "Term 2"]];
+  const term = tab.startsWith("marks/") ? tab.split("/")[1] : null;
+  return (
+    <div>
+      <h3 style={{ margin: "8px 0" }}>{student.fullName} <small style={{ color: "#888", fontSize: 12 }}>(API loads so far: {loads})</small></h3>
+      <div style={{ display: "flex", gap: 4, borderBottom: "1px solid #ccc", marginBottom: 10 }}>
+        {tabs.map(([t, label]) => (
+          <button key={t} onClick={() => go(id, t)} style={{ border: "1px solid #ccc", borderBottom: "none", background: tab === t ? "#fff" : "#eee", fontWeight: tab === t ? 700 : 400, padding: "6px 12px", cursor: "pointer" }}>{label}</button>
+        ))}
+      </div>
+      <OutletCtx.Provider value={{ student }}>
+        {term ? <MarksTab id={id} term={term} /> : <ProfileTab />}
+      </OutletCtx.Provider>
+    </div>
+  );
+}
+function ProfileTab() {
+  const { student } = useOutletContext();
+  return <p>Email: {student.email} | Course: {student.course}</p>;
+}
+function MarksTab({ id, term }) {
+  const { student } = useOutletContext();
+  const m = MARKS[id][term];
+  return <div><p>useParams() = {JSON.stringify({ id: String(id), term })}</p>
+    <ul>{Object.entries(m).map(([sub, v]) => <li key={sub}>{sub}: {v}</li>)}</ul>
+    <p>Total for {student.fullName}: {Object.values(m).reduce((a, b) => a + b, 0)}</p></div>;
+}
+
+function App() {
+  const [loc, setLoc] = useState({ id: 1, tab: "profile" });
+  const go = (id, tab) => setLoc({ id, tab });
+  return (
+    <div style={{ fontFamily: "Segoe UI, sans-serif", padding: 16 }}>
+      <code style={{ display: "block", background: "#eee", padding: 6 }}>localhost:5173/admin/students/{loc.id}/{loc.tab}</code>
+      <p>Open: <button onClick={() => go(1, "profile")}>Student 1</button> <button onClick={() => go(2, "profile")}>Student 2</button></p>
+      <StudentShell id={loc.id} tab={loc.tab} go={go} />
+    </div>
+  );
+}`,
+      },
+      result: 'URL /admin/students/1/profile: "Asha Patil (API loads so far: 1)" with tabs Profile, Term 1, Term 2 and "Email: asha@test.com | Course: C#". Clicking Term 2 changes the URL to /admin/students/1/marks/term2 and shows useParams() = {"id":"1","term":"term2"}, C#: 91, SQL: 80, Total 171, while the load counter stays at 1. Clicking Student 2 loads again (counter 2) and shows Ravi Kumar.',
+      explanation:
+        'The shell loads the student once per id; switching tabs only changes the child route, so no new API call happens. The tabs read the shared student through Outlet context (useOutletContext) instead of fetching it again, and a child route sees the params of all its parent routes (id and term). The playground passes id/term as props where real code uses useParams().',
+    },
   ],
   interview: [
     { q: 'What is a nested route?', a: 'A <Route> declared inside another <Route>. The child path is relative to the parent and the child renders inside the parent element\'s <Outlet>.', level: 'Easy' },

@@ -1,7 +1,9 @@
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { openInPlayground } from '../components/playgroundRuntime.js';
 import { useState } from 'react';
-import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL, isDotnet } from '../data/index.js';
+import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL, isDotnet, isAI, isSoft } from '../data/index.js';
+import { AI_LOAD_KEY } from './AiPromptLab.jsx';
+import { ExternalLink, Sparkles } from 'lucide-react';
 import { CS_LOAD_KEY } from './CSharpIDE.jsx';
 import { SSMS_LOAD_KEY } from './MySQLWorkbench.jsx';
 import { MYSQL_LOAD_KEY } from './MySQLWorkbench.jsx';
@@ -68,19 +70,26 @@ export default function TopicPage() {
   const py = isPython(track);
   const my = isMySQL(track);
   const dn = isDotnet(track);
+  const ai = isAI(track);
+  const soft = isSoft(track);
+  const openAi = (payload) => { try { sessionStorage.setItem(AI_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/ai-lab'); };
+  const aiLab = /Machine Learning Hands-on/i.test(t.module || '') ? ['/tools/ml-playground', 'ML Playground']
+    : /Final Project|Careers/i.test(`${t.module} ${t.title}`) ? ['/tools/ai-app-builder', 'AI App Builder']
+    : /Generative AI|Foundations/i.test(t.module || '') ? ['/tools/ai-concepts', 'AI Concepts Lab']
+    : /Productivity/i.test(t.module || '') ? ['/tools/ai-tools', 'AI Tools Directory'] : ['/tools/ai-lab', 'AI Prompt Lab'];
   const dnMod = `${t.module || ''} ${t.title}`;
   const dnSql = dn && /SQL Server/i.test(dnMod);
   const dnWeb = dn && /Frontend|React/i.test(t.module || '');
-  const isExcel = !isPbi(track) && !web && !java && !py && !my && !dn;
+  const isExcel = !isPbi(track) && !web && !java && !py && !my && !dn && !ai && !soft;
   const openCs = (payload) => { try { sessionStorage.setItem(CS_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/csharp-ide'); };
   const openSsms = (payload) => { try { sessionStorage.setItem(SSMS_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/ssms-lab'); };
   const openWb = (payload) => { try { sessionStorage.setItem(MYSQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/mysql-workbench'); };
   const openPy = (payload) => { try { sessionStorage.setItem(PY_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/python-ide'); };
   const openSql = (payload) => { try { sessionStorage.setItem(SQL_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/sql-lab'); };
   const openJava = (payload) => { try { sessionStorage.setItem(JAVA_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/java-ide'); };
-  const codeLabel = dn ? (dnSql ? 'T-SQL / Code' : dnWeb ? 'Code' : 'C# / Code') : my ? 'MySQL' : py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
+  const codeLabel = soft ? 'Sample answer / Template' : ai ? 'Prompt / Code' : dn ? (dnSql ? 'T-SQL / Code' : dnWeb ? 'Code' : 'C# / Code') : my ? 'MySQL' : py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
   const pqTopic = !isExcel && /power query|\bM\b|m language|dataflow/i.test(`${t.module || ''} ${t.title}`);
-  const lab = dnSql ? ['/tools/ssms-lab', 'SSMS Lab'] : dnWeb ? ['/tools/playground', 'Code Playground'] : dn ? ['/tools/csharp-ide', 'C# IDE'] : my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
+  const lab = soft ? ['/tools/soft-skills', 'Soft Skills Lab'] : ai ? aiLab : dnSql ? ['/tools/ssms-lab', 'SSMS Lab'] : dnWeb ? ['/tools/playground', 'Code Playground'] : dn ? ['/tools/csharp-ide', 'C# IDE'] : my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
 
   const setTab = (k) => setParams({ tab: k }, { replace: true });
 
@@ -147,6 +156,18 @@ export default function TopicPage() {
               {s.tip && <div className="tip">💡 <Inline text={s.tip} /></div>}
             </section>
           ))}
+          {t.tools?.length > 0 && (
+            <section className="card">
+              <h3>AI tools used in this lesson</h3>
+              <div className="lesson-tools">
+                {t.tools.map((x) => (
+                  <a key={x.name} className="lesson-tool" href={x.url} target="_blank" rel="noreferrer">
+                    <b>{x.name} <ExternalLink size={12} /></b><span className="muted small">{x.use}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
           <div className="center"><button className="btn primary" onClick={() => setTab('examples')}>Next: Worked examples →</button></div>
         </div>
       )}
@@ -165,6 +186,11 @@ export default function TopicPage() {
                 </div>
               )}
               <CodeBlock code={ex.code} label={codeLabel} />
+              {ex.prompt && (
+                <button className="btn small primary try-btn" onClick={() => openAi({ system: ex.prompt.system || '', user: ex.prompt.user || '', title: ex.title })}>
+                  <Sparkles size={14} /> Run in AI Prompt Lab
+                </button>
+              )}
               {ex.csharp?.files && (
                 <button className="btn small primary try-btn" onClick={() => openCs({ files: ex.csharp.files, stdin: ex.csharp.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
                   🟣 Open in C# IDE
@@ -244,7 +270,7 @@ export default function TopicPage() {
       {tab === 'practice' && (
         <div>
           <div className="card info">
-            Do these exercises in {dnSql ? 'SQL Server Management Studio' : dn ? 'Visual Studio' : my ? 'MySQL Workbench' : track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
+            Do these exercises in {soft ? 'real life (practise aloud, with a friend or in front of a mirror)' : ai ? 'Claude / ChatGPT / Gemini and the in-app AI labs' : dnSql ? 'SQL Server Management Studio' : dn ? 'Visual Studio' : my ? 'MySQL Workbench' : track === 'sql' ? 'MySQL Workbench' : py ? 'VS Code / PyCharm' : java ? 'IntelliJ IDEA / Eclipse' : web ? 'VS Code' : isExcel ? 'real Excel' : 'real Power BI Desktop'} or in the built-in <Link to={lab[0]}>{lab[1]}</Link>
             {!isExcel && <> (the DAX Lab has a download button for the practice CSV files)</>}.
             Try first, then use the hint, then check the solution. Tick an exercise once you've solved it.
           </div>
@@ -259,6 +285,11 @@ export default function TopicPage() {
               <RichText text={ex.task} />
               {ex.hint && <Reveal label="hint"><div className="tip">💡 <Inline text={ex.hint} /></div></Reveal>}
               {ex.solution && <Reveal label="solution"><SolutionText text={ex.solution} /></Reveal>}
+              {ai && (
+                <button className="btn small" onClick={() => openAi({ user: String(ex.task), system: '', title: `Exercise ${i + 1}` })}>
+                  ✍ Practise in AI Prompt Lab
+                </button>
+              )}
               {dn && !dnWeb && (
                 <button className="btn small" onClick={() => (dnSql
                   ? openSsms({ script: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n-- Tip: load StudentDB / EmployeeDB from Object Explorer first\n\n', expected: '', title: `Exercise ${i + 1}` })

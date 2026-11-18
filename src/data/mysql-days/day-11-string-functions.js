@@ -242,22 +242,22 @@ export default {
       "question": "What does CONCAT('Pune', NULL, 'India') return?",
       "options": [
         "Pune India",
-        "PuneIndia",
         "NULL",
+        "PuneIndia",
         "Error"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "Any NULL argument makes CONCAT return NULL. CONCAT_WS would skip it."
     },
     {
       "question": "SUBSTRING_INDEX('report.final.pdf', '.', -1) returns:",
       "options": [
         "report",
-        "pdf",
         "final.pdf",
-        "report.final"
+        "report.final",
+        "pdf"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Negative count keeps the part after the last delimiter."
     },
     {
@@ -274,12 +274,12 @@ export default {
     {
       "question": "LPAD('42', 5, '0') returns:",
       "options": [
-        "42000",
         "00042",
+        "42000",
         "0042",
         "4200"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "LPAD fills on the left up to 5 characters."
     },
     {
@@ -287,10 +287,10 @@ export default {
       "options": [
         "INSTR('@', 'diya@x.com')",
         "LOCATE('diya@x.com', '@')",
-        "LOCATE('@', 'diya@x.com')",
-        "POSITION('diya@x.com' IN '@')"
+        "POSITION('diya@x.com' IN '@')",
+        "LOCATE('@', 'diya@x.com')"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "LOCATE(substr, str). INSTR takes the string first: INSTR('diya@x.com', '@')."
     }
   ]

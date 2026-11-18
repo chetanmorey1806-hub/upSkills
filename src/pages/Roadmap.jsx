@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { tracks, topicKey, topicLabel } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import ProgressBar from '../components/ProgressBar.jsx';
+import { TrackIcon } from '../components/Icons.jsx';
 
 function addCourse(plan, trackKey, startDay) {
   let day = startDay;
@@ -20,7 +21,7 @@ function addExtras(plan, trackKey, label) {
   tracks[trackKey].topics.forEach((x, i) => plan.push({ type: 'topic', track: trackKey, topic: x, idx: i }));
 }
 
-const WEB_PLANS = { html: ['html'], css: ['css'], js: ['js'], react: ['react'], web: ['html', 'css', 'js', 'react'], javafs: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'], mysql: ['mysql'], dotnet: ['dotnet'], pyfs: ['python', 'sql', 'flask', 'django', 'drf'], pyfull: ['python', 'sql', 'html', 'css', 'js', 'flask', 'django', 'drf', 'react'], javafull: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'html', 'css', 'js', 'react'] };
+const WEB_PLANS = { html: ['html'], css: ['css'], js: ['js'], react: ['react'], web: ['html', 'css', 'js', 'react'], javafs: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech'], ai: ['ai'], mysql: ['mysql'], dotnet: ['dotnet'], pyfs: ['python', 'sql', 'flask', 'django', 'drf'], pyfull: ['python', 'sql', 'html', 'css', 'js', 'flask', 'django', 'drf', 'react'], javafull: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'html', 'css', 'js', 'react', 'javatech'] };
 
 function buildPlan(mode) {
   const plan = [];
@@ -50,13 +51,13 @@ export default function Roadmap() {
   return (
     <div>
       <div className="page-head">
-        <h1>🗺 Step-by-step roadmap</h1>
+        <h1>Step-by-step roadmap</h1>
         <p className="muted">
           Follow one day at a time: read the theory → solve the step-by-step examples → do the practice →
           take the quiz → revise the interview Q&amp;A. Tick "Mark as completed" on each day to track progress.
         </p>
         <div className="chips">
-          {[['excel', 'Excel 60 days'], ['powerbi', 'Power BI 45 days'], ['both', 'Excel → Power BI (105 days)'], ['html', 'HTML 30 days'], ['css', 'CSS 30 days'], ['js', 'JavaScript 45 days'], ['react', 'React 30 days'], ['web', 'Full web dev: HTML → CSS → JS → React (135 days)'], ['javafs', 'Java Full Stack: Core Java → Collections → Adv Java → Hibernate → Spring → Spring Boot (132 days)'], ['javafull', 'Java Full Stack + Frontend (Java + HTML/CSS/JS/React)'], ['mysql', 'MySQL with Workbench (30 days)'], ['dotnet', '.NET Full Stack (120 days)'], ['pyfs', 'Python Full Stack: Python → SQL → Flask → Django → DRF (114 days)'], ['pyfull', 'Python Full Stack + Frontend (Python, SQL, HTML/CSS/JS, Flask, Django, DRF, React)']].map(([k, l]) => (
+          {[['excel', 'Excel 60 days'], ['powerbi', 'Power BI 45 days'], ['both', 'Excel → Power BI (105 days)'], ['html', 'HTML 30 days'], ['css', 'CSS 30 days'], ['js', 'JavaScript 45 days'], ['react', 'React 30 days'], ['web', 'Full web dev: HTML → CSS → JS → React (135 days)'], ['javafs', 'Java Full Stack: Core Java → Collections → Adv Java → Hibernate → Spring → Spring Boot (132 days)'], ['javafull', 'Java Full Stack + Frontend (Java + HTML/CSS/JS/React)'], ['ai', 'Artificial Intelligence (45 days)'], ['mysql', 'MySQL with Workbench (30 days)'], ['dotnet', '.NET Full Stack (120 days)'], ['pyfs', 'Python Full Stack: Python → SQL → Flask → Django → DRF (114 days)'], ['pyfull', 'Python Full Stack + Frontend (Python, SQL, HTML/CSS/JS, Flask, Django, DRF, React)']].map(([k, l]) => (
             <button key={k} className={`chip ${mode === k ? 'active' : ''}`} onClick={() => setMode(k)}>{l}</button>
           ))}
         </div>
@@ -90,7 +91,7 @@ export default function Roadmap() {
           const t = tracks[p.track];
           return (
             <div key={k} className={`tl-item ${done[k] ? 'is-done' : ''}`}>
-              <div className="tl-dot" style={{ background: done[k] ? 'var(--ok)' : t.color }}>{done[k] ? '✓' : t.icon}</div>
+              <div className="tl-dot" style={{ background: done[k] ? 'var(--ok)' : t.color }}>{done[k] ? '✓' : <TrackIcon track={p.track} size={16} />}</div>
               <Link to={`/track/${p.track}/${p.topic.id}`} className="card tl-card">
                 <div className="tl-day">{p.day ? `Day ${p.day}` : topicLabel(p.track, p.topic, p.idx)} · {t.short} · <span className={`lvl lvl-${p.topic.level}`}>{p.topic.level}</span></div>
                 <h4>{p.topic.title}</h4>

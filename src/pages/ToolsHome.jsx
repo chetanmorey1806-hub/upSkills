@@ -1,37 +1,66 @@
 import { Link } from 'react-router-dom';
+import {
+  Sparkles, Brain, Network, Rocket, Compass, Code2, Coffee, Cpu, Terminal, Database, Server, Table2,
+  Calculator, Zap, Filter, Trophy, Layers, Keyboard, ClipboardCheck, Hammer, MessageCircle,
+} from 'lucide-react';
 
-const tools = [
-  ['/tools/csharp-ide', '🟣', 'C# IDE (Visual Studio style)', 'Visual Studio–like editor for C#: menu bar, Solution Explorer with Program.cs and extra classes (Add > Class), C# syntax highlighting and IntelliSense-style suggestions, Output / Error List panes, expected output from each lesson, .csproj and copy/download to run in Visual Studio (Ctrl+F5).'],
-  ['/tools/ssms-lab', '🗄️', 'SSMS Lab (SQL Server style)', 'SQL Server Management Studio–style T-SQL practice: Object Explorer, New Query, ▶ Execute (F5), Results and Messages ("(3 rows affected)", Msg 208 …). Supports TOP, IDENTITY, GO, GETDATE, DATEADD/DATEDIFF, CONVERT, OFFSET-FETCH, SELECT INTO #temp, CTEs, window functions, views and transactions. Sample StudentDB and EmployeeDB.'],
-  ['/tools/mysql-workbench', '🐬', 'MySQL Workbench Lab', 'A MySQL Workbench–style practice tool: Navigator with schemas/tables/columns, query tabs, ⚡ execute all (Ctrl+Shift+Enter) or current statement (Ctrl+Enter), Result Grid and Action Output. Understands MySQL syntax (CREATE DATABASE, USE, SHOW TABLES, DESCRIBE, AUTO_INCREMENT, DATE_FORMAT, IF, CONCAT…). Sample college & ecommerce databases; your databases are saved in the browser.'],
-  ['/tools/python-ide', '🐍', 'Python IDE (PyCharm style)', 'Write and RUN real Python 3.12 in your browser (Pyodide): multiple .py files with imports, input() support, output console, Stop button, compare with the expected output, numpy/pandas auto-loaded.'],
-  ['/tools/sql-lab', '🗄️', 'SQL Lab (Workbench style)', 'Run SQL queries in your browser on a ready sample company database (employees, departments, customers, products, orders). Result grids, setup editor, practice queries incl. joins and window functions.'],
-  ['/tools/java-ide', '☕', 'Java IDE (IntelliJ / Eclipse style)', 'Java editor with a project tree, multiple class files, syntax highlighting, IntelliJ (dark) and Eclipse (light) themes, expected output from each lesson, program-input notes, and copy/download to run in your IDE.'],
-  ['/tools/playground', '💻', 'Code Playground (VS Code style)', 'Real VS Code editor (Monaco) with index.html, style.css and script.js tabs, live preview, console panel, React (JSX) mode, templates, Ctrl+Enter to run and download as index.html. Every HTML/CSS/JS/React example opens here with one click.'],
-  ['/tools/formula-lab', '🧮', 'Excel Formula Lab', 'A mini spreadsheet in your browser. Type real Excel formulas (SUM, IF, VLOOKUP, XLOOKUP, SUMIFS, TEXT functions…) and see results instantly. Includes guided challenges.'],
-  ['/tools/dax-lab', '⚡', 'DAX Lab', 'Write DAX measures against a Sales star schema with a Date table and see them evaluated in a matrix with slicers. Supports CALCULATE, FILTER, ALL, SUMX, RELATED, LOOKUPVALUE and time intelligence (TOTALYTD, SAMEPERIODLASTYEAR, DATEADD). Download the CSVs to practise in Power BI Desktop.'],
-  ['/tools/power-query-lab', '🧹', 'Power Query Lab', 'Clean a messy sales file step by step: promote headers, remove blanks and duplicates, fill down, split, replace, change types, custom columns, group by, merge, append and unpivot. See Applied Steps and the generated M code, and solve challenges.'],
-  ['/tools/quiz', '🏆', 'Quiz Arena', 'Random mixed quiz from all topics. Pick track, number of questions and a timer to simulate a test.'],
-  ['/tools/flashcards', '🃏', 'Interview Flashcards', 'Every interview question from every topic as flip cards. Filter by track, level or bookmarks.'],
-  ['/tools/shortcuts', '⌨️', 'Shortcuts & Cheat Sheet', 'Essential Excel and Power BI keyboard shortcuts plus a formula and DAX cheat sheet, with search.'],
+const GROUPS = [
+  ['Artificial Intelligence', [
+    ['/tools/ai-lab', Sparkles, 'AI Prompt Lab', 'Build prompts with a guided builder, get a quality score, use 15 templates, and run them with Claude (your API key) or open them in Claude.ai / ChatGPT.'],
+    ['/tools/ai-app-builder', Rocket, 'AI App Builder (final project)', 'Create your own AI chatbot: template, system prompt, knowledge base (RAG), test cases, then download a working app and your project report.'],
+    ['/tools/ai-concepts', Brain, 'AI Concepts Lab', 'See tokens and cost, next-word probabilities (temperature / top-p) and semantic search / RAG, step by step.'],
+    ['/tools/ml-playground', Network, 'ML Playground', 'Click to add data points and watch KNN, logistic regression, k-means and linear regression learn, with accuracy and a confusion matrix.'],
+    ['/tools/ai-tools', Compass, 'AI Tools Directory', '60+ AI tools: what each is, where it is used in jobs, how to use it step by step, example prompts, tips and limitations.'],
+  ]],
+  ['Java career & placement', [
+    ['/tools/java-interview', ClipboardCheck, 'Java Interview Test Series', 'Timed grand, course-wise and module-wise tests, mock technical & HR interviews (type or speak, AI feedback), a coding round and your score history.'],
+    ['/tools/java-projects', Hammer, 'Final Project Studio', '8 Java final projects from console apps to Spring Boot microservices: milestones, DB design, APIs, starter code, viva Q&A and a downloadable project report.'],
+    ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Self-introduction builder, speaking practice with filler-word and speed analysis, HR answers, STAR stories, group discussion and email writing.'],
+  ]],
+  ['Code editors & IDEs', [
+    ['/tools/playground', Code2, 'Web Code Editor (VS Code style)', 'HTML / CSS / JavaScript and React with live preview and console.'],
+    ['/tools/python-ide', Terminal, 'Python IDE (PyCharm style)', 'Runs real Python 3.12 in your browser: input(), multiple files, numpy, pandas, scikit-learn.'],
+    ['/tools/java-ide', Coffee, 'Java IDE (IntelliJ / Eclipse style)', 'Project tree, multiple classes, expected output, copy/download to your IDE.'],
+    ['/tools/csharp-ide', Cpu, 'C# IDE (Visual Studio style)', 'Solution Explorer, multiple .cs files, expected output, .csproj, run in Visual Studio.'],
+  ]],
+  ['Databases', [
+    ['/tools/mysql-workbench', Database, 'MySQL Workbench Lab', 'Navigator, query tabs, Result Grid, Action Output; MySQL syntax; sample college & ecommerce DBs.'],
+    ['/tools/ssms-lab', Server, 'SSMS Lab (SQL Server)', 'Object Explorer, T-SQL (TOP, IDENTITY, GO, GETDATE…), Results & Messages; StudentDB & EmployeeDB.'],
+    ['/tools/sql-lab', Table2, 'SQL Lab (SQLite)', 'Quick SQL practice on a sample company database with result grids.'],
+  ]],
+  ['Data analytics', [
+    ['/tools/formula-lab', Calculator, 'Excel Formula Lab', 'A mini spreadsheet with 80+ Excel functions and 15 challenges.'],
+    ['/tools/dax-lab', Zap, 'DAX Lab', 'DAX measures on a star schema with a Date table, time intelligence and CSV downloads.'],
+    ['/tools/power-query-lab', Filter, 'Power Query Lab', 'Clean messy data step by step and see the generated M code.'],
+  ]],
+  ['Revision', [
+    ['/tools/quiz', Trophy, 'Quiz Arena', 'Random timed quizzes from any course.'],
+    ['/tools/flashcards', Layers, 'Interview Flashcards', 'Every interview question as flip cards; star the hard ones.'],
+    ['/tools/shortcuts', Keyboard, 'Shortcuts & Cheat Sheet', 'Excel, Power BI and DAX shortcuts and formulas.'],
+  ]],
 ];
 
 export default function ToolsHome() {
   return (
     <div>
       <div className="page-head">
-        <h1>🛠 Practice tools</h1>
-        <p className="muted">Practice right here in the browser, no installation needed.</p>
+        <h1>Practice tools</h1>
+        <p className="muted">Learn by doing: every tool runs in your browser. Lesson examples open here with one click.</p>
       </div>
-      <div className="grid2">
-        {tools.map(([to, icon, h, p]) => (
-          <Link key={to} to={to} className="card tool-card">
-            <div className="track-icon">{icon}</div>
-            <h3>{h}</h3>
-            <p className="muted">{p}</p>
-          </Link>
-        ))}
-      </div>
+      {GROUPS.map(([g, tools]) => (
+        <section key={g}>
+          <h2 className="section-title">{g}</h2>
+          <div className="grid3">
+            {tools.map(([to, Icon, h, p]) => (
+              <Link key={to} to={to} className="card tool-card">
+                <div className="tool-icon"><Icon size={22} strokeWidth={1.8} /></div>
+                <h3>{h}</h3>
+                <p className="muted small">{p}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

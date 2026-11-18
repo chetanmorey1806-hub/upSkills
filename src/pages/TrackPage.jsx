@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { tracks, topicKey, topicLabel } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import ProgressBar from '../components/ProgressBar.jsx';
+import { TrackIcon } from '../components/Icons.jsx';
 
 function TopicRow({ track, t, x, idx, done, quiz }) {
   const k = topicKey(track, x.id);
@@ -51,11 +52,20 @@ export default function TrackPage() {
   return (
     <div>
       <div className="page-head" style={{ borderLeftColor: t.color }}>
-        <h1>{t.icon} {t.name}</h1>
+        <h1 className="with-icon"><span className="track-icon" style={{ color: t.color }}><TrackIcon track={track} size={26} /></span> {t.name}</h1>
         <p className="muted">{t.tagline}</p>
         <ProgressBar value={t.topics.length ? completed / t.topics.length : 0} color={t.color} />
         <div className="muted small">{completed} / {t.topics.length} completed</div>
       </div>
+      {t.group === 'java' && (
+        <div className="card info jc-hub">
+          <b>Java career hub:</b>
+          <Link to="/tools/java-interview">📝 Interview test series & mock interviews</Link>
+          <Link to="/tools/java-projects">🏗️ Final Project Studio</Link>
+          <Link to="/tools/soft-skills">🗣️ Soft Skills Lab</Link>
+          <Link to="/tools/java-ide">☕ Java IDE</Link>
+        </div>
+      )}
       <div className="chips">
         {['All', 'Beginner', 'Intermediate', 'Advanced'].map((l) => (
           <button key={l} className={`chip ${level === l ? 'active' : ''}`} onClick={() => setLevel(l)}>{l}</button>

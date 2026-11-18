@@ -17,10 +17,18 @@ import SqlLab from './pages/SqlLab.jsx';
 import MySQLWorkbench from './pages/MySQLWorkbench.jsx';
 import SsmsLab from './pages/SsmsLab.jsx';
 import CSharpIDE from './pages/CSharpIDE.jsx';
+import AiPromptLab from './pages/AiPromptLab.jsx';
+import AiConceptsLab from './pages/AiConceptsLab.jsx';
+import MlPlayground from './pages/MlPlayground.jsx';
+import AiAppBuilder from './pages/AiAppBuilder.jsx';
+import AiToolsDirectory from './pages/AiToolsDirectory.jsx';
 import QuizArena from './pages/QuizArena.jsx';
 import Flashcards from './pages/Flashcards.jsx';
 import Shortcuts from './pages/Shortcuts.jsx';
 import SearchPage from './pages/SearchPage.jsx';
+import JavaInterview from './pages/JavaInterview.jsx';
+import JavaProjects from './pages/JavaProjects.jsx';
+import SoftSkills from './pages/SoftSkills.jsx';
 
 function ScrollTop() {
   const { pathname } = useLocation();
@@ -51,9 +59,18 @@ export default function App() {
         <Route path="/tools/mysql-workbench" element={<MySQLWorkbench key="mysql" />} />
         <Route path="/tools/ssms-lab" element={<SsmsLab />} />
         <Route path="/tools/csharp-ide" element={<CSharpIDE />} />
+        <Route path="/tools/ai-lab" element={<AiPromptLab />} />
+        <Route path="/tools/ai-concepts" element={<AiConceptsLab />} />
+        <Route path="/tools/ml-playground" element={<MlPlayground />} />
+        <Route path="/tools/ai-app-builder" element={<AiAppBuilder />} />
+        <Route path="/tools/ai-tools" element={<AiToolsDirectory />} />
         <Route path="/tools/quiz" element={<QuizArena />} />
         <Route path="/tools/flashcards" element={<Flashcards />} />
         <Route path="/tools/shortcuts" element={<Shortcuts />} />
+        <Route path="/tools/java-interview" element={<JavaInterview />} />
+        <Route path="/tools/java-projects" element={<JavaProjects />} />
+        <Route path="/tools/java-projects/:id" element={<JavaProjects />} />
+        <Route path="/tools/soft-skills" element={<SoftSkills />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="*" element={<Home />} />
       </Routes>

@@ -416,7 +416,11 @@ def translate(sql):
     s = re.sub(r'\bGROUP_CONCAT\s*\(\s*(DISTINCT\s+)?([^()]*?)(?:\s+ORDER\s+BY\s+[^()]*?)?\s+SEPARATOR\s+(\x00\d+\x00)\s*\)', lambda m: 'GROUP_CONCAT(%s%s, %s)' % (m.group(1) or '', m.group(2), m.group(3)), s, flags=re.I)
     s = re.sub(r'\bLIMIT\s+(\d+)\s+OFFSET\s+(\d+)', r'LIMIT \1 OFFSET \2', s, flags=re.I)
     s = re.sub(r'\bTRUE\b', '1', s, flags=re.I); s = re.sub(r'\bFALSE\b', '0', s, flags=re.I)
-    s = re.sub(r'\bDIV\b', '/', s)
+    # MySQL: '/' is always decimal division, DIV is integer division
+    s = re.sub(r'\bDIV\b', '\x01', s, flags=re.I)
+    if _current.get('dialect') != 'tsql':
+        s = s.replace('/', ' * 1.0 / ')
+    s = s.replace('\x01', '/')
     s = re.sub(r'\s+XOR\s+', ' <> ', s, flags=re.I)
     return _unmask(s, lits)
 
@@ -685,7 +689,10 @@ def run_one(stmt, original=None):
         msg = str(e)
         if 'UNIQUE' in msg: raise Exception("Error Code: 1062. Duplicate entry for key (%s)" % msg.split(':', 1)[-1].strip())
         if 'NOT NULL' in msg: raise Exception("Error Code: 1048. Column '%s' cannot be null" % msg.split('.')[-1])
-        if 'FOREIGN KEY' in msg: raise Exception('Error Code: 1452. Cannot add or update a child row: a foreign key constraint fails')
+        if 'FOREIGN KEY' in msg:
+            if re.match(r'\s*DELETE\b', raw, re.I) or re.match(r'\s*DROP\b', raw, re.I):
+                raise Exception('Error Code: 1451. Cannot delete or update a parent row: a foreign key constraint fails')
+            raise Exception('Error Code: 1452. Cannot add or update a child row: a foreign key constraint fails')
         if 'CHECK' in msg: raise Exception('Error Code: 3819. Check constraint is violated (%s)' % msg)
         raise Exception('Error Code: 1062. ' + msg)
     except sqlite3.OperationalError as e:

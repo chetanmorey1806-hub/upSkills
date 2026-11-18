@@ -256,12 +256,12 @@ export default {
     {
       "question": "What does DATEDIFF('2024-03-01', '2024-02-01') return?",
       "options": [
-        "1",
         "29",
+        "1",
         "-29",
         "30"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "February 2024 has 29 days (leap year); DATEDIFF(later, earlier) is positive."
     },
     {
@@ -290,22 +290,22 @@ export default {
       "question": "TRUNCATE(9.87, 1) returns:",
       "options": [
         "9.9",
-        "9.8",
         "10",
-        "9"
+        "9",
+        "9.8"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "TRUNCATE cuts digits without rounding."
     },
     {
       "question": "Which function returns 2024-02-29 for the input '2024-02-10'?",
       "options": [
         "END_OF_MONTH",
-        "LAST_DAY",
         "MONTH_END",
+        "LAST_DAY",
         "EOMONTH"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "LAST_DAY returns the last date of the month (EOMONTH is the Excel/SQL Server name)."
     }
   ]

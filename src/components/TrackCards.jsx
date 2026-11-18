@@ -2,12 +2,16 @@ import { Link } from 'react-router-dom';
 import { tracks, trackGroups, topicKey } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import ProgressBar from './ProgressBar.jsx';
+import { TrackIcon } from './Icons.jsx';
+import { BrainCircuit, BarChart3, Globe, Coffee, Code2, Cpu, Database } from 'lucide-react';
+
+const GROUP_ICONS = { ai: BrainCircuit, data: BarChart3, web: Globe, java: Coffee, python: Code2, dotnet: Cpu, db: Database };
 
 export default function TrackCards() {
   const { done, quiz } = useProgress();
   return trackGroups.map((g) => (
     <section key={g.key} className="track-group">
-      <h2 className="section-title">{g.name}</h2>
+      <h2 className="section-title group-title">{(() => { const G = GROUP_ICONS[g.key]; return G ? <G size={22} /> : null; })()} {g.name}</h2>
       <div className="grid3">
         {g.tracks.map((k) => tracks[k]).map((t) => {
           const total = t.topics.length;
@@ -16,7 +20,7 @@ export default function TrackCards() {
           const quizzes = t.topics.filter((x) => quiz[topicKey(t.key, x.id)] != null).length;
           return (
             <Link key={t.key} to={`/track/${t.key}`} className="card track-card" style={{ borderTopColor: t.color }}>
-              <div className="track-icon">{t.icon}</div>
+              <div className="track-icon" style={{ color: t.color, background: `color-mix(in srgb, ${t.color} 12%, transparent)` }}><TrackIcon track={t.key} size={24} /></div>
               <h3>{t.name}</h3>
               <p className="muted small">{t.tagline}</p>
               <div className="stats">

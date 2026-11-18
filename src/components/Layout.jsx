@@ -1,18 +1,24 @@
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search, ClipboardCheck, MessageCircle } from 'lucide-react';
 import Logo from './Logo.jsx';
 
+const ic = (I) => <I size={16} strokeWidth={2} />;
 const links = [
-  { to: '/', label: 'Home', icon: '🏠', end: true },
-  { to: '/courses', label: 'Courses', icon: '📚' },
-  { to: '/roadmap', label: 'Roadmap', icon: '🗺️' },
-  { to: '/tools', label: 'Practice Tools', icon: '🛠', end: true },
-  { to: '/tools/playground', label: 'Web', icon: '💻' },
-  { to: '/tools/java-ide', label: 'Java', icon: '☕' },
-  { to: '/tools/python-ide', label: 'Python', icon: '🐍' },
-  { to: '/tools/mysql-workbench', label: 'MySQL', icon: '🐬' },
-  { to: '/tools/csharp-ide', label: 'C#', icon: '🟣' },
-  { to: '/tools/ssms-lab', label: 'SSMS', icon: '🗄️' },
+  { to: '/', label: 'Home', icon: ic(Home), end: true },
+  { to: '/courses', label: 'Courses', icon: ic(BookOpen) },
+  { to: '/roadmap', label: 'Roadmap', icon: ic(MapIcon) },
+  { to: '/tools', label: 'Practice Tools', icon: ic(Wrench), end: true },
+  { to: '/tools/ai-lab', label: 'AI Lab', icon: ic(Sparkles) },
+  { to: '/tools/ai-app-builder', label: 'AI App Builder', icon: ic(Rocket) },
+  { to: '/tools/playground', label: 'Web', icon: ic(Code2) },
+  { to: '/tools/java-ide', label: 'Java', icon: ic(Coffee) },
+  { to: '/tools/java-interview', label: 'Interview Prep', icon: ic(ClipboardCheck) },
+  { to: '/tools/soft-skills', label: 'Soft Skills', icon: ic(MessageCircle) },
+  { to: '/tools/python-ide', label: 'Python', icon: ic(Terminal) },
+  { to: '/tools/mysql-workbench', label: 'MySQL', icon: ic(Database) },
+  { to: '/tools/csharp-ide', label: 'C#', icon: ic(Cpu) },
+  { to: '/tools/ssms-lab', label: 'SSMS', icon: ic(Server) },
 ];
 
 const REVEAL_SEL = '.card, .section-title, .module-head, .page-head, .tl-item';
@@ -111,7 +117,7 @@ export default function Layout({ children }) {
               <button className="nav-close" onClick={() => setOpen(false)} aria-label="Close menu">✕</button>
             </div>
             <form onSubmit={submit} className="search-form">
-              <span className="search-ic">🔍</span>
+              <span className="search-ic"><Search size={14} /></span>
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
             </form>
             <div className="nav-links">

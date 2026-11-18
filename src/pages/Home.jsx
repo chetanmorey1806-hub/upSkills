@@ -22,7 +22,7 @@ export default function Home() {
     <div>
       <section className="hero">
         <div className="hero-badge"><Logo size={24} /> Learn any tech, one day at a time</div>
-        <h1>Master <span className="hl-excel">Excel</span>, <span className="hl-pbi">Power BI</span>, <span className="hl-web">Web Development</span>, <span className="hl-java">Java</span>, <span className="hl-py">Python</span> &amp; <span className="hl-dn">.NET Full Stack</span> <span className="grad-text">step by step</span></h1>
+        <h1>Master <span className="hl-excel">Excel</span>, <span className="hl-pbi">Power BI</span>, <span className="hl-web">Web Development</span>, <span className="hl-java">Java</span>, <span className="hl-py">Python</span>, <span className="hl-dn">.NET Full Stack</span> &amp; <span className="hl-ai">AI</span> <span className="grad-text">step by step</span></h1>
         <p>
           Complete preparation for students: theory with clear explanations, worked examples,
           interview questions with answers, hands-on practice and built-in practice tools.
@@ -30,7 +30,7 @@ export default function Home() {
         <div className="hero-actions">
           <Link to="/roadmap" className="btn primary">Start the roadmap →</Link>
           <Link to="/courses" className="btn">Browse courses</Link>
-          <Link to="/tools/playground" className="btn">💻 Open code editor</Link>
+          <Link to="/tools/ai-lab" className="btn">Try the AI Prompt Lab</Link>
         </div>
         <div className="hero-stats">
           <div><b>{stat.courses}+</b><span>Courses</span></div>

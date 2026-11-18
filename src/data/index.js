@@ -25,6 +25,7 @@ const javaGlob = {
   hibernate: load(import.meta.glob('./hibernate-days/*.js', { eager: true })),
   spring: load(import.meta.glob('./spring-days/*.js', { eager: true })),
   springboot: load(import.meta.glob('./springboot-days/*.js', { eager: true })),
+  javatech: load(import.meta.glob('./javatech-days/*.js', { eager: true })),
 };
 Object.values(javaGlob).forEach((l) => l.sort(byDay));
 const pyGlob = {
@@ -33,10 +34,19 @@ const pyGlob = {
   flask: load(import.meta.glob('./flask-days/*.js', { eager: true })),
   django: load(import.meta.glob('./django-days/*.js', { eager: true })),
   drf: load(import.meta.glob('./drf-days/*.js', { eager: true })),
+  pydsa: load(import.meta.glob('./pydsa-days/*.js', { eager: true })),
+  pydata: load(import.meta.glob('./pydata-days/*.js', { eager: true })),
+  pyml: load(import.meta.glob('./pyml-days/*.js', { eager: true })),
+  fastapi: load(import.meta.glob('./fastapi-days/*.js', { eager: true })),
+  pyauto: load(import.meta.glob('./pyauto-days/*.js', { eager: true })),
+  pytools: load(import.meta.glob('./pytools-days/*.js', { eager: true })),
 };
+const pythonExtra = load(import.meta.glob('./python-extra/*.js', { eager: true })).sort(byExtra);
+const softDays = load(import.meta.glob('./softskills-days/*.js', { eager: true })).sort(byDay);
 Object.values(pyGlob).forEach((l) => l.sort(byDay));
 const dotnetDays = load(import.meta.glob('./dotnet-days/*.js', { eager: true })).sort(byDay);
 const dotnetExtra = load(import.meta.glob('./dotnet-extra/*.js', { eager: true })).sort(byExtra);
+const aiDays = load(import.meta.glob('./ai-days/*.js', { eager: true })).sort(byDay);
 const mysqlDays = load(import.meta.glob('./mysql-days/*.js', { eager: true })).sort(byDay);
 const powerbiExtra = load(import.meta.glob('./powerbi-extra/*.js', { eager: true })).sort((a, b) => (a.extraNo || 0) - (b.extraNo || 0));
 
@@ -149,6 +159,11 @@ export const tracks = {
     tagline: 'REST APIs, validation, Spring Data JPA, Spring Security + JWT, testing, microservices, Docker and a React full-stack project.',
     topics: javaGlob.springboot,
   },
+  javatech: {
+    key: 'javatech', name: 'Java Technologies & Frameworks (30 Days)', short: 'Java Tech', icon: '🧰', color: '#9a3412', unit: 'Day', lang: 'java', group: 'java',
+    tagline: '7 modules, 30 days: Maven, Gradle, Git, Lombok, logging, JUnit & Mockito, SOLID & design patterns, DSA, Java 21, JVM tuning, JavaFX, Thymeleaf, MongoDB, Redis, Batch, WebFlux, Spring Cloud, Kafka, GraphQL, OAuth2/Keycloak, Docker, Kubernetes, CI/CD and AWS.',
+    topics: javaGlob.javatech,
+  },
   python: {
     key: 'python', name: 'Python 45-Day Course', short: 'Python', icon: '🐍', color: '#3776ab', unit: 'Day', lang: 'python', group: 'python',
     tagline: '7 modules, 45 days: basics, data structures, functions, files, OOP, decorators, generators, async, testing and coding programs.',
@@ -174,6 +189,46 @@ export const tracks = {
     tagline: 'Serializers, API views, viewsets, routers, JWT auth, permissions, filtering, pagination, docs and a React full-stack project.',
     topics: pyGlob.drf,
   },
+  pyextra: {
+    key: 'pyextra', name: 'Python Extra Topics (20)', short: 'Python Extra', icon: '🧩', color: '#4b8bbe', unit: 'Topic', lang: 'python', group: 'python',
+    tagline: 'match-case, collections, itertools, functools, datetime, pathlib, argparse, descriptors, metaclasses, memory management, typing, packaging and new Python 3.11-3.13 features.',
+    topics: pythonExtra,
+  },
+  pydsa: {
+    key: 'pydsa', name: 'DSA with Python (15 Days)', short: 'Python DSA', icon: '🧠', color: '#0f766e', unit: 'Day', lang: 'python', group: 'python',
+    tagline: 'Big-O, arrays, strings, hashing, recursion, stacks, queues, linked lists, searching, sorting, trees, heaps, graphs and dynamic programming for coding interviews.',
+    topics: pyGlob.pydsa,
+  },
+  pydata: {
+    key: 'pydata', name: 'Data Analysis with Python (15 Days)', short: 'NumPy & Pandas', icon: '🐼', color: '#150458', unit: 'Day', lang: 'python', group: 'python',
+    tagline: 'NumPy, Pandas, data cleaning, groupby, merges, time series, Matplotlib, Seaborn and end-to-end EDA projects.',
+    topics: pyGlob.pydata,
+  },
+  pyml: {
+    key: 'pyml', name: 'Machine Learning with Python (12 Days)', short: 'ML', icon: '🤖', color: '#f7931e', unit: 'Day', lang: 'python', group: 'python',
+    tagline: 'scikit-learn: preprocessing, regression, classification, trees, ensembles, clustering, PCA, tuning, deep learning intro and an end-to-end ML project.',
+    topics: pyGlob.pyml,
+  },
+  fastapi: {
+    key: 'fastapi', name: 'FastAPI (10 Days)', short: 'FastAPI', icon: '⚡', color: '#009688', unit: 'Day', lang: 'python', group: 'python',
+    tagline: 'Path/query params, Pydantic, response models, dependency injection, SQLAlchemy CRUD, JWT auth, middleware, async, testing and deployment.',
+    topics: pyGlob.fastapi,
+  },
+  pyauto: {
+    key: 'pyauto', name: 'Python Automation & Web Scraping (10 Days)', short: 'Automation', icon: '⚙️', color: '#b45309', unit: 'Day', lang: 'python', group: 'python',
+    tagline: 'Automate files, Excel, Word/PDF, emails and browsers; REST APIs with requests, scraping with BeautifulSoup and Selenium, scheduling and bots.',
+    topics: pyGlob.pyauto,
+  },
+  pytools: {
+    key: 'pytools', name: 'Python Tools & Deployment (12 Days)', short: 'Python Tools', icon: '🧰', color: '#475569', unit: 'Day', lang: 'python', group: 'python',
+    tagline: 'Git, project structure, pytest, SQLAlchemy, Tkinter, Streamlit, Pydantic, Celery, Docker, GitHub Actions CI/CD, deployment and system design basics.',
+    topics: pyGlob.pytools,
+  },
+  softskills: {
+    key: 'softskills', name: 'Soft Skills & HR Interview (15 Days)', short: 'Soft Skills', icon: '🗣️', color: '#db2777', unit: 'Day', lang: 'soft', group: 'career',
+    tagline: 'Communication, self-introduction, spoken English, body language, emails, resume, LinkedIn, HR and STAR answers, group discussion, presentations and workplace skills.',
+    topics: softDays,
+  },
   mysql: {
     key: 'mysql', name: 'MySQL with Workbench (30 Days)', short: 'MySQL', icon: '🐬', color: '#00758f', unit: 'Day', lang: 'mysql', group: 'db',
     tagline: '6 modules, 30 days: install MySQL & Workbench, CRUD, functions, joins, subqueries, views, indexes, procedures, triggers, transactions, window functions, EER diagrams, users and backup.',
@@ -189,6 +244,11 @@ export const tracks = {
     tagline: 'OOP concepts (association → SOLID & design patterns), advanced C#, advanced SQL Server, and advanced ASP.NET Core / EF Core / Web API.',
     topics: dotnetExtra,
   },
+  ai: {
+    key: 'ai', name: 'Artificial Intelligence (45 Days)', short: 'AI', icon: '🤖', color: '#9333ea', unit: 'Day', lang: 'ai', group: 'ai',
+    tagline: '7 modules, 45 days: AI & ML foundations, generative AI & LLMs, prompt engineering, 40+ AI tools, AI APIs, RAG & agents, hands-on ML, careers and a final AI app project.',
+    topics: aiDays,
+  },
   guides: {
     key: 'guides',
     name: 'Excel Topic Guides',
@@ -201,20 +261,24 @@ export const tracks = {
   },
 };
 
-export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'python', 'sql', 'flask', 'django', 'drf', 'mysql', 'dotnet', 'dotnetextra'];
+export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech', 'python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools', 'mysql', 'dotnet', 'dotnetextra', 'ai', 'softskills'];
 export const trackGroups = [
-  { key: 'data', name: '📈 Data Analytics', tracks: ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides'] },
-  { key: 'web', name: '💻 Web Development', tracks: ['html', 'htmlextra', 'css', 'js', 'react'] },
-  { key: 'java', name: '☕ Java Full Stack', tracks: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot'] },
-  { key: 'python', name: '🐍 Python Full Stack', tracks: ['python', 'sql', 'flask', 'django', 'drf'] },
-  { key: 'dotnet', name: '🟣 .NET Full Stack', tracks: ['dotnet', 'dotnetextra'] },
-  { key: 'db', name: '🗄️ Databases', tracks: ['mysql', 'sql'] },
+  { key: 'ai', name: 'Artificial Intelligence', tracks: ['ai'] },
+  { key: 'data', name: 'Data Analytics', tracks: ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides'] },
+  { key: 'web', name: 'Web Development', tracks: ['html', 'htmlextra', 'css', 'js', 'react'] },
+  { key: 'java', name: 'Java Full Stack', tracks: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech'] },
+  { key: 'python', name: 'Python Full Stack', tracks: ['python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools'] },
+  { key: 'dotnet', name: '.NET Full Stack', tracks: ['dotnet', 'dotnetextra'] },
+  { key: 'db', name: 'Databases', tracks: ['mysql', 'sql'] },
+  { key: 'career', name: 'Career & Soft Skills', tracks: ['softskills'] },
 ];
+export const isAI = (track) => tracks[track]?.lang === 'ai';
 export const isDotnet = (track) => tracks[track]?.lang === 'dotnet';
 export const isMySQL = (track) => tracks[track]?.lang === 'mysql';
 export const isPython = (track) => tracks[track]?.lang === 'python';
 export const isJava = (track) => tracks[track]?.lang === 'java';
 export const isWeb = (track) => tracks[track]?.lang === 'web';
+export const isSoft = (track) => tracks[track]?.lang === 'soft';
 export const isPbi = (track) => tracks[track]?.lang === 'pbi';
 
 export const allTopics = trackOrder.flatMap((k) => tracks[k].topics.map((t) => ({ ...t, track: k })));

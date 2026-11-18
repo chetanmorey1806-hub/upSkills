@@ -442,12 +442,10 @@ Location: https://localhost:7001/api/students/5
     { q: 'When do you use 409 Conflict?', a: 'When the request conflicts with the current state of the resource: duplicate unique value, optimistic concurrency failure, deleting an entity that is still referenced.', level: 'Medium' },
     { q: 'What is a Postman environment?', a: 'A named set of variables (baseUrl, token, ids) that requests reference with {{name}}. Switching environment runs the same collection against a different server.', level: 'Easy' },
     { q: 'How do you chain Postman requests?', a: 'In the post-response script of one request save a value with pm.environment.set("studentId", pm.response.json().id); later requests use {{studentId}} in URL or body.', level: 'Medium' },
-    { q: 'What is Newman?', a: 'The command-line runner for Postman collections. It is used in CI/CD pipelines to run API tests automatically and produce reports.', level: 'Medium' },
     { q: 'Should Swagger be enabled in production?', a: 'Usually not publicly - it reveals the API surface. Enable it only in Development, or protect it with authentication / internal network if needed.', level: 'Medium' },
     { q: 'What does .NET 9 change about Swagger in templates?', a: 'Templates no longer include Swashbuckle. They use Microsoft.AspNetCore.OpenApi (AddOpenApi/MapOpenApi) to produce /openapi/v1.json; a UI such as Swagger UI or Scalar must be added separately.', level: 'Hard' },
     { q: 'What is the difference between 400 and 422?', a: '400 means the request is malformed or fails input validation. 422 means the syntax is fine but the server cannot process the instructions (semantic/business error). ASP.NET Core uses 400 for validation by default.', level: 'Hard' },
     { q: 'Output question: an action has [HttpGet("{id:int}")] only. A client sends DELETE /api/students/5. What status code?', a: '405 Method Not Allowed - the route matches the URL, but no endpoint for DELETE exists there.', level: 'Medium' },
-    { q: 'What is 204 No Content and can it have a body?', a: 'A success response with no body, typical for PUT and DELETE. By definition it must not contain a body.', level: 'Easy' },
     { q: 'What does client error mapping in [ApiController] do?', a: 'When an action returns a status code >= 400 without a body (e.g. NotFound()), ASP.NET Core wraps it in a ProblemDetails JSON body with type, title, status and traceId.', level: 'Hard' },
   ],
   practice: [

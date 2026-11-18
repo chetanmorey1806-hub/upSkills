@@ -473,9 +473,9 @@ ORDER BY age DESC, full_name;`,
 +----------------+--------------+----------------+-------------------+-----+
 | full_name      | current_fees | fees_next_year | after_scholarship | age |
 +----------------+--------------+----------------+-------------------+-----+
-| Diya Patel     | 85000        | 93500          | 80000             | 21  |
-| Aarav Sharma   | 85000        | 93500          | 80000             | 20  |
-| Sneha Kulkarni | 85000        | 93500          | 80000             | 20  |
+| Diya Patel     | 85000        | 93500.0        | 80000             | 21  |
+| Aarav Sharma   | 85000        | 93500.0        | 80000             | 20  |
+| Sneha Kulkarni | 85000        | 93500.0        | 80000             | 20  |
 +----------------+--------------+----------------+-------------------+-----+
 3 row(s) returned`,
       explanation: "Each calculated column is computed per row; the table itself is unchanged. The table alias s shortens column references, and the column aliases become the grid headings. The alias age is used in ORDER BY (allowed), but WHERE uses the real column dept_id because aliases are not visible in WHERE. In real MySQL fees_next_year displays as 93500.0000 because / returns a decimal."

@@ -264,33 +264,33 @@ export default {
       "question": "A table has 10 rows; 3 have NULL in marks. What does COUNT(marks) return?",
       "options": [
         "10",
-        "7",
         "3",
+        "7",
         "NULL"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "COUNT(col) ignores NULLs."
     },
     {
       "question": "Which clause filters groups using aggregate values?",
       "options": [
-        "WHERE",
         "HAVING",
+        "WHERE",
         "ORDER BY",
         "LIMIT"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "HAVING is evaluated after GROUP BY and may use aggregates."
     },
     {
       "question": "SELECT city, COUNT(*) FROM students; fails in MySQL 8 by default because:",
       "options": [
         "COUNT needs a column name",
-        "city is not in GROUP BY (ONLY_FULL_GROUP_BY)",
         "students has no primary key",
-        "COUNT cannot be used with SELECT"
+        "COUNT cannot be used with SELECT",
+        "city is not in GROUP BY (ONLY_FULL_GROUP_BY)"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Error 1140/1055: a non-aggregated column requires GROUP BY under ONLY_FULL_GROUP_BY."
     },
     {
@@ -307,12 +307,12 @@ export default {
     {
       "question": "Default separator of GROUP_CONCAT is:",
       "options": [
+        "a comma",
         "a space",
         "a semicolon",
-        "a comma",
         "a pipe |"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "Default is ','; change it with SEPARATOR."
     }
   ]
