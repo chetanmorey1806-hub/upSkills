@@ -780,8 +780,17 @@ usersRouter.post("/users", (req: Request<{}, ApiResponse<UserDto>, unknown>, res
 });`,
     },
     {
-      task: 'Debugging round: a product module has four compile errors under strict mode (implicit any parameters, a possibly undefined discount, a possibly undefined product, and a string id passed where a number is expected). Write the corrected version without `any` or `@ts-ignore`.',
-      hint: 'Use `??` for the optional discount, return Product | undefined from find, and convert the id with Number().',
+      task: `Debugging round: fix every strict-mode error in this code without \`any\` or \`@ts-ignore\`, then make it print the discounted price of the product whose id comes from the URL:
+
+interface Product { id: number; title: string; price: number; discount?: number }
+function finalPrice(p: Product) { return Math.round(p.price * (1 - p.discount / 100)); }
+function findProduct(list, id) { return list.find((p: Product) => p.id === id); }
+const idFromUrl = "1";
+const product: Product | undefined = catalogue.find((p) => p.id === idFromUrl);
+console.log(product.title, finalPrice(product));
+
+tsc reports: 'p.discount' is possibly 'undefined' (TS18048), implicit any for 'list' and 'id' (TS7006), comparing number and string has no overlap (TS2367), and 'product' is possibly 'undefined' (TS18048, TS2345).`,
+      hint: 'Use `??` for the optional discount, type the parameters, convert the id with Number() and check the product before using it.',
       solution: `// Fix the bugs that the compiler reports, without using any or @ts-ignore.
 // (Buggy version had: implicit any params, possibly-undefined access, wrong return type, string vs number.)
 interface Product {

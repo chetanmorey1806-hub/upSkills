@@ -72,6 +72,12 @@ export default function Dashboard() {
   const projects = readJSON('xlpbi-java-projects-v1', {});
   const soft = { log: [], done: {}, ...readJSON('xlpbi-softskills-v1', {}) };
   const last = readJSON('xlpbi-last-topic', null);
+  const series = { results: {}, history: [], ...readJSON('upskillr-tests-v1', {}) };
+  // all course test-series MCQ attempts + Java interview-prep tests, oldest first
+  const allTests = [
+    ...results.tests.map((r) => ({ title: r.title, pct: pct(r.score, r.total), at: new Date(r.date).getTime() })),
+    ...(series.history || []).filter((h) => h.mode === 'mcq').map((h) => ({ title: h.label, pct: h.pct, at: h.at })),
+  ].sort((a, b) => a.at - b.at);
 
   const s = useMemo(() => {
     const per = trackOrder.map((k) => {
@@ -101,6 +107,7 @@ export default function Dashboard() {
     const bump = (iso) => { if (!iso) return; const d = iso.slice(0, 10); act[d] = (act[d] || 0) + 1; };
     results.tests.forEach((r) => bump(r.date));
     results.interviews.forEach((r) => bump(r.date));
+    (series.history || []).forEach((h) => bump(new Date(h.at).toISOString()));
     soft.log.forEach((r) => bump(r.date));
     const days = [];
     for (let i = 13; i >= 0; i--) {
@@ -114,8 +121,9 @@ export default function Dashboard() {
     let streak = 0;
     while (set.has(dayKey(d))) { streak++; d.setDate(d.getDate() - 1); }
 
-    const tests = results.tests.slice(-10).map((r, i) => ({ label: r.title, short: `T${results.tests.length - Math.min(10, results.tests.length) + i + 1}`, v: pct(r.score, r.total), tip: `${r.title} · ${new Date(r.date).toLocaleDateString('en-IN')}` }));
-    const testAvg = results.tests.length ? Math.round(results.tests.reduce((a, r) => a + pct(r.score, r.total), 0) / results.tests.length) : null;
+    const tests = allTests.slice(-10).map((r, i) => ({ label: r.title, short: `T${allTests.length - Math.min(10, allTests.length) + i + 1}`, v: r.pct, tip: `${r.title} · ${new Date(r.at).toLocaleDateString('en-IN')}` }));
+    const testAvg = allTests.length ? Math.round(allTests.reduce((a, r) => a + r.pct, 0) / allTests.length) : null;
+    const mockCount = results.interviews.length + (series.history || []).filter((h) => h.mode === 'mock').length;
     const codingSolved = codingProblems.filter((x) => results.coding?.[x.id]).length;
 
     const proj = javaProjects.map((x) => {
@@ -139,7 +147,7 @@ export default function Dashboard() {
     ];
     const readiness = Math.round(parts.reduce((a, [, v, w]) => a + (v * w) / 100, 0));
 
-    return { per, totalLessons, doneLessons, quizTaken, quizAvg, practiceDone, starred, days, streak, tests, testAvg, codingSolved, proj, softDone, softDays, parts, readiness };
+    return { mockCount, per, totalLessons, doneLessons, quizTaken, quizAvg, practiceDone, starred, days, streak, tests, testAvg, codingSolved, proj, softDone, softDays, parts, readiness };
   }, [p.done, p.quiz, p.practice, p.bookmarks, p.activity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lastInfo = last && findTopic(last.track, last.id);
@@ -216,8 +224,8 @@ export default function Dashboard() {
         <Tile icon={BookOpenCheck} label="Lessons completed" value={s.doneLessons} sub={`${overall}% of ${s.totalLessons}`} to="/courses" />
         <Tile icon={Trophy} label="Quiz average" value={s.quizAvg != null ? `${s.quizAvg}%` : '–'} sub={`${s.quizTaken} quizzes taken`} to="/tools/quiz" tone="t2" />
         <Tile icon={Code2} label="Practice tasks done" value={s.practiceDone} to="/roadmap" tone="t3" />
-        <Tile icon={ClipboardCheck} label="Test series" value={s.testAvg != null ? `${s.testAvg}%` : '–'} sub={`${results.tests.length} tests taken`} to="/tools/java-interview" tone="t4" />
-        <Tile icon={MessagesSquare} label="Mock interviews" value={results.interviews.length} sub={`${s.codingSolved}/${codingProblems.length} coding solved`} to="/tools/java-interview" tone="t5" />
+        <Tile icon={ClipboardCheck} label="Test series" value={s.testAvg != null ? `${s.testAvg}%` : '–'} sub={`${allTests.length} tests taken`} to="/tools/test-series" tone="t4" />
+        <Tile icon={MessagesSquare} label="Mock interviews" value={s.mockCount} sub={`${s.codingSolved}/${codingProblems.length} coding solved`} to="/tools/java-interview" tone="t5" />
         <Tile icon={MessageCircle} label="Soft-skill practice days" value={s.softDays} sub={`${s.softDone}/${softSkillModules.length} modules`} to="/tools/soft-skills" tone="t6" />
         <Tile icon={Star} label="Starred questions" value={s.starred} to="/tools/flashcards" tone="t2" />
         <Tile icon={Flame} label="Current streak" value={`${s.streak} ${s.streak === 1 ? 'day' : 'days'}`} sub="Active days in a row" tone="t4" />
@@ -230,9 +238,9 @@ export default function Dashboard() {
           <Columns data={s.days} empty="No activity yet. Complete a lesson or take a quiz to start your chart." />
         </div>
         <div className="card">
-          <div className="db-card-head"><h3>Test series scores</h3><span className="muted small">last {Math.min(10, results.tests.length)} tests · 70% target</span></div>
-          <Columns data={s.tests} max={100} unit="%" refLine={70} empty="No tests yet. Take a timed test in Java Interview Prep." />
-          {results.tests.length === 0 && <Link to="/tools/java-interview" className="btn small">Take a test</Link>}
+          <div className="db-card-head"><h3>Test series scores</h3><span className="muted small">last {Math.min(10, allTests.length)} tests · all courses · 70% target</span></div>
+          <Columns data={s.tests} max={100} unit="%" refLine={70} empty="No tests yet. Pick any course in the Test Series and take a timed test." />
+          {allTests.length === 0 && <Link to="/tools/test-series" className="btn small">Open Test Series</Link>}
         </div>
       </div>
 
@@ -290,7 +298,7 @@ export default function Dashboard() {
       <div className="db-actions">
         {[
           ['/roadmap', MapIcon, 'Roadmap'], ['/tools/quiz', Trophy, 'Quiz Arena'], ['/tools/flashcards', Layers, 'Flashcards'],
-          ['/tools/java-interview', ClipboardCheck, 'Mock test'], ['/tools/java-projects', Hammer, 'Projects'], ['/tools/soft-skills', MessageCircle, 'Soft skills'],
+          ['/tools/test-series', ClipboardCheck, 'Test series'], ['/tools/java-projects', Hammer, 'Projects'], ['/tools/soft-skills', MessageCircle, 'Soft skills'],
           ['/tools/java-ide', Code2, 'Java IDE'], ['/tools', Target, 'All tools'],
         ].map(([to, I, l]) => <Link key={to} to={to} className="card db-action"><I size={22} /><span>{l}</span></Link>)}
       </div>

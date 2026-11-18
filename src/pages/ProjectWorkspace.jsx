@@ -314,7 +314,7 @@ export default function ProjectWorkspace() {
                 <p>successfully built the project</p>
                 <div className="cert-project">{custom ? (st.custom?.title || 'Own Project') : project.title}</div>
                 <p>with a final score of <b>{st.submission.score}/100</b>{project.tests ? ` (${st.submission.passed}/${st.submission.total} automated tests passing)` : ''}</p>
-                <div className="cert-foot"><span>{new Date(st.submission.at).toLocaleDateString()}</span><span>Developed by Er. Chetan D Morey</span></div>
+                <div className="cert-foot"><span>{new Date(st.submission.at).toLocaleDateString()}</span><span>Developed by ER. Chetan D Morey</span></div>
               </div>
               <button className="btn small no-print" onClick={() => window.print()}>🖨 Print / Save as PDF</button>
             </div>

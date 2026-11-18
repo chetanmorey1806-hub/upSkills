@@ -66,6 +66,13 @@ export default function TrackPage() {
           <Link to="/tools/java-ide">☕ Java IDE</Link>
         </div>
       )}
+      {t.topics.some((x) => x.quiz?.length || x.interview?.length) && (
+        <Link to={`/tools/test-series/${track}`} className="card ts-banner" style={{ '--c': t.color }}>
+          <span>🎯</span>
+          <div><b>{t.short} Test Series</b><div className="muted small">Practice sets, module-wise and lesson-wise tests, a grand test and mock interviews for this course</div></div>
+          <span className="btn small primary">Take a test →</span>
+        </Link>
+      )}
       <div className="chips">
         {['All', 'Beginner', 'Intermediate', 'Advanced'].map((l) => (
           <button key={l} className={`chip ${level === l ? 'active' : ''}`} onClick={() => setLevel(l)}>{l}</button>

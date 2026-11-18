@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { tracks, trackOrder, trackGroups } from '../data/index.js';
 import Quiz from '../components/Quiz.jsx';
 import RichText from '../components/RichText.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { analyzeAnswer } from '../engine/answerCheck.js';
 import { useSpeech, speak, stopSpeaking } from '../components/useSpeech.js';
+import { TrackIcon } from '../components/Icons.jsx';
 
 const STORE = 'upskillr-tests-v1';
 const PER_TEST = 5; // lessons per numbered test
@@ -68,6 +69,37 @@ function buildSets(course) {
       .forEach((q, j) => sets[(ti * 2 + j) % SETS].iv.push(q));
   });
   return sets;
+}
+
+// One test per module of a course: MCQ paper from that module's lessons + a mock interview on them.
+function buildModuleTests(course) {
+  const topics = (tracks[course]?.topics || []).map((t) => ({ ...t, track: course }));
+  const mods = [...new Set(topics.map((t) => t.module).filter(Boolean))];
+  if (mods.length < 2) return [];
+  return mods.map((m, i) => {
+    const list = topics.filter((t) => t.module === m);
+    return {
+      id: `${course}#mod${i + 1}`, n: i + 1, title: m.replace(/^Module \d+:\s*/, ''), module: m, course, topics: list,
+      mcq: shuffle(list.flatMap((t) => (t.quiz || []).map((q) => ({ ...q, source: t.title })))).slice(0, 40),
+      iv: list.flatMap((t) => (t.interview || []).map((q) => ({ ...q, level: normLevel(q.level), topic: t }))),
+      label: `${tracks[course]?.short} · ${m.replace(/^Module \d+:\s*/, 'Module ' + (i + 1) + ': ')}`,
+    };
+  });
+}
+
+// Totals for one course (used on the all-courses grid).
+function courseSummary(course, res) {
+  const topics = tracks[course]?.topics || [];
+  const lessonTests = Math.ceil(topics.length / PER_TEST);
+  const modTests = buildModuleTests(course).length;
+  const total = SETS + lessonTests + modTests + (topics.length ? 1 : 0);
+  const mine = Object.entries(res).filter(([id]) => id.startsWith(`${course}#`));
+  const best = mine.reduce((b, [, r]) => Math.max(b, r.mcq?.best || 0, r.mock?.best || 0), 0);
+  const passed = mine.filter(([, r]) => Math.max(r.mcq?.best || 0, r.mock?.best || 0) >= PASS).length;
+  return {
+    total, attempted: mine.length, passed, best,
+    mcq: topics.reduce((a, t) => a + (t.quiz?.length || 0), 0), iv: topics.reduce((a, t) => a + (t.interview?.length || 0), 0),
+  };
 }
 
 const mcqOf = (topics) => topics.flatMap((t) => (t.quiz || []).map((q) => ({ ...q, source: `${tracks[t.track]?.short} · ${t.title}` })));
@@ -303,69 +335,191 @@ function SetCards({ course, res, start }) {
   );
 }
 
-/* ------------------------------ Dashboard ------------------------------ */
+/* -------------------------- All-courses grid -------------------------- */
+function CourseGrid({ res, history }) {
+  const [q, setQ] = useState('');
+  const has = (k) => tracks[k]?.topics?.some((t) => t.quiz?.length || t.interview?.length);
+  const all = trackOrder.filter(has);
+  const sums = Object.fromEntries(all.map((k) => [k, courseSummary(k, res)]));
+  const totalTests = all.reduce((a, k) => a + sums[k].total, 0);
+  const attempted = all.reduce((a, k) => a + sums[k].attempted, 0);
+  const passed = all.reduce((a, k) => a + sums[k].passed, 0);
+  const match = (k) => !q || `${tracks[k].name} ${tracks[k].short}`.toLowerCase().includes(q.toLowerCase());
+  const seen = new Set();
+  const groups = trackGroups.map((g) => ({ ...g, list: g.tracks.filter((k) => has(k) && match(k) && !seen.has(k) && seen.add(k)) })).filter((g) => g.list.length);
+  return (
+    <div>
+      <div className="page-head">
+        <h1>🎯 Test Series – all courses</h1>
+        <p className="muted">Every course has its own separate test series: <b>5 full-syllabus practice sets</b>, <b>module-wise tests</b>, <b>lesson-wise tests</b> and a <b>grand test</b>. Each test has a timed MCQ paper and a mock interview (speak or type). Pick a course to start.</p>
+      </div>
+      <div className="ts-stats">
+        <div className="card"><b>{all.length}</b><span>Courses with a test series</span></div>
+        <div className="card"><b>{totalTests}</b><span>Tests available</span></div>
+        <div className="card"><b>{attempted}</b><span>Tests attempted</span></div>
+        <div className="card"><b>{passed}</b><span>Tests passed (≥{PASS}%)</span></div>
+      </div>
+      <input className="input ts-search" placeholder="Search a course… (e.g. Java, React, Power BI)" value={q} onChange={(e) => setQ(e.target.value)} />
+      {groups.map((g) => (
+        <section key={g.key}>
+          <div className="set-group-head">
+            <h2 className="section-title">{g.name}</h2>
+            {g.list.length > 1 && !q && <Link className="btn small" to={`/tools/test-series/grp:${g.key}`}>🏆 Full-path tests ({g.name})</Link>}
+          </div>
+          <div className="grid3">
+            {g.list.map((k) => {
+              const t = tracks[k];
+              const s = sums[k];
+              return (
+                <Link key={k} to={`/tools/test-series/${k}`} className="card ts-course" style={{ '--c': t.color }}>
+                  <div className="ts-course-top">
+                    <span className="ts-cicon"><TrackIcon track={k} size={22} /></span>
+                    <div><h3>{t.name}</h3><div className="muted small">{s.total} tests · {s.mcq} MCQs · {s.iv} interview Qs</div></div>
+                  </div>
+                  <ProgressBar value={s.total ? s.passed / s.total : 0} color={t.color} />
+                  <div className="ts-course-foot small">
+                    <span>{s.attempted ? `${s.passed}/${s.total} passed` : 'Not started'}</span>
+                    {s.attempted > 0 && <span>Best <b className={s.best >= PASS ? 'ok-t' : 'bad-t'}>{s.best}%</b></span>}
+                    <span className="ts-go">Open →</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+      {groups.length === 0 && <p className="muted">No course matches “{q}”.</p>}
+      <History history={history} />
+    </div>
+  );
+}
+
+function History({ history, title = '🕘 Recent attempts' }) {
+  if (!history.length) return null;
+  return (
+    <div className="card">
+      <h3>{title}</h3>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Test</th><th>Type</th><th>Score</th><th>Date</th></tr></thead>
+          <tbody>{history.map((h, i) => (
+            <tr key={i}><td>{h.label}</td><td>{h.mode === 'mcq' ? '📝 MCQ' : '🎤 Interview'}</td><td className={h.pct >= PASS ? 'ok-t' : 'bad-t'}>{h.pct}% <span className="muted">({h.detail})</span></td><td>{new Date(h.at).toLocaleString()}</td></tr>
+          ))}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ModuleCards({ course, res, start }) {
+  const tests = useMemo(() => buildModuleTests(course), [course]);
+  if (!tests.length) return <p className="muted">{tracks[course]?.name} has no separate modules; use the practice sets or lesson-wise tests.</p>;
+  return (
+    <div className="set-group">
+      <div className="set-group-head"><h2>{tracks[course].name}</h2><span className="badge">{tests.length} module tests</span></div>
+      <div className="grid3">
+        {tests.map((t) => {
+          const r = res[t.id] || {};
+          const best = Math.max(r.mcq?.best || 0, r.mock?.best || 0);
+          return (
+            <div key={t.id} className={`card test-card ${best >= PASS ? 'passed' : ''}`}>
+              <div className="test-card-top">
+                <span className="test-no">M{t.n}</span>
+                <div><h3>{t.title}</h3><div className="muted small">{t.topics.length} lessons · {t.mcq.length} MCQs · {t.iv.length} interview Qs</div></div>
+              </div>
+              <div className="muted small test-topics">{t.topics.map((x) => x.title).join(' • ')}</div>
+              <div className="test-modes">
+                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!t.mcq.length}>📝 MCQ · {t.mcq.length} Q</button>
+                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!t.iv.length}>🎤 Mock interview</button>
+                <button className="btn small" onClick={() => start(t, 'sheet')} disabled={!t.iv.length}>📖 Q&amp;A sheet</button>
+              </div>
+              <div className="test-scores small">
+                <span>MCQ: {r.mcq ? <b className={r.mcq.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mcq.best}%</b> : '–'}</span>
+                <span>Interview: {r.mock ? <b className={r.mock.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mock.best}%</b> : '–'}</span>
+                {best >= PASS && <span className="badge ok">✓ Passed</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------ Course page ------------------------------ */
 export default function TestSeries() {
+  const { course } = useParams();
   const [params, setParams] = useSearchParams();
-  const sel = params.get('course') || 'python';
-  const view = params.get('view') === 'lessons' ? 'lessons' : 'sets';
-  const setView = (v) => setParams({ course: sel, ...(v === 'lessons' ? { view: v } : {}) });
+  const legacy = params.get('course');
+  const sel = course || '';
+  const v = params.get('view');
+  const view = ['lessons', 'modules'].includes(v) ? v : 'sets';
+  const setView = (x) => setParams(x === 'sets' ? {} : { view: x });
   const [run, setRun] = useState(null);
   const [store, setStore] = useState(readStore);
   const { topics, tests } = useMemo(() => buildTests(sel), [sel]);
   const { key: locKey } = useLocation();
   useEffect(() => { setRun(null); setStore(readStore()); }, [locKey]); // any navigation (course change or menu click) closes the running test
 
-  const options = trackOrder.filter((k) => tracks[k]?.topics?.some((t) => t.interview?.length));
-  const groupOpts = trackGroups.filter((g) => g.tracks.length > 1);
+  if (legacy) return <Navigate replace to={`/tools/test-series/${legacy}${params.get('view') ? `?view=${params.get('view')}` : ''}`} />;
+  const res = store.results || {};
+  if (!sel) return <CourseGrid res={res} history={(store.history || []).slice(0, 8)} />;
+
+  const isGroup = sel.startsWith('grp:');
+  const grp = isGroup ? trackGroups.find((g) => `grp:${g.key}` === sel) : null;
+  const courses = (isGroup ? grp?.tracks || [] : [sel]).filter((k) => tracks[k]?.topics?.length);
   const exit = () => { setRun(null); setStore(readStore()); window.scrollTo(0, 0); };
   const start = (test, mode) => { setRun({ test, mode }); window.scrollTo(0, 0); };
-  const label = sel.startsWith('grp:') ? trackGroups.find((g) => `grp:${g.key}` === sel)?.name : tracks[sel]?.name;
+  const label = isGroup ? grp?.name : tracks[sel]?.name;
 
+  if (!label) return <div><p>Course not found.</p><Link to="/tools/test-series" className="btn">← All courses</Link></div>;
   if (run?.mode === 'mcq') return <McqRun test={run.test} onExit={exit} />;
   if (run?.mode === 'sheet') return <QaSheet test={run.test} onExit={exit} onMock={() => start(run.test, 'mock')} />;
   if (run) return <MockRun key={run.test.id} test={run.test} onExit={exit} />;
 
-  const res = store.results || {};
   const taken = tests.filter((t) => res[t.id]);
   const passed = tests.filter((t) => Math.max(res[t.id]?.mcq?.best || 0, res[t.id]?.mock?.best || 0) >= PASS);
   const grand = { id: `${sel}#grand`, n: 'G', title: 'Grand Test', grand: true, topics, label: `${label} · Grand Test` };
-  const history = (store.history || []).slice(0, 8);
+  const history = (store.history || []).filter((h) => h.testId?.startsWith(`${sel}#`) || courses.some((k) => h.testId?.startsWith(`${k}#`))).slice(0, 10);
+  const color = isGroup ? 'var(--primary)' : tracks[sel].color;
+  const sum = !isGroup ? courseSummary(sel, res) : null;
 
   return (
     <div>
-      <div className="page-head">
-        <h1>🎯 Interview Test Series</h1>
-        <p className="muted">Separate practice sets for every course: timed <b>MCQ papers</b>, <b>mock interviews</b> where you answer real interview questions by speaking or typing, and full <b>interview Q&amp;A sheets</b> with model answers for revision.</p>
-        <div className="quiz-settings">
-          <label>Course
-            <select value={sel} onChange={(e) => setParams({ course: e.target.value, ...(view === 'lessons' ? { view } : {}) })}>
-              <optgroup label="Full paths">{groupOpts.map((g) => <option key={g.key} value={`grp:${g.key}`}>{g.name} (all courses)</option>)}</optgroup>
-              <optgroup label="Single course">{options.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</optgroup>
-            </select>
-          </label>
-        </div>
+      <Link to="/tools/test-series" className="btn small">← All courses</Link>
+      <div className="page-head ts-head" style={{ marginTop: '.8rem' }}>
+        <h1 className="with-icon">{!isGroup && <span className="track-icon" style={{ color, background: `color-mix(in srgb, ${color} 12%, transparent)` }}><TrackIcon track={sel} size={24} /></span>} {label}: Test Series</h1>
+        <p className="muted">{isGroup ? `Tests for every course in the ${label} path, plus full-path grand tests.` : `${sum.total} separate tests for this course: ${SETS} full-syllabus practice sets, module-wise tests, lesson-wise tests and a grand test. Pass mark ${PASS}%.`}</p>
+        {!isGroup && <><ProgressBar value={sum.total ? sum.passed / sum.total : 0} color={color} /><div className="muted small">{sum.passed}/{sum.total} tests passed · {sum.attempted} attempted{sum.attempted ? ` · best ${sum.best}%` : ''} · <Link to={`/track/${sel}`}>Open the course</Link></div></>}
       </div>
 
       <div className="tabs">
-        <button className={`tab ${view === 'sets' ? 'active' : ''}`} onClick={() => setView('sets')}>📚 5 Practice Sets per course</button>
-        <button className={`tab ${view === 'lessons' ? 'active' : ''}`} onClick={() => setView('lessons')}>🧩 Lesson-wise tests</button>
+        <button className={`tab ${view === 'sets' ? 'active' : ''}`} onClick={() => setView('sets')}>📚 {SETS} Practice Sets</button>
+        <button className={`tab ${view === 'modules' ? 'active' : ''}`} onClick={() => setView('modules')}>🧱 Module-wise tests</button>
+        <button className={`tab ${view === 'lessons' ? 'active' : ''}`} onClick={() => setView('lessons')}>🧩 Lesson-wise tests + Grand</button>
       </div>
 
-      {view === 'sets' ? (
+      {view === 'sets' && (
         <>
           <p className="muted">Each course has <b>{SETS} full-length practice sets</b>. Every set covers the <b>whole syllabus</b>, and the {SETS} sets together use <b>every MCQ and interview question</b> in the course exactly once. Clear a set by scoring ≥{PASS}% in both its MCQ paper and its mock interview. Use the Q&amp;A sheet to revise before the mock.</p>
-          {(sel.startsWith('grp:') ? (trackGroups.find((g) => `grp:${g.key}` === sel)?.tracks || []) : [sel])
-            .filter((k) => tracks[k]?.topics?.length)
-            .map((k) => <SetCards key={k} course={k} res={res} start={start} />)}
+          {courses.map((k) => <SetCards key={k} course={k} res={res} start={start} />)}
         </>
-      ) : (<>
+      )}
+      {view === 'modules' && (
+        <>
+          <p className="muted">One test per module: take it right after you finish that module. The MCQ paper has up to 40 questions from that module's lessons.</p>
+          {courses.map((k) => <ModuleCards key={k} course={k} res={res} start={start} />)}
+        </>
+      )}
+      {view === 'lessons' && (<>
       <div className="ts-stats">
-        <div className="card"><b>{tests.length}</b><span>Tests in {label}</span></div>
+        <div className="card"><b>{tests.length}</b><span>Lesson tests in {label}</span></div>
         <div className="card"><b>{taken.length}</b><span>Attempted</span></div>
         <div className="card"><b>{passed.length}</b><span>Passed (≥{PASS}%)</span></div>
         <div className="card"><b>{qaOf(topics).length}</b><span>Interview questions</span></div>
       </div>
       <ProgressBar value={tests.length ? passed.length / tests.length : 0} />
+      <p className="muted small">Each lesson test covers {PER_TEST} consecutive lessons. The 🏆 Grand Test (last card) mixes 40 questions from the whole course.</p>
 
       {tests.length === 0 && <p className="muted">No questions in this course yet.</p>}
       <div className="grid3">
@@ -396,22 +550,9 @@ export default function TestSeries() {
           );
         })}
       </div>
-
       </>)}
 
-      {history.length > 0 && (
-        <div className="card">
-          <h3>🕘 Recent attempts</h3>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead><tr><th>Test</th><th>Type</th><th>Score</th><th>Date</th></tr></thead>
-              <tbody>{history.map((h, i) => (
-                <tr key={i}><td>{h.label}</td><td>{h.mode === 'mcq' ? '📝 MCQ' : '🎤 Interview'}</td><td className={h.pct >= PASS ? 'ok-t' : 'bad-t'}>{h.pct}% <span className="muted">({h.detail})</span></td><td>{new Date(h.at).toLocaleString()}</td></tr>
-              ))}</tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <History history={history} title={`🕘 Recent attempts · ${label}`} />
     </div>
   );
 }

@@ -207,7 +207,7 @@ function Workspace({ project }) {
               <div className="cert-project">{project.title}</div>
               <p>with a final score of <b>{st.submission.score}/100</b> ({st.submission.passed}/{st.submission.total} automated API tests passing)</p>
               {(st.github || st.live) && <p className="small">{st.github}{st.github && st.live ? ' · ' : ''}{st.live}</p>}
-              <div className="cert-foot"><span>{new Date(st.submission.at).toLocaleDateString()}</span><span>Developed by Er. Chetan D Morey</span></div>
+              <div className="cert-foot"><span>{new Date(st.submission.at).toLocaleDateString()}</span><span>Developed by ER. Chetan D Morey</span></div>
             </div><button className="btn small no-print" onClick={() => window.print()}>🖨 Print / Save as PDF</button></div>
           )}
           <div className="card"><h3>🔑 Reference solution (backend)</h3>

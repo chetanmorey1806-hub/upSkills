@@ -273,7 +273,7 @@ export default function Landing() {
         <div className="footer-inner">
           <div className="footer-brand"><Logo size={28} /><span className="brand-name">Up<b>Skillr</b></span></div>
           <p className="footer-tag">Learn any tech, one day at a time</p>
-          <div className="footer-credit">Developed with <span className="heart">♥</span> by <b>Er. Chetan D Morey</b></div>
+          <div className="footer-credit">Developed by <b>ER. Chetan D Morey</b></div>
           <div className="footer-copy">© {new Date().getFullYear()} UpSkillr. All rights reserved.</div>
         </div>
       </footer>

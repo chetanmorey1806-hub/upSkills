@@ -82,6 +82,7 @@ function AppShell() {
         <Route path="/tools/java-projects/:id" element={<JavaProjects />} />
         <Route path="/tools/soft-skills" element={<SoftSkills />} />
         <Route path="/tools/test-series" element={<TestSeries />} />
+        <Route path="/tools/test-series/:course" element={<TestSeries />} />
         <Route path="/tools/python-projects" element={<Projects />} />
         <Route path="/tools/python-projects/:id" element={<ProjectWorkspace />} />
         <Route path="/tools/mongo-lab" element={<MongoLab />} />

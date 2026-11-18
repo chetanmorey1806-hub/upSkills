@@ -1,31 +1,230 @@
-import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
-import { Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search, ClipboardCheck, MessageCircle, Trophy, Hammer, LayoutDashboard } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search,
+  ClipboardCheck, MessageCircle, Trophy, Hammer, LayoutDashboard, ChevronDown, BarChart3, Globe, Layers, BookMarked,
+  Brain, ListChecks, Library, GraduationCap,
+} from 'lucide-react';
 import Logo from './Logo.jsx';
+import { tracks, trackGroups } from '../data/index.js';
 
-const ic = (I) => <I size={16} strokeWidth={2} />;
-const links = [
-  { to: '/home', label: 'Home', icon: ic(Home), end: true },
-  { to: '/dashboard', label: 'Dashboard', icon: ic(LayoutDashboard) },
-  { to: '/courses', label: 'Courses', icon: ic(BookOpen) },
-  { to: '/roadmap', label: 'Roadmap', icon: ic(MapIcon) },
-  { to: '/tools', label: 'Practice Tools', icon: ic(Wrench), end: true },
-  { to: '/tools/ai-lab', label: 'AI Lab', icon: ic(Sparkles) },
-  { to: '/tools/ai-app-builder', label: 'AI App Builder', icon: ic(Rocket) },
-  { to: '/tools/playground', label: 'Web', icon: ic(Code2) },
-  { to: '/tools/api-lab', label: 'API Lab', icon: ic(Server) },
-  { to: '/tools/java-ide', label: 'Java', icon: ic(Coffee) },
-  { to: '/tools/java-interview', label: 'Interview Prep', icon: ic(ClipboardCheck) },
-  { to: '/tools/soft-skills', label: 'Soft Skills', icon: ic(MessageCircle) },
-  { to: '/tools/test-series', label: 'Test Series', icon: ic(Trophy) },
-  { to: '/tools/python-projects', label: 'Python Projects', icon: ic(Hammer) },
-  { to: '/tools/mern-projects', label: 'MERN Projects', icon: ic(Rocket) },
-  { to: '/tools/mongo-lab', label: 'MongoDB', icon: ic(Database) },
-  { to: '/tools/python-ide', label: 'Python', icon: ic(Terminal) },
-  { to: '/tools/mysql-workbench', label: 'MySQL', icon: ic(Database) },
-  { to: '/tools/csharp-ide', label: 'C#', icon: ic(Cpu) },
-  { to: '/tools/ssms-lab', label: 'SSMS', icon: ic(Server) },
-];
+const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
+
+/*
+ * Menu tree — same structure as the SoftTheNext portal:
+ * plain links, and sections that open a dropdown. A section item with
+ * `children` is a group that expands in place inside the dropdown.
+ */
+const GROUP_ICON = { ai: Sparkles, data: BarChart3, mern: Layers, web: Globe, java: Coffee, python: Terminal, dotnet: Cpu, db: Database, career: MessageCircle };
+const courseName = (k) => tracks[k]?.name || k;
+const groupsWith = (build) => trackGroups
+  .map((g) => ({ g, ks: g.tracks.filter((k) => tracks[k]?.topics?.length) }))
+  .filter(({ ks }) => ks.length)
+  .map(({ g, ks }) => build(g, ks, GROUP_ICON[g.key] || Library));
+
+function buildMenu() {
+  return [
+    { to: '/home', label: 'Home', icon: Home },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {
+      key: 'courses', label: 'Courses', icon: BookOpen,
+      items: [
+        { to: '/courses', label: 'All Courses', icon: BookOpen },
+        ...groupsWith((g, ks, I) => (ks.length === 1
+          ? { to: `/track/${ks[0]}`, label: courseName(ks[0]), icon: I }
+          : { label: g.name, icon: I, children: ks.map((k) => ({ to: `/track/${k}`, label: courseName(k), icon: BookMarked })) })),
+      ],
+    },
+    {
+      key: 'tests', label: 'Test Series', icon: Trophy,
+      items: [
+        { to: '/tools/test-series', label: 'All Test Series', icon: Trophy },
+        ...groupsWith((g, ks, I) => (ks.length === 1
+          ? { to: `/tools/test-series/${ks[0]}`, label: courseName(ks[0]), icon: I }
+          : {
+            label: g.name, icon: I,
+            children: [
+              { to: `/tools/test-series/grp:${g.key}`, label: `${g.name}: all courses`, icon: ListChecks },
+              ...ks.map((k) => ({ to: `/tools/test-series/${k}`, label: courseName(k), icon: ClipboardCheck })),
+            ],
+          })),
+      ],
+    },
+    { to: '/roadmap', label: 'Roadmap', icon: MapIcon },
+    {
+      key: 'labs', label: 'Practice Labs', icon: Wrench,
+      items: [
+        { to: '/tools', label: 'All Practice Tools', icon: Wrench },
+        { to: '/tools/playground', label: 'Web Playground', icon: Code2 },
+        { to: '/tools/python-ide', label: 'Python IDE', icon: Terminal },
+        { to: '/tools/java-ide', label: 'Java IDE', icon: Coffee },
+        { to: '/tools/csharp-ide', label: 'C# IDE', icon: Cpu },
+        { to: '/tools/mysql-workbench', label: 'MySQL Workbench', icon: Database },
+        { to: '/tools/ssms-lab', label: 'SSMS Lab', icon: Server },
+        { to: '/tools/mongo-lab', label: 'MongoDB Lab', icon: Database },
+        { to: '/tools/api-lab', label: 'API Lab', icon: Server },
+        { to: '/tools/ai-lab', label: 'AI Lab', icon: Sparkles },
+        { to: '/tools/ai-app-builder', label: 'AI App Builder', icon: Rocket },
+      ],
+    },
+    {
+      key: 'interview', label: 'Interview Prep', icon: GraduationCap,
+      items: [
+        { to: '/tools/java-interview', label: 'Interview Prep', icon: ClipboardCheck },
+        { to: '/tools/soft-skills', label: 'Soft Skills', icon: MessageCircle },
+        { to: '/tools/quiz', label: 'Quiz Arena', icon: ListChecks },
+        { to: '/tools/flashcards', label: 'Flashcards', icon: Brain },
+      ],
+    },
+    {
+      key: 'projects', label: 'Projects', icon: Hammer,
+      items: [
+        { to: '/tools/python-projects', label: 'Python Projects', icon: Terminal },
+        { to: '/tools/mern-projects', label: 'MERN Projects', icon: Layers },
+        { to: '/tools/java-projects', label: 'Java Projects', icon: Coffee },
+      ],
+    },
+  ];
+}
+
+const leavesOf = (items) => items.flatMap((it) => (it.children ? leavesOf(it.children) : it.items ? leavesOf(it.items) : it.to ? [it] : []));
+
+// Only the most specific menu entry lights up (longest path that matches the page).
+function useCurrentPath(menu, pathname) {
+  return useMemo(() => {
+    let best = null;
+    for (const { to } of leavesOf(menu)) {
+      if ((pathname === to || pathname.startsWith(`${to}/`)) && (!best || to.length > best.length)) best = to;
+    }
+    return best;
+  }, [menu, pathname]);
+}
+const holds = (item, cur) => leavesOf([item]).some((l) => l.to === cur);
+
+function DropLink({ item, cur, nested }) {
+  const I = item.icon || BookMarked;
+  return (
+    <Link to={item.to} role="menuitem" className={`dropdown-item${nested ? ' nested' : ''}${item.to === cur ? ' active' : ''}`}>
+      <span className="dropdown-icon">{ic(I, nested ? 14 : 15)}</span>
+      <span className="dropdown-label">{item.label}</span>
+    </Link>
+  );
+}
+
+/* A few courses that belong together; opens in place inside the dropdown. */
+function DropGroup({ item, cur }) {
+  const inside = holds(item, cur);
+  const [open, setOpen] = useState(inside);
+  useEffect(() => { setOpen(inside); }, [inside]);
+  const I = item.icon || Library;
+  return (
+    <div className={`dropdown-group${open ? ' open' : ''}`}>
+      <button type="button" className={`dropdown-item as-group${inside ? ' active' : ''}`} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <span className="dropdown-icon">{ic(I, 15)}</span>
+        <span className="dropdown-label">{item.label}</span>
+        <span className="dropdown-count">{item.children.length}</span>
+        <ChevronDown size={13} className="dropdown-caret" />
+      </button>
+      {open && (
+        <div className="dropdown-children" role="group">
+          {item.children.map((c) => <DropLink key={c.to} item={c} cur={cur} nested />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const DropItems = ({ items, cur }) => items.map((it) => (it.children
+  ? <DropGroup key={it.label} item={it} cur={cur} />
+  : <DropLink key={it.to} item={it} cur={cur} />));
+
+/* Desktop: the horizontal bar under the header. */
+function Topnav({ menu, cur, pathname }) {
+  const [openKey, setOpenKey] = useState(null);
+  const [flip, setFlip] = useState(false);
+  const navRef = useRef(null);
+  const dropRef = useRef(null);
+
+  useEffect(() => { setOpenKey(null); }, [pathname]);
+  useEffect(() => {
+    if (!openKey) return undefined;
+    const onDown = (e) => { if (!navRef.current?.contains(e.target)) setOpenKey(null); };
+    const onKey = (e) => { if (e.key === 'Escape') setOpenKey(null); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [openKey]);
+  // A panel opened near the right end would run off screen, so anchor it to its right edge.
+  useLayoutEffect(() => {
+    if (!openKey || !dropRef.current) { setFlip(false); return; }
+    setFlip(dropRef.current.getBoundingClientRect().right > window.innerWidth - 12);
+  }, [openKey]);
+
+  return (
+    <nav className="topnav" ref={navRef} aria-label="Main">
+      <div className="topnav-inner">
+        {menu.map((sec) => {
+          if (!sec.items) {
+            return (
+              <Link key={sec.to} to={sec.to} className={`nav-link${sec.to === cur ? ' active' : ''}`}>
+                <span className="nav-link-icon">{ic(sec.icon)}</span><span>{sec.label}</span>
+              </Link>
+            );
+          }
+          const isOpen = openKey === sec.key;
+          const cols = sec.items.length > 8 && !sec.items.some((i) => i.children) ? 2 : 1;
+          return (
+            <div key={sec.key} className={`nav-group${isOpen ? ' open' : ''}`}>
+              <button
+                type="button"
+                className={`nav-link${holds(sec, cur) ? ' active' : ''}`}
+                aria-expanded={isOpen}
+                aria-haspopup="true"
+                onClick={() => setOpenKey((k) => (k === sec.key ? null : sec.key))}
+              >
+                <span className="nav-link-icon">{ic(sec.icon)}</span><span>{sec.label}</span>
+                <ChevronDown size={14} className="nav-caret" />
+              </button>
+              {isOpen && (
+                <div className={`dropdown${flip ? ' flip' : ''}`} role="menu" ref={dropRef} data-cols={cols}>
+                  <DropItems items={sec.items} cur={cur} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+/* Mobile / tablet: the same tree as an accordion inside the drawer. */
+function DrawerMenu({ menu, cur }) {
+  const [openKey, setOpenKey] = useState(() => menu.find((s) => s.items && holds(s, cur))?.key || null);
+  return (
+    <div className="dnav">
+      {menu.map((sec, i) => {
+        if (!sec.items) {
+          return (
+            <Link key={sec.to} to={sec.to} style={{ '--i': i }} className={`dnav-link${sec.to === cur ? ' active' : ''}`}>
+              <span className="nav-ic">{ic(sec.icon)}</span><span>{sec.label}</span>
+            </Link>
+          );
+        }
+        const isOpen = openKey === sec.key;
+        return (
+          <div key={sec.key} className={`dnav-sec${isOpen ? ' open' : ''}`} style={{ '--i': i }}>
+            <button type="button" className={`dnav-link${holds(sec, cur) ? ' active' : ''}`} aria-expanded={isOpen} onClick={() => setOpenKey((k) => (k === sec.key ? null : sec.key))}>
+              <span className="nav-ic">{ic(sec.icon)}</span><span>{sec.label}</span>
+              <ChevronDown size={16} className="nav-caret" />
+            </button>
+            {isOpen && <div className="dnav-items"><DropItems items={sec.items} cur={cur} /></div>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const REVEAL_SEL = '.card, .section-title, .module-head, .page-head, .tl-item';
 
@@ -70,13 +269,19 @@ export default function Layout({ children }) {
   const { pathname } = useLocation();
   const mainRef = useRef(null);
   useScrollReveal(mainRef, pathname);
+  const menu = useMemo(buildMenu, []);
+  const cur = useCurrentPath(menu, pathname);
+  const pageLabel = useMemo(() => {
+    const hit = leavesOf(menu).find((l) => l.to === cur || l.to === pathname);
+    if (hit) return hit.label;
+    const seg = pathname.split('/').filter(Boolean);
+    if (seg[0] === 'track' && seg[1]) return seg[2] ? 'Lesson' : 'Course';
+    const last = seg[seg.length - 1] || 'Home';
+    return decodeURIComponent(last).replace(/^grp:/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  }, [menu, cur, pathname]);
+  useEffect(() => { document.title = `${pageLabel} · UpSkillr`; }, [pageLabel]);
 
   useEffect(() => { setOpen(false); }, [pathname]);
-  useEffect(() => {
-    const el = document.querySelector('.nav-links a.active');
-    const box = el?.parentElement;
-    if (el && box && box.scrollWidth > box.clientWidth) box.scrollTo({ left: el.offsetLeft - box.clientWidth / 2 + el.offsetWidth / 2 });
-  }, [pathname]);
 
   useEffect(() => {
     document.body.classList.toggle('no-scroll', open);
@@ -113,6 +318,10 @@ export default function Layout({ children }) {
             <Logo size={32} />
             <span className="brand-name">Up<b>Skillr</b></span>
           </Link>
+          <form onSubmit={submit} className="search-form top-search">
+            <span className="search-ic"><Search size={14} /></span>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
+          </form>
           <button
             className={`menu-btn ${open ? 'is-open' : ''}`}
             onClick={() => setOpen(!open)}
@@ -121,29 +330,32 @@ export default function Layout({ children }) {
           >
             <span /><span /><span />
           </button>
-          <div className={`nav-overlay ${open ? 'show' : ''}`} onClick={() => setOpen(false)} />
-          <nav className={`nav ${open ? 'open' : ''}`}>
-            <div className="nav-head">
-              <span className="brand"><Logo size={28} /><span className="brand-name">Up<b>Skillr</b></span></span>
-              <button className="nav-close" onClick={() => setOpen(false)} aria-label="Close menu">✕</button>
-            </div>
-            <form onSubmit={submit} className="search-form">
-              <span className="search-ic"><Search size={14} /></span>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
-            </form>
-            <div className="nav-links">
-              {links.map((l, i) => (
-                <NavLink key={l.to} to={l.to} end={l.end} style={{ '--i': i }}>
-                  <span className="nav-ic">{l.icon}</span>
-                  <span>{l.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          </nav>
         </div>
+        <Topnav menu={menu} cur={cur} pathname={pathname} />
+        <div className={`nav-overlay ${open ? 'show' : ''}`} onClick={() => setOpen(false)} />
+        <nav className={`nav ${open ? 'open' : ''}`} aria-label="Menu">
+          <div className="nav-head">
+            <span className="brand"><Logo size={28} /><span className="brand-name">Up<b>Skillr</b></span></span>
+            <button className="nav-close" onClick={() => setOpen(false)} aria-label="Close menu">✕</button>
+          </div>
+          <form onSubmit={submit} className="search-form">
+            <span className="search-ic"><Search size={14} /></span>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
+          </form>
+          <DrawerMenu key={pathname} menu={menu} cur={cur} />
+        </nav>
       </header>
 
       <main className="container" ref={mainRef}>
+        <div key={`pb-${pathname}`} className="page-brand" aria-label="UpSkillr">
+          <Link to="/" className="pb-logo" title="UpSkillr home"><Logo size={30} /></Link>
+          <div className="pb-text">
+            <span className="pb-name">Up<b>Skillr</b></span>
+            <span className="pb-sep">›</span>
+            <span className="pb-page">{pageLabel}</span>
+          </div>
+          <span className="pb-credit">Developed by <b>ER. Chetan D Morey</b></span>
+        </div>
         <div key={pathname} className="page-anim">{children}</div>
       </main>
 
@@ -154,9 +366,7 @@ export default function Layout({ children }) {
             <span className="brand-name">Up<b>Skillr</b></span>
           </div>
           <p className="footer-tag">Learn any tech, one day at a time · Progress is saved in your browser</p>
-          <div className="footer-credit">
-            Developed with <span className="heart">♥</span> by <b>Er. Chetan D Morey</b>
-          </div>
+          <div className="footer-credit">Developed by <b>ER. Chetan D Morey</b></div>
           <div className="footer-copy">© {new Date().getFullYear()} UpSkillr. All rights reserved.</div>
         </div>
       </footer>
