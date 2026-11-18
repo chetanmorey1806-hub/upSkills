@@ -1,0 +1,66 @@
+export default {
+  lesson: 'day-02-installing-python-vscode-pycharm',
+  minutes: 15,
+  intro: 'Practise the setup basics: PATH, checking the version, the interactive shell vs .py files, and a first program that talks to the user.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'While installing Python on Windows, which checkbox must you tick so that `python` works in any terminal?',
+      options: ['Install launcher for all users', 'Add python.exe to PATH', 'Disable path length limit', 'Associate files with Python'],
+      answer: 1,
+      explain: '**Add python.exe to PATH** lets Windows find `python` from any folder. If you forget it, typing `python` gives "\'python\' is not recognized..." (or opens the Microsoft Store). Fix: re-run the installer → Modify, or add the folder to PATH manually.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Which terminal command shows the installed Python version (for example `Python 3.12.3`)?',
+      accept: ['python --version', 'python3 --version', 'py --version', 'python -V', 'python3 -V', 'py -V'],
+      explain: '`python --version` (or `python3 --version` on macOS/Linux, `py --version` on Windows) prints the version. It is the first command to run after installing, to confirm Python is on PATH.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'You type `python` in a terminal and see the prompt `>>>`. What is this?',
+      options: ['An error message', 'The interactive shell (REPL) waiting for a Python statement', 'The pip package manager', 'The VS Code debugger'],
+      answer: 1,
+      explain: '`>>>` is the **REPL** (Read-Eval-Print Loop). It runs one statement at a time and shows results immediately: great for quick experiments. Type `exit()` (or Ctrl+Z/Ctrl+D) to leave. Real programs are saved in `.py` files.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'This code is saved in `calc.py` and run with `python calc.py` (a **script**, not the REPL). What is printed?',
+      code: `5 + 3
+print("done")
+10 * 2`,
+      expected: 'done',
+      explain: 'In the REPL, typing `5 + 3` shows `8` automatically. In a **script**, a bare expression is calculated but NOT shown: only `print()` produces output. So only `done` appears. Beginners often wonder why their script "prints nothing".',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which are correct ways to run a file named `hello.py`? (select all that apply)',
+      options: [
+        '`python hello.py` in a terminal opened in the file’s folder',
+        'The ▶ Run button in VS Code (after selecting a Python interpreter)',
+        'Right-click → Run \'hello\' in PyCharm',
+        'Double-clicking `hello.py` inside Microsoft Word',
+        'Typing `hello.py` inside the `>>>` prompt',
+      ],
+      answers: [0, 1, 2],
+      explain: 'Run scripts from the terminal (`python hello.py`) or with the IDE’s Run button. Typing `python hello.py` or `hello.py` **inside** the `>>>` prompt is a common mistake: the REPL expects Python code, not terminal commands, and gives a SyntaxError/NameError.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 4,
+      q: 'Write a program that **talks to the user**: read the user’s name with `input()` and print\n```\nHello, <name>! Welcome to Python.\n```\nFor the test, the name typed is `Asha`.\n\nUse `input()` **without** a prompt message (the grader types the input for you).',
+      example: { title: 'input() returns what the user typed', code: 'city = input()\nprint("You live in", city)' },
+      stdin: 'Asha',
+      starter: '# TODO: read the name\n# TODO: print the greeting\n',
+      solution: 'name = input()\nprint("Hello, " + name + "! Welcome to Python.")',
+      tests: [{ stdout: 'Hello, Asha! Welcome to Python.' }],
+      explain: '`input()` waits for the user and returns the typed text as a string. Join strings with `+` so there is no extra space before the `!`. Using `print("Hello,", name, "!")` would print `Hello, Asha !` because commas add spaces.',
+    },
+  ],
+};

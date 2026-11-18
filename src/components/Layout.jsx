@@ -3,10 +3,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search,
   ClipboardCheck, MessageCircle, Trophy, Hammer, LayoutDashboard, ChevronDown, BarChart3, Globe, Layers, BookMarked,
-  Brain, ListChecks, Library, GraduationCap, PlayCircle, Film,
-} from 'lucide-react';
+  Brain, ListChecks, Library, GraduationCap, PlayCircle, Film, Shield } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useAuth, logout, firstName } from '../auth.js';
+import { usePerms, filterMenu } from '../permissions.js';
 import { tracks, trackGroups } from '../data/index.js';
 
 const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
@@ -292,6 +292,7 @@ function UserMenu({ user, onLogout }) {
         <div className="um-drop">
           <div className="um-head"><span className="um-ava big">{first.charAt(0).toUpperCase()}</span><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
           <Link to="/dashboard" onClick={() => setOpen(false)}>My dashboard</Link>
+          {user.role === 'admin' && <Link to="/admin" onClick={() => setOpen(false)}>🛡️ Admin panel</Link>}
           <Link to="/" onClick={() => setOpen(false)}>Home page</Link>
           <button className="um-out" onClick={() => { setOpen(false); onLogout(); }}>Logout</button>
         </div>
@@ -311,7 +312,11 @@ export default function Layout({ children }) {
   const { pathname } = useLocation();
   const mainRef = useRef(null);
   useScrollReveal(mainRef, pathname);
-  const menu = useMemo(buildMenu, []);
+  const { canPath, isAdmin } = usePerms();
+  const menu = useMemo(() => {
+    const base = filterMenu(buildMenu(), canPath);
+    return isAdmin ? [...base, { to: '/admin', label: 'Admin', icon: Shield }] : base;
+  }, [canPath, isAdmin]);
   const cur = useCurrentPath(menu, pathname);
   const pageLabel = useMemo(() => {
     const hit = leavesOf(menu).find((l) => l.to === cur || l.to === pathname);

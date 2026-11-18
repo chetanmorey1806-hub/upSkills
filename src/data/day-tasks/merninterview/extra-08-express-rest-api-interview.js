@@ -1,0 +1,120 @@
+export default {
+  lesson: 'extra-08-express-rest-api-interview',
+  minutes: 45,
+  intro: 'Express and REST interview round: the middleware chain, routers and error handling, then build validation (422), an Idempotency-Key and a rate limiter like in a coding round.',
+  tasks: [
+    {
+      type: 'output',
+      mins: 3,
+      q: 'This is a tiny model of how Express runs middleware with `next()`. Predict the output (four lines).',
+      code: "const stack = [\n  (req, next) => { console.log('logger'); next(); console.log('logger after'); },\n  (req, next) => { console.log('auth'); if (!req.user) return next(new Error('401')); next(); },\n  (req, next) => { console.log('handler'); },\n];\nconst onError = (err) => console.log('error ' + err.message);\nfunction run(req) {\n  let i = 0;\n  const next = (err) => {\n    if (err) return onError(err);\n    const fn = stack[i++];\n    if (fn) fn(req, next);\n  };\n  next();\n}\nrun({});",
+      expected: 'logger\nauth\nerror 401\nlogger after',
+      explain: 'Middleware runs in **registration order**. Calling `next(err)` skips the remaining normal middleware and jumps to the error handler, so "handler" never runs. `next()` is a normal function call: when it returns, the rest of the logger runs ("logger after") – which is how response-time loggers work.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which statements about Express 5 are TRUE? (choose all that apply)',
+      options: [
+        'Error-handling middleware has exactly four parameters (err, req, res, next)',
+        'In Express 5, a rejected promise from an async route handler is passed to the error middleware automatically',
+        'express.Router() lets you group routes and mount them with app.use("/api/v1/users", router)',
+        'The 404 handler must be registered before all routes',
+        'req.query is read-only in Express 5 (it is a getter)',
+      ],
+      answers: [0, 1, 2, 4],
+      explain: 'The 404 handler goes **after** all routes (it catches whatever nothing else handled) and the error middleware goes last. Express 5 forwards async errors automatically (no `express-async-handler` needed) and made `req.query` a getter, so sanitisers must not reassign it.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: 'Validation returning **422** with field errors. `POST /api/v1/users` with `{ name, email, age }`:\n- `name`: string, 2+ characters → else `"name must be at least 2 characters"`\n- `email`: must contain `@` and a `.` after it → else `"email is invalid"`\n- `age`: optional, but if present an integer 18-60 → else `"age must be an integer between 18 and 60"`\n- errors → **422** `{ errors: [{ field, message }] }` (in the order name, email, age)\n- valid → **201** `{ id, name, email }` (+ age if given), ids from 1',
+      example: { title: 'collect errors as a list', code: "const errors = [];\nif (!ok) errors.push({ field: 'phone', message: 'phone is invalid' });\nif (errors.length) return res.status(422).json({ errors });" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst users = [];\n\n// TODO\n\napp.listen(5000);\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst users = [];\n\napp.post('/api/v1/users', (req, res) => {\n  const { name, email, age } = req.body || {};\n  const errors = [];\n  if (typeof name !== 'string' || name.trim().length < 2) errors.push({ field: 'name', message: 'name must be at least 2 characters' });\n  if (typeof email !== 'string' || !/@.+\\./.test(email)) errors.push({ field: 'email', message: 'email is invalid' });\n  if (age !== undefined && !(Number.isInteger(age) && age >= 18 && age <= 60)) errors.push({ field: 'age', message: 'age must be an integer between 18 and 60' });\n  if (errors.length) return res.status(422).json({ errors });\n  const user = { id: users.length + 1, name: name.trim(), email };\n  if (age !== undefined) user.age = age;\n  users.push(user);\n  res.status(201).json(user);\n});\n\napp.listen(5000);\n",
+      tests: [
+        { name: 'valid user → 201', steps: [
+          { method: 'POST', url: '/api/v1/users', body: { name: 'Asha', email: 'asha@example.com', age: 24 }, expect: { status: 201, json: { id: 1, name: 'Asha', email: 'asha@example.com', age: 24 } } },
+        ] },
+        { name: 'all errors listed in order → 422', steps: [
+          { method: 'POST', url: '/api/v1/users', body: { name: 'A', email: 'asha.example.com', age: 15 }, expect: { status: 422, json: { errors: [{ field: 'name', message: 'name must be at least 2 characters' }, { field: 'email', message: 'email is invalid' }, { field: 'age', message: 'age must be an integer between 18 and 60' }] } } },
+        ] },
+        { name: 'age is optional but must be an integer', steps: [
+          { method: 'POST', url: '/api/v1/users', body: { name: 'Ravi', email: 'ravi@example.com' }, expect: { status: 201, json: { id: 1 }, absent: ['age'] } },
+          { method: 'POST', url: '/api/v1/users', body: { name: 'Neha', email: 'neha@example.com', age: 25.5 }, expect: { status: 422, json: { errors: [{ field: 'age' }] } } },
+        ] },
+      ],
+      explain: '400 vs 422: both are used for validation; 422 Unprocessable Content says "the JSON is well-formed but the values are invalid". Return **every** error with its field so the frontend can show them next to the inputs. In real projects a schema library (Zod/Joi) generates exactly this list.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: '**Idempotency-Key** to prevent double payments. `POST /api/payments` `{ amount }` with header `Idempotency-Key`:\n- missing header → **400** `{ error: \'Idempotency-Key header is required\' }`\n- first request with a key → create the payment `{ id: \'pay_<n>\', amount, status: \'captured\' }` (n from 1), store the response for that key and reply **201**\n- repeated key → return the **same stored response** (same status 201 and body) without creating another payment\n- `GET /api/payments` → all payments',
+      example: { title: 'storing responses by key', code: "const saved = responses.get(key);\nif (saved) return res.status(saved.status).json(saved.body);" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst payments = [];\nconst responses = new Map();\n\n// TODO\n\napp.listen(5000);\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst payments = [];\nconst responses = new Map();\n\napp.post('/api/payments', (req, res) => {\n  const key = req.get('idempotency-key');\n  if (!key) return res.status(400).json({ error: 'Idempotency-Key header is required' });\n  const saved = responses.get(key);\n  if (saved) return res.status(saved.status).json(saved.body);\n  const payment = { id: 'pay_' + (payments.length + 1), amount: req.body.amount, status: 'captured' };\n  payments.push(payment);\n  responses.set(key, { status: 201, body: payment });\n  res.status(201).json(payment);\n});\n\napp.get('/api/payments', (req, res) => res.json(payments));\n\napp.listen(5000);\n",
+      tests: [
+        { name: 'header required', steps: [
+          { method: 'POST', url: '/api/payments', body: { amount: 499 }, expect: { status: 400, json: { error: 'Idempotency-Key header is required' } } },
+        ] },
+        { name: 'retry with the same key does not charge twice', steps: [
+          { method: 'POST', url: '/api/payments', headers: { 'Idempotency-Key': 'k-1' }, body: { amount: 499 }, expect: { status: 201, json: { id: 'pay_1', amount: 499, status: 'captured' } } },
+          { method: 'POST', url: '/api/payments', headers: { 'Idempotency-Key': 'k-1' }, body: { amount: 499 }, expect: { status: 201, json: { id: 'pay_1' } } },
+          { method: 'GET', url: '/api/payments', expect: { status: 200, length: 1 } },
+        ] },
+        { name: 'a new key creates a new payment', steps: [
+          { method: 'POST', url: '/api/payments', headers: { 'Idempotency-Key': 'k-1' }, body: { amount: 100 }, expect: { status: 201 } },
+          { method: 'POST', url: '/api/payments', headers: { 'Idempotency-Key': 'k-2' }, body: { amount: 200 }, expect: { status: 201, json: { id: 'pay_2', amount: 200 } } },
+        ] },
+      ],
+      explain: 'POST is not idempotent: a double-click or a mobile network retry would charge twice. The client generates one key per checkout attempt; the server returns the **stored response** for a repeated key (Stripe and Razorpay work this way). In production store keys in Redis/MongoDB with a TTL and a unique index.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: '**Fixed-window rate limiter** middleware (per IP from header `x-ip`, simulated clock). Allow **3** requests per window. The window is controlled by `currentWindow` (change it with `POST /test/next-window`). The 4th request in the same window → **429** `{ error: \'Too many requests\', retryAfter: 60 }`. Apply it to `GET /api/data` → 200 `{ ok: true }`. Different IPs have separate counters.',
+      example: { title: 'counter key per window', code: "const key = ip + ':' + currentWindow;\nconst n = (hits.get(key) || 0) + 1;\nhits.set(key, n);" },
+      starter: "const express = require('express');\nconst app = express();\n\nlet currentWindow = 0;\nconst hits = new Map();\n\n// TODO: limiter middleware, GET /api/data, POST /test/next-window\n\napp.listen(5000);\n",
+      solution: "const express = require('express');\nconst app = express();\n\nlet currentWindow = 0;\nconst hits = new Map();\nconst LIMIT = 3;\n\nfunction limiter(req, res, next) {\n  const key = (req.get('x-ip') || 'unknown') + ':' + currentWindow;\n  const n = (hits.get(key) || 0) + 1;\n  hits.set(key, n);\n  if (n > LIMIT) return res.status(429).json({ error: 'Too many requests', retryAfter: 60 });\n  next();\n}\n\napp.get('/api/data', limiter, (req, res) => res.json({ ok: true }));\napp.post('/test/next-window', (req, res) => { currentWindow += 1; res.json({ window: currentWindow }); });\n\napp.listen(5000);\n",
+      tests: [
+        { name: '3 allowed, 4th → 429', steps: [
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200, json: { ok: true } } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 429, json: { error: 'Too many requests', retryAfter: 60 } } },
+        ] },
+        { name: 'separate counters per IP', steps: [
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '2.2.2.2' }, expect: { status: 200 } },
+        ] },
+        { name: 'new window resets', steps: [
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 429 } },
+          { method: 'POST', url: '/test/next-window', expect: { status: 200 } },
+          { method: 'GET', url: '/api/data', headers: { 'x-ip': '1.1.1.1' }, expect: { status: 200 } },
+        ] },
+      ],
+      explain: 'Fixed window = count per (client, time window); a real version uses `Math.floor(Date.now() / 60000)` as the window and Redis `INCR` + `EXPIRE` so all servers share counts, and sends a `Retry-After` header. Follow-up: fixed windows allow bursts at window edges – sliding windows or **token buckets** smooth that out.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Which is the best REST design for "get the orders of user 42, page 2, newest first"?',
+      options: [
+        'POST /getOrdersOfUser with body { id: 42, page: 2 }',
+        'GET /api/v1/users/42/orders?page=2&limit=20&sort=-createdAt',
+        'GET /api/v1/orders/getAll/42/2',
+        'GET /api/v1/users/42?action=orders&page=2',
+      ],
+      answer: 1,
+      explain: 'Resources are **nouns** in the path (`users/42/orders`), the HTTP method is the verb, and filtering/sorting/pagination go in the **query string**. A version prefix (`/v1`) lets you change the API later without breaking clients. Verbs in URLs (`getOrders`) are a common anti-pattern.',
+    },
+  ],
+};

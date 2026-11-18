@@ -6,6 +6,7 @@ import {
   GraduationCap, Laptop, Trophy, Briefcase, Rocket, CheckCircle2, Flame, Menu, X, LogIn, UserPlus, LogOut,
 } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
+import PackagesSection from '../components/PackagesSection.jsx';
 import { TrackIcon } from '../components/Icons.jsx';
 import { allTopics, trackGroups, tracks, trackOrder } from '../data/index.js';
 import { codingProblems, javaProjects } from '../data/javaCareer.js';
@@ -131,6 +132,7 @@ export default function Landing() {
           <nav className={`ld-links ${menu ? 'open' : ''}`}>
             <a href="#features" onClick={go('features')}>Features</a>
             <a href="#courses" onClick={go('courses')}>Courses</a>
+            <a href="#packages" onClick={go('packages')}>Packages</a>
             <a href="#career" onClick={go('career')}>Career prep</a>
             <a href="#journey" onClick={go('journey')}>How it works</a>
             {user ? (
@@ -232,6 +234,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <PackagesSection />
 
       {/* CAREER PREP */}
       <section id="career" className="ld-section">

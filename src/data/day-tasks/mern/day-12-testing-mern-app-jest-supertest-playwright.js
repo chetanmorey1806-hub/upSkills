@@ -1,0 +1,92 @@
+export default {
+  lesson: 'day-12-testing-mern-app-jest-supertest-playwright',
+  minutes: 40,
+  intro: 'Test a MERN app at every level: the testing pyramid, a testable app.js, Supertest-style API checks, assertions, React Testing Library queries and Playwright.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Why do we split the Express app into `app.js` (creates and exports the app) and `server.js` (connects to MongoDB and calls `app.listen`)?',
+      options: [
+        'Express 5 requires two files',
+        'So Supertest can import the app and send requests without opening a real port or connecting to production',
+        'To make the bundle smaller',
+        'Because Jest cannot read files with listen()',
+      ],
+      answer: 1,
+      explain: '`request(app).get(\'/api/health\')` works directly on the exported app. Tests then connect to **mongodb-memory-server** in `beforeAll`, so they never touch a real database and can run in parallel in CI.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which statements about the **testing pyramid** for a MERN app are TRUE? (choose all that apply)',
+      options: [
+        'Many fast unit tests (pure functions, validators) at the bottom',
+        'API integration tests (Supertest + in-memory MongoDB) in the middle',
+        'A few end-to-end Playwright tests for the most important user journeys at the top',
+        'E2E tests should cover every edge case because they are the fastest',
+        'React component tests should use getByRole / getByText like a user, not internal state',
+      ],
+      answers: [0, 1, 2, 4],
+      explain: 'E2E tests are the **slowest and most brittle**, so keep them for critical flows (register → login → create → logout). Edge cases belong in unit/integration tests. Testing Library encourages testing what the user sees, not implementation details.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 8,
+      q: 'Build a tiny `expect` like Jest\'s. `expect(actual)` returns an object with:\n- `toBe(expected)` – passes if `Object.is(actual, expected)`, else **throws** `Error(\'Expected <expected> but received <actual>\')` (use `JSON.stringify` for both values)\n- `toEqual(expected)` – deep equality by comparing `JSON.stringify` of both, same error message\n- `toThrow()` – `actual` is a function; passes if calling it throws, else throws `Error(\'Expected function to throw\')`\n\nPassing matchers return `true`.',
+      example: { title: 'a matcher that throws', code: "function assertTrue(v) {\n  if (v !== true) throw new Error('Expected true but received ' + JSON.stringify(v));\n  return true;\n}" },
+      starter: 'function expect(actual) {\n  // TODO\n}\n',
+      solution: "function expect(actual) {\n  const fail = (expected) => { throw new Error('Expected ' + JSON.stringify(expected) + ' but received ' + JSON.stringify(actual)); };\n  return {\n    toBe(expected) { if (!Object.is(actual, expected)) fail(expected); return true; },\n    toEqual(expected) { if (JSON.stringify(actual) !== JSON.stringify(expected)) fail(expected); return true; },\n    toThrow() {\n      try { actual(); } catch { return true; }\n      throw new Error('Expected function to throw');\n    },\n  };\n}\n",
+      tests: [
+        { call: 'expect(2 + 2).toBe(4)', expect: true },
+        { call: "(() => { try { expect(201).toBe(200); return 'no error'; } catch (e) { return e.message; } })()", expect: 'Expected 200 but received 201' },
+        { call: "expect({ id: 1, tags: ['a'] }).toEqual({ id: 1, tags: ['a'] })", expect: true },
+        { call: "(() => { try { expect({ id: 1 }).toBe({ id: 1 }); return 'no error'; } catch (e) { return e.message; } })()", expect: 'Expected {"id":1} but received {"id":1}' },
+        { call: "expect(() => { throw new Error('boom'); }).toThrow()", expect: true },
+        { call: "(() => { try { expect(() => 1).toThrow(); return 'no error'; } catch (e) { return e.message; } })()", expect: 'Expected function to throw' },
+      ],
+      explain: '`toBe` checks **identity** (`Object.is`), so two different objects with the same content fail – use `toEqual` for objects and arrays (`res.body`). A test passes when no assertion throws. This is exactly how Jest and Vitest report "Expected … Received …".',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: 'Build the notes API that the Supertest suite checks:\n- `GET /api/health` → 200 `{ status: \'ok\' }`\n- `POST /api/notes` requires header `Authorization: Bearer test-token` → else **401** `{ error: \'Unauthorized\' }`; `title` missing → **400** `{ error: \'Title is required\' }`; success → **201** `{ id, title }` (ids from 1)\n- `GET /api/notes` (same auth) → 200 array',
+      example: { title: 'what the Supertest test looks like', code: "const res = await request(app)\n  .post('/api/notes')\n  .set('Authorization', 'Bearer test-token')\n  .send({ title: 'Buy milk' });\nexpect(res.status).toBe(201);\nexpect(res.body.title).toBe('Buy milk');" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst notes = [];\n\n// TODO\n\nmodule.exports = app;   // server.js would call app.listen()\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst notes = [];\n\nconst auth = (req, res, next) => {\n  if (req.get('authorization') !== 'Bearer test-token') return res.status(401).json({ error: 'Unauthorized' });\n  next();\n};\n\napp.get('/api/health', (req, res) => res.json({ status: 'ok' }));\napp.get('/api/notes', auth, (req, res) => res.json(notes));\napp.post('/api/notes', auth, (req, res) => {\n  const title = (req.body || {}).title;\n  if (!title) return res.status(400).json({ error: 'Title is required' });\n  const note = { id: notes.length + 1, title };\n  notes.push(note);\n  res.status(201).json(note);\n});\n\nmodule.exports = app;\n",
+      tests: [
+        { name: 'health check', steps: [
+          { method: 'GET', url: '/api/health', expect: { status: 200, json: { status: 'ok' } } },
+        ] },
+        { name: 'POST without token → 401', steps: [
+          { method: 'POST', url: '/api/notes', body: { title: 'x' }, expect: { status: 401, json: { error: 'Unauthorized' } } },
+        ] },
+        { name: 'validation → 400', steps: [
+          { method: 'POST', url: '/api/notes', headers: { Authorization: 'Bearer test-token' }, body: {}, expect: { status: 400, json: { error: 'Title is required' } } },
+        ] },
+        { name: 'create and list', steps: [
+          { method: 'POST', url: '/api/notes', headers: { Authorization: 'Bearer test-token' }, body: { title: 'Revise Jest' }, expect: { status: 201, json: { id: 1, title: 'Revise Jest' } } },
+          { method: 'GET', url: '/api/notes', headers: { Authorization: 'Bearer test-token' }, expect: { status: 200, json: [{ id: 1, title: 'Revise Jest' }] } },
+        ] },
+      ],
+      explain: 'Exporting the app (`module.exports = app`) is what makes it testable. Good API tests cover the **happy path** and every failure branch (401, 400, 404). Each test should start from a clean database (`afterEach` → `deleteMany({})`) so tests do not depend on each other.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'In React Testing Library, which query is the **best** way to find the submit button of a login form?',
+      options: ["container.querySelector('.btn-primary')", "screen.getByRole('button', { name: /log in/i })", "screen.getByTestId('submit')", 'wrapper.find(Button).at(0)'],
+      answer: 1,
+      explain: '`getByRole` with an accessible name finds elements the way users and screen readers do, and fails if the button is not accessible. CSS classes change with styling; `getByTestId` is a last resort. Pair it with **MSW** to mock the API at the network level.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the Playwright assertion that waits until the new note is visible:\n`await ________(page.getByText(\'Revise Jest\')).toBeVisible();`',
+      accept: ['expect'],
+      explain: 'Playwright\'s `expect(locator).toBeVisible()` **auto-waits** (retries until a timeout), so you never need manual `sleep`s. E2E tests run the real client + API (started with `webServer` in `playwright.config`) against a test database.',
+    },
+  ],
+};

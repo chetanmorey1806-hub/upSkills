@@ -1,0 +1,96 @@
+export default {
+  lesson: 'extra-05-itertools',
+  minutes: 30,
+  intro: 'Work with lazy iterators from itertools: chain, islice, pairwise, batched, groupby, accumulate, takewhile and the combinatoric tools.',
+  tasks: [
+    {
+      type: 'output',
+      mins: 3,
+      q: 'What is printed?',
+      code: `import itertools as it
+print(list(it.islice(it.count(10, 5), 4)))
+print(list(it.chain([1, 2], (3,), "ab")))
+print(list(it.accumulate([3, 1, 4, 1])))
+print(list(it.pairwise("abcd")))`,
+      expected: "[10, 15, 20, 25]\n[1, 2, 3, 'a', 'b']\n[3, 4, 8, 9]\n[('a', 'b'), ('b', 'c'), ('c', 'd')]",
+      explain: '`count(10, 5)` is infinite, so `islice` takes the first 4. `chain` walks several iterables one after another. `accumulate` gives running totals. `pairwise` gives overlapping neighbour pairs.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'How many tuples does `itertools.combinations("ABCD", 2)` produce?',
+      options: ['4', '6', '12', '16'],
+      answer: 1,
+      explain: 'Combinations ignore order: AB, AC, AD, BC, BD, CD = **6** (4C2). `permutations("ABCD", 2)` would give 12 because AB and BA count separately, and `product("ABCD", repeat=2)` gives 16.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: '`groupby(["a", "b", "a"])` returns how many groups?',
+      options: ['2, because there are 2 different values', '3, because groupby only groups CONSECUTIVE equal items', '1', 'It raises an error because the data is not sorted'],
+      answer: 1,
+      explain: '`groupby` starts a new group whenever the key changes, so unsorted data gives a, b, a = 3 groups. That is why you usually **sort by the same key** before calling `groupby`.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 7,
+      q: 'Write `sales_by_region(rows)` where rows are `(region, amount)` tuples in any order. Use `sorted` + `itertools.groupby` to return a dict `{region: total amount}`.',
+      example: { title: 'groupby after sorting', code: 'from itertools import groupby\nwords = sorted(["apple", "avocado", "banana"], key=lambda w: w[0])\nfor letter, grp in groupby(words, key=lambda w: w[0]):\n    print(letter, list(grp))' },
+      starter: 'from itertools import groupby\n\ndef sales_by_region(rows):\n    result = {}\n    # TODO: sort, then groupby on the region\n    return result\n',
+      solution: 'from itertools import groupby\n\ndef sales_by_region(rows):\n    key = lambda r: r[0]\n    result = {}\n    for region, grp in groupby(sorted(rows, key=key), key=key):\n        result[region] = sum(amount for _, amount in grp)\n    return result\n',
+      tests: [
+        { call: 'sales_by_region([("North", 100), ("South", 50), ("North", 25)])', expect: { North: 125, South: 50 } },
+        { call: 'sales_by_region([("West", 10)])', expect: { West: 10 } },
+        { call: 'sales_by_region([])', expect: {} },
+      ],
+      explain: 'Without sorting, "North" would appear in two separate groups and the second total would overwrite the first. Sort by the same key function you give to `groupby`.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 6,
+      q: 'Write `chunks(items, n)` that returns a list of lists, each of size `n` (the last may be smaller). Use `itertools.batched` (Python 3.12) or `islice`.',
+      example: { title: 'batching with islice', code: 'from itertools import islice\nit = iter(range(5))\nprint(list(islice(it, 2)))  # [0, 1]\nprint(list(islice(it, 2)))  # [2, 3]' },
+      starter: 'import itertools\n\ndef chunks(items, n):\n    # TODO\n    return [items]\n',
+      solution: 'import itertools\n\ndef chunks(items, n):\n    return [list(b) for b in itertools.batched(items, n)]\n',
+      tests: [
+        { call: 'chunks([1, 2, 3, 4, 5, 6, 7], 3)', expect: [[1, 2, 3], [4, 5, 6], [7]] },
+        { call: 'chunks(["a", "b"], 5)', expect: [['a', 'b']] },
+        { call: 'chunks([], 2)', expect: [] },
+      ],
+      explain: '`batched(iterable, n)` yields tuples of up to n items, which is ideal for bulk inserts or API calls in pages. On older Python use `while chunk := list(islice(it, n)):`.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 6,
+      q: 'A T-shirt shop sells sizes and colours. Write `all_skus(sizes, colours)` that returns every combination as strings `"size-colour"` (e.g. `"M-red"`) in the natural order, using `itertools.product`.',
+      example: { title: 'product', code: 'from itertools import product\nlist(product("AB", [1, 2]))\n# [("A", 1), ("A", 2), ("B", 1), ("B", 2)]' },
+      starter: 'from itertools import product\n\ndef all_skus(sizes, colours):\n    # TODO\n    return []\n',
+      solution: 'from itertools import product\n\ndef all_skus(sizes, colours):\n    return [f"{s}-{c}" for s, c in product(sizes, colours)]\n',
+      tests: [
+        { call: 'all_skus(["S", "M"], ["red", "blue"])', expect: ['S-red', 'S-blue', 'M-red', 'M-blue'] },
+        { call: 'all_skus(["L"], ["black"])', expect: ['L-black'] },
+        { call: 'all_skus([], ["red"])', expect: [] },
+      ],
+      explain: '`product(a, b)` is the same as a nested for loop over a then b, so it lists every pair. If any input is empty there are no combinations at all.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 5,
+      q: 'Sensor readings are sorted by time. Write `before_spike(readings, limit)` that returns the readings **until** the first value above `limit` (use `takewhile`), and `after_warmup(readings)` that skips leading zeros (use `dropwhile`).',
+      example: { title: 'takewhile / dropwhile', code: 'from itertools import takewhile, dropwhile\nlist(takewhile(lambda x: x < 5, [1, 4, 6, 2]))  # [1, 4]\nlist(dropwhile(lambda x: x < 5, [1, 4, 6, 2]))  # [6, 2]' },
+      starter: 'from itertools import takewhile, dropwhile\n\ndef before_spike(readings, limit):\n    return readings  # TODO\n\ndef after_warmup(readings):\n    return readings  # TODO\n',
+      solution: 'from itertools import takewhile, dropwhile\n\ndef before_spike(readings, limit):\n    return list(takewhile(lambda x: x <= limit, readings))\n\ndef after_warmup(readings):\n    return list(dropwhile(lambda x: x == 0, readings))\n',
+      tests: [
+        { call: 'before_spike([20, 22, 50, 21], 30)', expect: [20, 22] },
+        { call: 'before_spike([1, 2], 30)', expect: [1, 2] },
+        { call: 'after_warmup([0, 0, 5, 0, 7])', expect: [5, 0, 7], msg: 'Only LEADING zeros are skipped' },
+        { call: 'after_warmup([0, 0])', expect: [] },
+      ],
+      explain: 'Unlike `filter`, `takewhile` stops for good at the first failing item and `dropwhile` drops only until the first failing item, after which everything is kept (that is why the later 0 stays).',
+    },
+  ],
+};

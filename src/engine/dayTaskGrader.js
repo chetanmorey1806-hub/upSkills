@@ -11,6 +11,9 @@ import { runApiTests, createBrowserExec } from './apiTests.js';
 import { WB_ENGINE_PY } from './wbEngine.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Python jobs share one worker: run them one at a time so their outputs never mix.
+let pyQueue = Promise.resolve();
+export const pyLock = (fn) => { const p = pyQueue.then(fn, fn); pyQueue = p.catch(() => {}); return p; };
 const s = (v) => (v == null ? '' : String(v));
 const squash = (v) => s(v).replace(/\r/g, '').replace(/[ \t]+/g, ' ').trim();
 const normLines = (v) => s(v).replace(/\r/g, '').split('\n').map((l) => l.replace(/[ \t]+$/g, '').replace(/^[ \t]+/, '')).join('\n').replace(/\n+$/g, '').replace(/^\n+/g, '');
@@ -118,6 +121,7 @@ export function runDomChecks(win, doc, checks = []) {
     if (c.max != null && els.length > c.max) return fail(`expected at most ${c.max} × "${c.sel}", found ${els.length}`);
     if (!els.length) return fail(`no element matches "${c.sel}"`);
     const el = els[c.index || 0];
+    if (c.nonEmpty && !(el.textContent || '').trim()) return fail(`"${c.sel}" is empty`);
     if (c.text != null) {
       const txt = (el.textContent || '').replace(/\s+/g, ' ').trim();
       if (!txt.toLowerCase().includes(String(c.text).toLowerCase())) return fail(`text is "${txt.slice(0, 60)}"`);
@@ -147,13 +151,18 @@ export function runDomChecks(win, doc, checks = []) {
     return { ok: true, msg: c.msg };
   });
 }
+// Student code runs in a same-origin frame (so checks can read its DOM). Give it its own in-memory
+// localStorage/sessionStorage so practice code can never read or wipe the app's real data (progress, login).
+const SAFE_STORAGE = `<script>(function(){function mk(){var d={};return{getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[String(k)]=String(v)},removeItem:function(k){delete d[String(k)]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}try{Object.defineProperty(window,'localStorage',{value:mk(),configurable:true});Object.defineProperty(window,'sessionStorage',{value:mk(),configurable:true})}catch(e){}})();<\/script>`;
+const withSafeStorage = (html) => (/<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + SAFE_STORAGE) : SAFE_STORAGE + html);
+
 async function gradeDom(t, code) {
   let html;
-  if (t.lang === 'html') html = /<html|<!doctype/i.test(code) ? code : buildWebDoc({ html: code, css: t.css || '' });
-  else if (t.lang === 'css') html = buildWebDoc({ html: t.html || '', css: code });
-  else if (t.lang === 'dom') html = buildWebDoc({ html: t.html || '', css: t.css || '', js: code });
+  if (t.lang === 'html') html = /<html|<!doctype/i.test(code) ? code : buildWebDoc({ html: code, css: t.css || '', libs: t.libs });
+  else if (t.lang === 'css') html = buildWebDoc({ html: t.html || '', css: code, libs: t.libs });
+  else if (t.lang === 'dom') html = buildWebDoc({ html: t.html || '', css: t.css || '', js: code, libs: t.libs });
   else html = buildReactDoc({ jsx: code, css: t.css || '' });
-  const { frame, errors, stop } = await renderFrame(html, { react: t.lang === 'jsx' });
+  const { frame, errors, stop } = await renderFrame(withSafeStorage(html), { react: t.lang === 'jsx' });
   try {
     const win = frame.contentWindow, doc = frame.contentDocument;
     const actErr = await runActions(win, doc, t.actions);
@@ -244,9 +253,9 @@ print('##RES ' + json.dumps(res))
 `;
 async function gradePython(t, code) {
   let text = '', err = '';
-  await runPython({ files: { 'main.py': PY_HARNESS(t.tests, t.stdin), 'student.py': code } }, (m) => {
+  await pyLock(() => runPython({ files: { 'main.py': PY_HARNESS(t.tests, t.stdin), 'student.py': code } }, (m) => {
     if (m.type === 'out') text += m.text; if (m.type === 'err') err += m.text; if (m.type === 'done' && m.error) err += m.error;
-  }, 20000);
+  }, 20000));
   const line = text.split('\n').find((l) => l.startsWith('##RES '));
   if (!line) return res(false, [{ ok: false, msg: `Your code could not run: ${(err || 'unknown error').trim().split('\n').slice(-1)[0]}` }]);
   const results = JSON.parse(line.slice(6));
@@ -262,7 +271,7 @@ async function gradePython(t, code) {
 /* ----------------------------------- SQL ----------------------------------- */
 async function sqliteRun(setup, query) {
   let data = null;
-  await runSQL({ setup, query }, (m) => { if (m.type === 'sql') data = m.data; if (m.type === 'done' && m.error) data = { error: m.error, results: [] }; });
+  await pyLock(() => runSQL({ setup, query }, (m) => { if (m.type === 'sql') data = m.data; if (m.type === 'done' && m.error) data = { error: m.error, results: [] }; }));
   return data || { error: 'No result' };
 }
 let wbReady = null;
@@ -271,12 +280,14 @@ async function wbRun(dialect, setup, query) {
   await wbReady;
   const prefix = dialect === 'tsql' ? 'CREATE DATABASE practice;\nGO\nUSE practice;\nGO\n' : 'CREATE DATABASE IF NOT EXISTS practice;\nUSE practice;\n';
   const store = dialect === 'tsql' ? 'task_tsql' : 'task_mysql';
+  return pyLock(async () => {
   await runPyExec({ code: `wb_select_store('${store}'); wb_reset(); _current['dialect'] = '${dialect === 'tsql' ? 'tsql' : 'mysql'}'; wb_run(__s)`, vars: { __s: prefix + (setup || '') } });
   const raw = await runPyExec({ code: `wb_select_store('${store}'); wb_run(__q)`, vars: { __q: query } });
   const r = JSON.parse(raw);
   const err = r.results.find((x) => x.type === 'error');
   const rows = [...r.results].reverse().find((x) => x.type === 'rows');
   return { error: err?.message, columns: rows?.columns, rows: rows?.rows, results: r.results };
+  });
 }
 async function runAnySql(t, q) {
   if (t.lang === 'sql') {

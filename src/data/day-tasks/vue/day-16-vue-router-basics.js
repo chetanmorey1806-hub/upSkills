@@ -1,0 +1,83 @@
+export default {
+  lesson: 'day-16-vue-router-basics',
+  minutes: 35,
+  intro: 'Practise Vue Router setup facts, RouterLink/RouterView, useRouter vs useRoute, and build a tiny router yourself to see how it works inside.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Which history mode gives clean URLs like `/courses/vue` (but needs a server fallback to index.html)?',
+      options: ['createWebHashHistory()', 'createWebHistory()', 'createMemoryHistory()', 'createCleanHistory()'],
+      answer: 1,
+      explain: '`createWebHistory()` uses the HTML5 History API for clean URLs; the server must return `index.html` for unknown paths, or a refresh on `/courses/vue` gives a 404. Hash mode (`/#/courses/vue`) works without server config; memory history is for SSR/tests.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which statements are TRUE? (choose all that apply)',
+      options: [
+        '`<RouterLink to="/about">` renders an <a> and navigates without a full page reload',
+        '`<RouterView />` is where the matched route component is displayed',
+        '`useRoute()` gives the current route (params, query); `useRouter()` gives the router to navigate (push, replace, back)',
+        'The active link gets the class `router-link-active` automatically',
+        'You must reload the page after router.push',
+      ],
+      answers: [0, 1, 2, 3],
+      explain: 'Client-side routing swaps components inside `<RouterView>` without reloading. Remember: use**Route** = read the current route, use**Router** = do navigation. Active links get `router-link-active` (and `router-link-exact-active` for exact matches).',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the 404 catch-all route path for Vue Router 4:\n\n`{ path: \'/:pathMatch(.*)*\', component: NotFound }` uses which param name? (write the name between `/:` and `(`)',
+      accept: ['pathMatch'],
+      explain: 'Vue Router 4 has no `*` wildcard; you use a custom regex param: `/:pathMatch(.*)*`. Put it last in the routes array. The unmatched segments are available as `route.params.pathMatch`.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'This mimics how the router finds a route for a path. What is printed?',
+      code: `const routes = [
+  { path: '/', name: 'home' },
+  { path: '/courses', name: 'courses' },
+  { path: '/about', name: 'about' },
+];
+const match = (p) => (routes.find((r) => r.path === p) || { name: 'not-found' }).name;
+console.log(match('/courses'), match('/contact'));`,
+      expected: 'courses not-found',
+      explain: 'The router compares the current path with each route record. When nothing matches, the catch-all route takes over and shows the 404 component.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      libs: ['vue'],
+      mins: 10,
+      q: 'Build a **mini router** in plain Vue to understand RouterLink and RouterView. The template is given. In setup:\n- `path` ref starting at `"/"`\n- `routes` object: `"/"` → `HomePage`, `"/courses"` → `CoursesPage`; any other path → `NotFound` (components given)\n- computed `currentView` returning the component for `path`\n- `go(to)` that sets `path`\n\nThe checks click **Courses**, then the broken link.',
+      html: '<div id="app">\n  <nav>\n    <a id="l-home" :class="{ active: path === \'/\' }" @click.prevent="go(\'/\')" href="/">Home</a>\n    <a id="l-courses" :class="{ active: path === \'/courses\' }" @click.prevent="go(\'/courses\')" href="/courses">Courses</a>\n    <a id="l-bad" @click.prevent="go(\'/oops\')" href="/oops">Broken</a>\n  </nav>\n  <component :is="currentView"></component>\n  <p id="path">{{ path }}</p>\n</div>',
+      example: { title: 'dynamic component with :is', code: "const views = { a: CompA, b: CompB };\nconst current = computed(() => views[tab.value]);\n// <component :is=\"current\" />" },
+      starter: "const { createApp, ref, computed } = Vue;\n\nconst HomePage = { template: '<h1 id=\"page\">Home</h1>' };\nconst CoursesPage = { template: '<h1 id=\"page\">Courses</h1>' };\nconst NotFound = { template: '<h1 id=\"page\">404 - Not found</h1>' };\n\ncreateApp({\n  setup() {\n    // TODO\n    return {};\n  },\n}).mount('#app');\n",
+      solution: "const { createApp, ref, computed } = Vue;\n\nconst HomePage = { template: '<h1 id=\"page\">Home</h1>' };\nconst CoursesPage = { template: '<h1 id=\"page\">Courses</h1>' };\nconst NotFound = { template: '<h1 id=\"page\">404 - Not found</h1>' };\n\ncreateApp({\n  setup() {\n    const path = ref('/');\n    const routes = { '/': HomePage, '/courses': CoursesPage };\n    const currentView = computed(() => routes[path.value] || NotFound);\n    function go(to) { path.value = to; }\n    return { path, currentView, go };\n  },\n}).mount('#app');",
+      actions: [{ click: '#l-courses' }, { click: '#l-bad' }],
+      checks: [
+        { sel: '#page', textEq: '404 - Not found', msg: 'An unknown path must show the NotFound component' },
+        { sel: '#path', textEq: '/oops', msg: 'The path must be /oops after clicking the broken link' },
+        { sel: '#l-courses.active', notExists: true, msg: 'Courses must no longer be active' },
+      ],
+      explain: 'This is the core of Vue Router: a reactive current location, a route table and a dynamic component (`<RouterView>`). The real router adds the History API, nested routes, params, guards and lazy loading on top.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 6,
+      q: 'Write `buildLocation(to)` that turns a `router.push` object into a URL string, like the router does. `to` has `path` and optional `query` (object). Example: `{ path: "/courses", query: { level: "beginner", page: 2 } }` → `"/courses?level=beginner&page=2"`. Without query return just the path.',
+      example: { title: 'URLSearchParams', code: "new URLSearchParams({ a: 1, b: 'x y' }).toString()  // 'a=1&b=x+y'" },
+      starter: 'function buildLocation(to) {\n  // TODO\n}\n',
+      solution: "function buildLocation(to) {\n  const qs = new URLSearchParams(to.query || {}).toString();\n  return qs ? `${to.path}?${qs}` : to.path;\n}",
+      tests: [
+        { call: "buildLocation({ path: '/courses', query: { level: 'beginner', page: 2 } })", expect: '/courses?level=beginner&page=2' },
+        { call: "buildLocation({ path: '/about' })", expect: '/about' },
+        { call: "buildLocation({ path: '/search', query: {} })", expect: '/search' },
+      ],
+      explain: '`router.push({ path: "/courses", query: { page: 2 } })` produces `/courses?page=2`, and `useRoute().query.page` gives `"2"` back (always a **string**). Query params are ideal for filters and pagination because they survive refreshes.',
+    },
+  ],
+};

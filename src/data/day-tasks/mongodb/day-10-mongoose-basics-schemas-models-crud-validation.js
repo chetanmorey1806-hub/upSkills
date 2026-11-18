@@ -1,0 +1,82 @@
+export default {
+  lesson: 'day-10-mongoose-basics-schemas-models-crud-validation',
+  minutes: 30,
+  intro: 'Check your Mongoose basics: connecting, schemas and SchemaTypes, model CRUD, validation and the three errors every API must handle.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What is **Mongoose**?',
+      options: [
+        'A database server that replaces MongoDB',
+        'An ODM library for Node.js that adds schemas, validation and models on top of the MongoDB driver',
+        'A GUI tool like Compass',
+        'A query language different from MQL',
+      ],
+      answer: 1,
+      explain: 'Mongoose is an **ODM (Object Data Modeling)** library. MongoDB itself is schema-less; Mongoose adds schemas, type casting, defaults, validation, middleware and handy model methods, and uses the official MongoDB driver underneath.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'What does this print? (`trim`, `lowercase` and `default` are applied when the document is created.)',
+      code: "const productSchema = new mongoose.Schema({\n  name: { type: String, trim: true },\n  category: { type: String, lowercase: true },\n  stock: { type: Number, default: 0 },\n});\nconst Product = mongoose.model('Product', productSchema);\n\nconst p = new Product({ name: '  Pen  ', category: 'STATIONERY' });\nconsole.log(p.name + '|' + p.category + '|' + p.stock);",
+      expected: 'Pen|stationery|0',
+      explain: 'Setters such as `trim` and `lowercase` run when the value is assigned, and `default` fills missing fields, so the document already holds `"Pen"`, `"stationery"` and `0` before it is saved. This is why you can trust the stored format of emails, codes and categories.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the update so Mongoose returns the **updated** document **and** runs schema validators:\n`Product.findByIdAndUpdate(id, { price: 999 }, { new: true, ________: true })`',
+      accept: ['runValidators', 'runValidators: true'],
+      explain: 'Update queries do **not** run validators by default. Add `runValidators: true`, otherwise a negative price or an invalid enum value can be saved through `findByIdAndUpdate`. `new: true` returns the document after the update instead of before it.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which of these are **built-in** Mongoose validators? (choose all that apply)',
+      options: ['required', 'min / max (Number)', 'enum (String)', 'match (String, regex)', 'unique'],
+      answers: [0, 1, 2, 3],
+      explain: '`required`, `min`/`max`, `minLength`/`maxLength`, `enum` and `match` are validators. **`unique` is NOT a validator**: it only tells Mongoose to create a unique **index**, and a duplicate is rejected by MongoDB with an E11000 error (not a ValidationError). Handle it separately (409 Conflict).',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: '`Product.findById(\'abc\')` is called with an invalid id. Which error does Mongoose throw, and which HTTP status should your API return?',
+      options: ['ValidationError → 500', 'CastError → 400 (invalid id)', 'E11000 → 409', 'No error, it returns an empty array → 200'],
+      answer: 1,
+      explain: '"abc" cannot be cast to an ObjectId, so Mongoose throws a **CastError** (`err.name === \'CastError\'`). Return **400 Bad Request** ("Invalid id"). A valid but non-existing id returns `null` – that is your **404**. ValidationError → 400 with field messages; E11000 → 409.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What does `{ timestamps: true }` in a schema add?',
+      options: ['A version key __v', 'createdAt and updatedAt fields that Mongoose maintains automatically', 'A TTL index that deletes old documents', 'The date the model was compiled'],
+      answer: 1,
+      explain: 'With `timestamps: true` Mongoose sets **createdAt** on insert and updates **updatedAt** on every save/update. `__v` is the version key and is added by default anyway. Timestamps are perfect for "newest first" sorting.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 8,
+      q: 'API Lab (in-memory, no real database). Build `POST /api/products` that behaves like a Mongoose `create()` with this schema:\n- `name`: required String\n- `price`: required Number, **min 0**\n\nRules:\n- valid body → **201** with the created product `{ id, name, price }` (ids start at 1)\n- missing name/price or negative price → **400** `{ error: \'ValidationError\', fields: [...] }` listing the bad field names\n- `GET /api/products` → 200 with the array',
+      example: { title: 'returning a validation error', code: "app.post('/api/users', (req, res) => {\n  const fields = [];\n  if (!req.body.email) fields.push('email');\n  if (fields.length) return res.status(400).json({ error: 'ValidationError', fields });\n  res.status(201).json({ id: 1, email: req.body.email });\n});" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst products = [];\n\n// TODO: GET /api/products and POST /api/products\n\napp.listen(3000);\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst products = [];\nlet nextId = 1;\n\napp.get('/api/products', (req, res) => res.json(products));\n\napp.post('/api/products', (req, res) => {\n  const { name, price } = req.body || {};\n  const fields = [];\n  if (typeof name !== 'string' || !name.trim()) fields.push('name');\n  if (typeof price !== 'number' || price < 0) fields.push('price');\n  if (fields.length) return res.status(400).json({ error: 'ValidationError', fields });\n  const product = { id: nextId++, name: name.trim(), price };\n  products.push(product);\n  res.status(201).json(product);\n});\n\napp.listen(3000);\n",
+      tests: [
+        { name: 'creates a valid product', steps: [
+          { method: 'POST', url: '/api/products', body: { name: 'Notebook', price: 60 }, expect: { status: 201, json: { name: 'Notebook', price: 60 } } },
+          { method: 'GET', url: '/api/products', expect: { status: 200, length: 1 } },
+        ] },
+        { name: 'missing name → 400', steps: [
+          { method: 'POST', url: '/api/products', body: { price: 10 }, expect: { status: 400, json: { error: 'ValidationError', fields: ['name'] } } },
+        ] },
+        { name: 'negative price → 400 and nothing saved', steps: [
+          { method: 'POST', url: '/api/products', body: { name: 'Pen', price: -5 }, expect: { status: 400, json: { fields: ['price'] } } },
+          { method: 'GET', url: '/api/products', expect: { status: 200, length: 0 } },
+        ] },
+      ],
+      explain: 'In a real app `Product.create(req.body)` throws a **ValidationError** whose `err.errors` object has one entry per bad field; your error middleware turns it into **400** with the field names. Successful creation returns **201 Created**. Never save first and validate later.',
+    },
+  ],
+};

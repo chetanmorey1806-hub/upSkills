@@ -37,6 +37,9 @@ import Landing from './pages/Landing.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import { WebProjectList, WebProjectWorkspace } from './pages/WebProjects.jsx';
 import { RequireAuth } from './auth.js';
+import Admin from './pages/Admin.jsx';
+import PermissionGate from './components/PermissionGate.jsx';
+import { loadPublishedConfig } from './permissions.js';
 const DevVerifyTasks = import.meta.env.DEV ? lazy(() => import('./pages/DevVerifyTasks.jsx')) : null;
 import Dashboard from './pages/Dashboard.jsx';
 import TestSeries from './pages/TestSeries.jsx';
@@ -54,7 +57,9 @@ function ScrollTop() {
 function AppShell() {
   return (
     <Layout>
+      <PermissionGate>
       <Routes>
+        <Route path="/admin" element={<Admin />} />
         <Route path="/home" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
@@ -97,14 +102,15 @@ function AppShell() {
         <Route path="/tools/mern-projects" element={<MernProjects />} />
         <Route path="/tools/mern-projects/:id" element={<MernProjects />} />
         <Route path="/search" element={<SearchPage />} />
-        {DevVerifyTasks && <Route path="/dev/verify-tasks/:track" element={<Suspense fallback={<p>Loading verifier…</p>}><DevVerifyTasks /></Suspense>} />}
         <Route path="*" element={<Home />} />
       </Routes>
+      </PermissionGate>
     </Layout>
   );
 }
 
 export default function App() {
+  useEffect(() => { loadPublishedConfig(); }, []);
   return (
     <>
       <ScrollTop />
@@ -112,6 +118,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
+        {DevVerifyTasks && <Route path="/dev/verify-tasks/:track" element={<Suspense fallback={<p>Loading verifier…</p>}><DevVerifyTasks /></Suspense>} />}
         <Route path="*" element={<RequireAuth><AppShell /></RequireAuth>} />
       </Routes>
     </>

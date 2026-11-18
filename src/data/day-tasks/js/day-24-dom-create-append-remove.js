@@ -1,0 +1,95 @@
+export default {
+  lesson: 'day-24-dom-create-append-remove',
+  minutes: 35,
+  intro: 'Create elements, insert them in the right place, render lists from arrays and remove or replace elements.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'You run `const li = document.createElement("li"); li.textContent = "Milk";`. Where is the new `<li>` now?',
+      options: ['At the end of the <body>', 'Inside the first <ul> on the page', 'Only in memory: it is not on the page until you insert it', 'At the top of the page'],
+      answer: 2,
+      explain: '`createElement` only creates the node in memory. Nothing appears until you insert it with `append`, `prepend`, `appendChild`, `before`, `after` etc.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 5,
+      q: 'Shopping list: create a new `<li>` with the text `Bread`, give it the class `item`, and **append** it to the end of `#list`. Then create another `<li>` with text `Milk` (class `item`) and **prepend** it to the start.',
+      example: { title: 'create, fill, insert', code: 'const p = document.createElement("p");\np.textContent = "Saved!";\np.classList.add("msg");\ndocument.body.append(p);' },
+      html: '<ul id="list">\n  <li class="item">Rice</li>\n</ul>',
+      starter: 'const list = document.getElementById("list");\n// TODO\n',
+      solution: 'const list = document.getElementById("list");\nconst bread = document.createElement("li");\nbread.textContent = "Bread";\nbread.classList.add("item");\nlist.append(bread);\nconst milk = document.createElement("li");\nmilk.textContent = "Milk";\nmilk.className = "item";\nlist.prepend(milk);',
+      checks: [
+        { sel: '#list > li.item', count: 3, msg: '#list should have 3 <li class="item"> items' },
+        { sel: '#list > li', index: 0, textEq: 'Milk', msg: 'The first item should be Milk (prepend)' },
+        { sel: '#list > li', index: 1, textEq: 'Rice', msg: 'Rice should stay in the middle' },
+        { sel: '#list > li', index: 2, textEq: 'Bread', msg: 'The last item should be Bread (append)' },
+      ],
+      explain: '`append` adds as the **last** child, `prepend` as the **first** child. Each new element needs its own `createElement` call; reusing one element would just move it.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 7,
+      q: 'Render product cards from data. For each product in the `products` array, create a `<div class="product">` containing an `<h3>` with the name and a `<p class="price">` with `₹` + price, and add them all to `#shop`. Use a **DocumentFragment** (or build them and append once).',
+      example: { title: 'DocumentFragment', code: 'const frag = document.createDocumentFragment();\nnames.forEach((n) => {\n  const li = document.createElement("li");\n  li.textContent = n;\n  frag.append(li);\n});\nul.append(frag); // one DOM update' },
+      html: '<div id="shop"></div>',
+      starter: 'const products = [\n  { name: "Kurta", price: 899 },\n  { name: "Saree", price: 2499 },\n  { name: "Jutti", price: 650 },\n];\n// TODO: render into #shop\n',
+      solution: 'const products = [\n  { name: "Kurta", price: 899 },\n  { name: "Saree", price: 2499 },\n  { name: "Jutti", price: 650 },\n];\nconst frag = document.createDocumentFragment();\nproducts.forEach((p) => {\n  const card = document.createElement("div");\n  card.className = "product";\n  const h3 = document.createElement("h3");\n  h3.textContent = p.name;\n  const price = document.createElement("p");\n  price.className = "price";\n  price.textContent = "₹" + p.price;\n  card.append(h3, price);\n  frag.append(card);\n});\ndocument.getElementById("shop").append(frag);',
+      checks: [
+        { sel: '#shop > .product', count: 3, msg: '#shop should contain 3 .product cards' },
+        { sel: '#shop .product h3', index: 1, textEq: 'Saree', msg: 'The second card heading should be Saree' },
+        { sel: '#shop .product .price', index: 2, text: '650', msg: 'The third card price should show 650' },
+        { sel: '#shop .product .price', index: 0, text: '₹', msg: 'Prices should start with ₹' },
+      ],
+      explain: 'Building the cards inside a fragment and appending the fragment once causes a single page update instead of one per card. `append` can take several nodes at once: `card.append(h3, price)`.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 5,
+      q: 'Remove and replace:\n1. Remove the `<li>` with class `sold-out` using `remove()`\n2. Replace the `<p id="old">` with a new `<p id="new">` whose text is `Updated price list` using `replaceWith()`',
+      example: { title: 'remove and replaceWith', code: 'document.querySelector(".ad").remove();\nconst h = document.createElement("h2");\nh.textContent = "New";\noldHeading.replaceWith(h);' },
+      html: '<ul>\n  <li>Tea</li>\n  <li class="sold-out">Coffee</li>\n  <li>Lassi</li>\n</ul>\n<p id="old">Price list</p>',
+      starter: '// TODO\n',
+      solution: 'document.querySelector(".sold-out").remove();\nconst p = document.createElement("p");\np.id = "new";\np.textContent = "Updated price list";\ndocument.getElementById("old").replaceWith(p);',
+      checks: [
+        { sel: '.sold-out', notExists: true, msg: 'The sold-out item should be removed' },
+        { sel: 'ul > li', count: 2, msg: 'Two items should remain in the list' },
+        { sel: '#old', notExists: true, msg: '#old should be replaced' },
+        { sel: '#new', textEq: 'Updated price list', msg: 'A <p id="new"> with "Updated price list" should take its place' },
+      ],
+      explain: '`el.remove()` deletes an element directly (older code used `parent.removeChild(el)`). `replaceWith(newNode)` swaps one element for another in the same position.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 5,
+      q: 'Positions: insert a `<p class="tip">Free delivery above ₹499</p>` **right after** the `<h2 id="heading">` (as a sibling, not inside it). Use `after()` or `insertAdjacentHTML("afterend", ...)`.',
+      example: { title: 'insertAdjacentHTML positions', code: 'el.insertAdjacentHTML("beforebegin", "<hr>"); // before el\nel.insertAdjacentHTML("afterbegin", "<b>!</b>"); // first child\nel.insertAdjacentHTML("beforeend", "<b>!</b>");  // last child\nel.insertAdjacentHTML("afterend", "<hr>");    // after el' },
+      html: '<section>\n  <h2 id="heading">Today\'s Offers</h2>\n  <ul><li>Shoes 20% off</li></ul>\n</section>',
+      starter: 'const heading = document.getElementById("heading");\n// TODO\n',
+      solution: 'const heading = document.getElementById("heading");\nheading.insertAdjacentHTML("afterend", \'<p class="tip">Free delivery above ₹499</p>\');',
+      checks: [
+        { sel: '#heading + p.tip', count: 1, msg: 'The .tip paragraph must come directly after the heading' },
+        { sel: '#heading p', notExists: true, msg: 'The paragraph must not be inside the heading' },
+        { sel: '.tip', text: '499', msg: 'The tip should say "Free delivery above ₹499"' },
+      ],
+      explain: '`after()` and `"afterend"` insert as the **next sibling**. `append` or `"beforeend"` would put the paragraph **inside** the heading, which is invalid structure.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'Move vs clone. The page has `<div id="a"><span id="s">Hi</span></div><div id="b"></div>`. What is printed?',
+      code: `const s = document.getElementById("s");
+document.getElementById("b").append(s);
+console.log(document.getElementById("a").children.length);
+const copy = s.cloneNode(true);
+document.getElementById("a").append(copy);
+console.log(document.querySelectorAll("span").length);`,
+      expected: '0\n2',
+      explain: 'Appending an element that is already in the DOM **moves** it, so `#a` becomes empty. `cloneNode(true)` makes a deep copy, so after appending the copy there are two spans.',
+    },
+  ],
+};

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadDayTask, hasDayTask } from '../data/dayTasks.js';
-import { gradeTask, correctAnswer, NEEDS_PYTHON } from '../engine/dayTaskGrader.js';
+import { gradeTask, correctAnswer, NEEDS_PYTHON, pyLock } from '../engine/dayTaskGrader.js';
 import { buildWebDoc, buildReactDoc } from './playgroundRuntime.js';
 import { ensurePython, runPython } from './pyodideRunner.js';
 import RichText, { Inline } from './RichText.jsx';
 import ProgressBar from './ProgressBar.jsx';
+import { usePerms } from '../permissions.js';
 
 const STORE = 'upskillr-daytasks-v1';
 const readAll = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
@@ -32,9 +33,9 @@ function Preview({ task, code }) {
   const [doc, setDoc] = useState('');
   useEffect(() => {
     const id = setTimeout(() => {
-      if (task.lang === 'html') setDoc(/<html|<!doctype/i.test(code) ? code : buildWebDoc({ html: code, css: task.css || '' }));
-      else if (task.lang === 'css') setDoc(buildWebDoc({ html: task.html || '', css: code }));
-      else if (task.lang === 'dom') setDoc(buildWebDoc({ html: task.html || '', css: task.css || '', js: code }));
+      if (task.lang === 'html') setDoc(/<html|<!doctype/i.test(code) ? code : buildWebDoc({ html: code, css: task.css || '', libs: task.libs }));
+      else if (task.lang === 'css') setDoc(buildWebDoc({ html: task.html || '', css: code, libs: task.libs }));
+      else if (task.lang === 'dom') setDoc(buildWebDoc({ html: task.html || '', css: task.css || '', js: code, libs: task.libs }));
       else if (task.lang === 'jsx') setDoc(buildReactDoc({ jsx: code, css: task.css || '' }));
     }, 500);
     return () => clearTimeout(id);
@@ -58,7 +59,7 @@ function RunBox({ task, code }) {
     } else {
       let text = '';
       await ensurePython();
-      await runPython({ files: { 'main.py': code }, stdin: task.stdin || '' }, (m) => { if (m.type === 'out' || m.type === 'err') text += m.text; if (m.type === 'done' && m.error) text += `\n${m.error}`; });
+      await pyLock(() => runPython({ files: { 'main.py': code }, stdin: task.stdin || '' }, (m) => { if (m.type === 'out' || m.type === 'err') text += m.text; if (m.type === 'done' && m.error) text += `\n${m.error}`; }));
       setOut(text.trim() || '(no output)');
     }
     setBusy(false);
@@ -128,6 +129,8 @@ export default function DayTask({ track, lesson }) {
   const [grading, setGrading] = useState(null);
   const [left, setLeft] = useState(0);
   const topRef = useRef(null);
+  const { canCourse } = usePerms();
+  const allowed = canCourse(track, 'tasks');
 
   useEffect(() => {
     let alive = true;
@@ -185,6 +188,7 @@ export default function DayTask({ track, lesson }) {
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  if (!allowed) return <div className="card locked"><div className="locked-ic">🔒</div><h3>Day Task is locked</h3><p className="muted">Your admin has not enabled Day Tasks for this course yet.</p></div>;
   if (data === undefined) return <div className="card"><p className="muted">Loading today's tasks…</p></div>;
   if (data === null) return (
     <div className="card dt-empty"><h3>📝 Day Task</h3><p className="muted">Timed practice tasks for this day are being added. Meanwhile, do the exercises in the <b>Practice</b> tab and the <b>Quiz</b>.</p></div>

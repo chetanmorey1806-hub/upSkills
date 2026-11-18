@@ -1,0 +1,86 @@
+export default {
+  lesson: 'day-28-localstorage-todo-app',
+  minutes: 40,
+  intro: 'Save and load data with localStorage, store arrays with JSON, and build a small persistent to-do app.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What is the main difference between `localStorage` and `sessionStorage`?',
+      options: ['localStorage can store objects, sessionStorage only strings', 'localStorage keeps data after the browser is closed; sessionStorage is cleared when the tab is closed', 'sessionStorage is sent to the server with every request', 'There is no difference'],
+      answer: 1,
+      explain: 'Both store **strings only** (about 5 MB per site) and are never sent to the server automatically (cookies are). `localStorage` persists until you remove it; `sessionStorage` lives only as long as the tab.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'The [object Object] bug. What is printed?',
+      code: `localStorage.setItem("user", { name: "Asha" });
+console.log(localStorage.getItem("user"));
+localStorage.setItem("user", JSON.stringify({ name: "Asha" }));
+console.log(JSON.parse(localStorage.getItem("user")).name);
+console.log(localStorage.getItem("missing"));`,
+      expected: '[object Object]\nAsha\nnull',
+      explain: 'Storage converts values to strings, and an object becomes the useless text "[object Object]". Always `JSON.stringify` when saving and `JSON.parse` when loading. A key that does not exist returns **null**.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Which localStorage method deletes **one** key, e.g. when the user logs out? Complete: `localStorage.______("token")`',
+      accept: ['removeItem'],
+      explain: '`removeItem(key)` deletes one entry. `clear()` deletes **everything** for the site, which would also wipe unrelated settings like the theme.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 5,
+      q: 'Visit counter. Read the number saved under the key `visits` (it may be missing the very first time), add 1, **save it back**, and show it in `#visits`.\n\n(The page has already been visited 4 times, so it should show 5.)',
+      example: { title: 'read, change, save', code: 'let score = Number(localStorage.getItem("score")) || 0;\nscore += 10;\nlocalStorage.setItem("score", score);' },
+      html: '<script>localStorage.setItem("visits", "4");</script>\n<p>You have visited <span id="visits">?</span> times.</p>\n<button id="peek">peek</button> <span id="stored"></span>\n<script>document.getElementById("peek").onclick = () => { document.getElementById("stored").textContent = localStorage.getItem("visits"); };</script>',
+      starter: '// TODO: read "visits", add 1, save, display\n',
+      solution: 'let visits = Number(localStorage.getItem("visits")) || 0;\nvisits++;\nlocalStorage.setItem("visits", visits);\ndocument.getElementById("visits").textContent = visits;',
+      actions: [{ click: '#peek' }],
+      checks: [
+        { sel: '#visits', textEq: '5', msg: '#visits should show 5' },
+        { sel: '#stored', textEq: '5', msg: 'The new count (5) must be saved back to localStorage under "visits"' },
+      ],
+      explain: 'Stored values are strings, so convert with `Number()` before adding (otherwise "4" + 1 = "41"). `|| 0` handles the first visit when getItem returns null. Forgetting `setItem` means the count never grows.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 6,
+      q: 'Remember the theme.\n1. On load, if `localStorage.getItem("theme")` is `"dark"`, add the class `dark` to `<body>`\n2. When `#toggle` is clicked, toggle the `dark` class and save `"dark"` or `"light"` under the key `theme`\n\n(The user chose dark last time; the checker then clicks the toggle once.)',
+      example: { title: 'saving a preference', code: 'const on = document.body.classList.toggle("big-font");\nlocalStorage.setItem("fontSize", on ? "big" : "normal");' },
+      html: '<script>localStorage.setItem("theme", "dark");</script>\n<button id="toggle">Toggle theme</button>\n<button id="peek">peek</button> <span id="stored"></span>\n<script>document.getElementById("peek").onclick = () => { document.getElementById("stored").textContent = localStorage.getItem("theme"); };</script>',
+      css: '.dark { background: #111; color: #eee; }',
+      starter: '// TODO: apply the saved theme, then handle #toggle\n',
+      solution: 'if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark");\ndocument.getElementById("toggle").addEventListener("click", () => {\n  const isDark = document.body.classList.toggle("dark");\n  localStorage.setItem("theme", isDark ? "dark" : "light");\n});',
+      actions: [{ click: '#toggle' }, { click: '#peek' }],
+      checks: [
+        { sel: 'body.dark', notExists: true, msg: 'Dark theme was loaded, so one toggle click should make it light' },
+        { sel: '#stored', textEq: 'light', msg: 'After the click, localStorage "theme" should be "light"' },
+      ],
+      explain: '`classList.toggle` returns `true` if the class is now present, which tells you what to save. Applying the saved theme **on load** is what makes the preference persist across visits.',
+    },
+    {
+      type: 'code',
+      lang: 'dom',
+      mins: 10,
+      q: 'Mini to-do app (state → render → save).\n- Keep an array `todos` of `{ text, done }`, loaded from localStorage key `todos` (use `[]` if missing)\n- `render()` fills `#list` with one `<li>` per todo (text only)\n- Clicking `#add` pushes `{ text: <input value>, done: false }`, **saves** the array with `JSON.stringify`, clears the input and re-renders\n\n(One todo "Pay electricity bill" is already saved; the checker adds "Buy vegetables".)',
+      example: { title: 'state → render → save', code: 'function save() {\n  localStorage.setItem("notes", JSON.stringify(notes));\n}\nfunction render() {\n  ul.innerHTML = "";\n  notes.forEach((n) => { /* create li */ });\n}' },
+      html: '<script>localStorage.setItem("todos", JSON.stringify([{ text: "Pay electricity bill", done: false }]));</script>\n<input id="task" placeholder="New task">\n<button id="add">Add</button>\n<ul id="list"></ul>\n<button id="peek">peek</button> <span id="stored"></span>\n<script>document.getElementById("peek").onclick = () => { const t = JSON.parse(localStorage.getItem("todos") || "[]"); document.getElementById("stored").textContent = t.length + ":" + t.map((x) => x.text).join("|"); };</script>',
+      starter: 'let todos = []; // TODO: load from localStorage\nconst list = document.getElementById("list");\nconst input = document.getElementById("task");\n\nfunction render() {\n  // TODO\n}\n\ndocument.getElementById("add").addEventListener("click", () => {\n  // TODO\n});\n\nrender();',
+      solution: 'let todos = JSON.parse(localStorage.getItem("todos")) || [];\nconst list = document.getElementById("list");\nconst input = document.getElementById("task");\n\nfunction save() {\n  localStorage.setItem("todos", JSON.stringify(todos));\n}\n\nfunction render() {\n  list.innerHTML = "";\n  todos.forEach((t) => {\n    const li = document.createElement("li");\n    li.textContent = t.text;\n    list.append(li);\n  });\n}\n\ndocument.getElementById("add").addEventListener("click", () => {\n  const text = input.value.trim();\n  if (!text) return;\n  todos.push({ text, done: false });\n  save();\n  input.value = "";\n  render();\n});\n\nrender();',
+      actions: [{ input: ['#task', 'Buy vegetables'] }, { click: '#add' }, { click: '#peek' }],
+      checks: [
+        { sel: '#list li', count: 2, msg: '#list should show the saved todo plus the new one (2 items)' },
+        { sel: '#list li', index: 0, textEq: 'Pay electricity bill', msg: 'The saved todo must be loaded first' },
+        { sel: '#list li', index: 1, textEq: 'Buy vegetables', msg: 'The new todo should appear last' },
+        { sel: '#task', prop: { value: '' }, msg: 'Clear the input after adding' },
+        { sel: '#stored', textEq: '2:Pay electricity bill|Buy vegetables', msg: 'localStorage "todos" must hold both todos as JSON' },
+      ],
+      explain: 'The array is the single source of truth: change it, **save** it, then **render** from it. `JSON.parse(null)` returns null, hence the `|| []` fallback for first-time users. Saving the array without JSON.stringify would store "[object Object]".',
+    },
+  ],
+};

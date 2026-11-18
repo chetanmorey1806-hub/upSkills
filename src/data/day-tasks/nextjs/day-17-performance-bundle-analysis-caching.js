@@ -1,0 +1,82 @@
+export default {
+  lesson: 'day-17-performance-bundle-analysis-caching',
+  minutes: 35,
+  intro: 'Practise shipping less JavaScript (next/dynamic, next/script), reading bundle sizes and naming the four caching layers of the App Router.',
+  tasks: [
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which are the **four caching layers** of the Next.js App Router? (choose all that apply)',
+      options: ['Request Memoization', 'Data Cache', 'Full Route Cache', 'Router Cache (client)', 'Service Worker Cache', 'Redux Cache'],
+      answers: [0, 1, 2, 3],
+      explain: 'Request Memoization (same fetch within one render), Data Cache (fetch results across requests), Full Route Cache (prerendered HTML + RSC payload) and the client-side Router Cache (visited/prefetched routes). Service workers and Redux are not part of Next.js caching.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'A heavy chart library (180 KB) is only needed when the user opens the "Reports" tab. What is the best tool?',
+      options: ['Import it normally at the top of the page', 'next/dynamic to load the chart component lazily', 'Put it in the public/ folder', 'Use a <link rel="preload"> for it'],
+      answer: 1,
+      explain: '`const Chart = dynamic(() => import("./Chart"), { loading: () => <p>Loading...</p> })` splits it into a separate chunk that downloads only when rendered. A normal import adds those 180 KB to the first load of the page for every visitor.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'You add a customer-support chat widget with `next/script`. It is not needed until the user has been on the page for a while. Which `strategy` fits best?',
+      options: ["'beforeInteractive'", "'afterInteractive'", "'lazyOnload'", "'blocking'"],
+      answer: 2,
+      explain: "`lazyOnload` loads the script during browser idle time after everything else, so it never competes with your own content. `afterInteractive` (the default) suits analytics/tag managers; `beforeInteractive` is only for scripts that must run before hydration (rare). There is no 'blocking' strategy.",
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Which npm package (by the Next.js team) shows an interactive treemap of your bundles when you run `ANALYZE=true npm run build`?',
+      accept: ['@next/bundle-analyzer', 'next/bundle-analyzer', 'bundle-analyzer'],
+      explain: 'Wrap your config with `withBundleAnalyzer` from **@next/bundle-analyzer**. The treemap shows which packages make your client JavaScript big, e.g. a full `lodash` import or `moment` locales.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'This script lists the two biggest modules from a bundle report. What is printed?',
+      code: `const modules = [
+  { name: 'chart.js', kb: 180 },
+  { name: 'date-fns', kb: 72 },
+  { name: 'page', kb: 40 },
+  { name: 'lodash', kb: 95 },
+];
+const top = [...modules].sort((a, b) => b.kb - a.kb).slice(0, 2).map((m) => m.name + ' ' + m.kb + 'KB');
+console.log(top.join(', '));`,
+      expected: 'chart.js 180KB, lodash 95KB',
+      explain: 'Sorting descending by size and taking the first two is exactly how you read a bundle analysis: start with the biggest wins. Here, lazy-loading the chart and importing single lodash functions (or native JS) would cut most of the bundle.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 6,
+      q: 'Write `overBudget(routes, limitKB)` for a performance budget check in CI. `routes` is an array of `{ path, firstLoadKB }` from the build output. Return the paths whose first-load JS is **greater than** `limitKB`, biggest first.',
+      example: { title: 'filter + sort + map', code: "const heavy = items.filter((i) => i.kg > 10).sort((a, b) => b.kg - a.kg).map((i) => i.name);" },
+      starter: 'function overBudget(routes, limitKB) {\n  // TODO\n  return [];\n}\n',
+      solution: 'function overBudget(routes, limitKB) {\n  return routes\n    .filter((r) => r.firstLoadKB > limitKB)\n    .sort((a, b) => b.firstLoadKB - a.firstLoadKB)\n    .map((r) => r.path);\n}',
+      tests: [
+        { call: "overBudget([{ path: '/', firstLoadKB: 95 }, { path: '/reports', firstLoadKB: 310 }, { path: '/admin', firstLoadKB: 180 }], 150)", expect: ['/reports', '/admin'] },
+        { call: "overBudget([{ path: '/', firstLoadKB: 150 }], 150)", expect: [], msg: 'Exactly at the limit is still OK' },
+      ],
+      explain: '`next build` prints "First Load JS" per route. Failing CI when a route grows past a budget catches regressions (someone importing a huge library into a shared layout) before users feel them.',
+    },
+    {
+      type: 'code',
+      lang: 'jsx',
+      mins: 8,
+      q: 'Imitate `next/dynamic`: the heavy `Chart` component is loaded with `React.lazy` (given). Render a `<button id="show">Show report</button>`. Only after it is clicked render `<Chart />` inside `<Suspense fallback={<p>Loading chart...</p>}>`. Before the click the chart must not be rendered at all.',
+      example: { title: 'render something only after a click', code: "const [open, setOpen] = React.useState(false);\n{open && <Details />}" },
+      starter: "const { useState, Suspense, lazy } = React;\n\nconst Chart = lazy(() => new Promise((resolve) => setTimeout(() => resolve({\n  default: () => <div id=\"chart\">Sales chart</div>,\n}), 30)));\n\nfunction App() {\n  // TODO\n  return <div />;\n}\n",
+      solution: "const { useState, Suspense, lazy } = React;\n\nconst Chart = lazy(() => new Promise((resolve) => setTimeout(() => resolve({\n  default: () => <div id=\"chart\">Sales chart</div>,\n}), 30)));\n\nfunction App() {\n  const [show, setShow] = useState(false);\n  return (\n    <div>\n      <button id=\"show\" onClick={() => setShow(true)}>Show report</button>\n      {show && (\n        <Suspense fallback={<p>Loading chart...</p>}>\n          <Chart />\n        </Suspense>\n      )}\n    </div>\n  );\n}",
+      actions: [{ click: '#show', wait: 200 }],
+      checks: [
+        { sel: '#chart', text: 'Sales chart', msg: 'After clicking "Show report" the lazy Chart must render' },
+        { sel: '#show', count: 1, msg: 'Keep the <button id="show">' },
+      ],
+      explain: 'The chart code is downloaded only when the user asks for it, so the initial page stays small and interactive sooner (better INP/LCP). `next/dynamic` is built on `React.lazy` + Suspense and also supports `ssr: false` for browser-only libraries.',
+    },
+  ],
+};

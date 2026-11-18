@@ -1,0 +1,96 @@
+export default {
+  lesson: 'day-15-middleware-redirects-rewrites',
+  minutes: 35,
+  intro: 'Practise where middleware runs, matcher patterns, redirect vs rewrite, and write the decision logic of an auth + A/B-test middleware.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Where does the `middleware.js` file go?',
+      options: ['app/middleware.js', 'In the project root (next to app/, or inside src/ when you use a src folder)', 'public/middleware.js', 'app/api/middleware/route.js'],
+      answer: 1,
+      explain: 'There is ONE middleware file per project, at the root level beside `app/` (or `src/middleware.js`). It runs **before** routing and caching for every matched request. Putting it inside `app/` means it is silently ignored.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What is the difference between `NextResponse.redirect(url)` and `NextResponse.rewrite(url)`?',
+      options: [
+        'There is no difference',
+        'redirect tells the browser to go to a new URL (address bar changes); rewrite serves another route\'s content while the address bar stays the same',
+        'rewrite is only for external URLs',
+        'redirect works only in next.config.js',
+      ],
+      answer: 1,
+      explain: 'A **redirect** sends a 307/308 response and the browser makes a new request, so the user sees the new URL. A **rewrite** is invisible: the server internally renders another path (useful for A/B tests, locales, proxies) while the URL stays unchanged.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the config so middleware only runs for dashboard pages:\n\n`export const config = { _______: [\'/dashboard/:path*\'] };`',
+      accept: ['matcher'],
+      explain: '`matcher` limits middleware to matching paths, so static files, images and public pages are not slowed down. `:path*` means "zero or more segments", so it also matches `/dashboard` itself.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which jobs are a good fit for middleware? (choose all that apply)',
+      options: [
+        'Redirecting guests without a session cookie away from /dashboard',
+        'Putting visitors into an A/B test bucket with a cookie',
+        'Redirecting to /hi or /en based on the Accept-Language header',
+        'Running heavy Prisma queries to build the page data',
+        'Rendering the page HTML',
+      ],
+      answers: [0, 1, 2],
+      explain: 'Middleware should be **fast and light**: read cookies/headers, then redirect, rewrite or add headers. It runs on every matched request (historically on the Edge runtime), so database-heavy work and rendering belong in pages and actions. Also keep the real auth check in the page/action, not only in middleware.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'Middleware often builds the login redirect URL like this. What is printed?',
+      code: `const url = new URL('https://shop.in/dashboard/orders?x=1');
+url.pathname = '/login';
+url.search = '';
+url.searchParams.set('from', '/dashboard/orders');
+console.log(url.toString());`,
+      expected: 'https://shop.in/login?from=%2Fdashboard%2Forders',
+      explain: 'Changing `pathname` keeps the origin; clearing `search` removes `x=1`; `searchParams.set` **URL-encodes** the value, so `/` becomes `%2F`. After login you read `from` and send the user back where they wanted to go.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 7,
+      q: 'Write the decision logic of a middleware: `decide(req)` where `req = { pathname, cookies }` (`cookies` is a plain object). Return:\n1. `/dashboard` paths (starting with it) without `cookies.token` → `{ type: "redirect", to: "/login?from=" + pathname }`\n2. `/login` with a token → `{ type: "redirect", to: "/dashboard" }`\n3. `/` with `cookies.bucket === "b"` → `{ type: "rewrite", to: "/home-b" }`\n4. otherwise `{ type: "next" }`',
+      example: { title: 'returning different result objects', code: "if (!user) return { type: 'redirect', to: '/login' };\nreturn { type: 'next' };" },
+      starter: 'function decide(req) {\n  // TODO\n  return { type: \'next\' };\n}\n',
+      solution: "function decide(req) {\n  const { pathname, cookies } = req;\n  if (pathname.startsWith('/dashboard') && !cookies.token) return { type: 'redirect', to: '/login?from=' + pathname };\n  if (pathname === '/login' && cookies.token) return { type: 'redirect', to: '/dashboard' };\n  if (pathname === '/' && cookies.bucket === 'b') return { type: 'rewrite', to: '/home-b' };\n  return { type: 'next' };\n}",
+      tests: [
+        { call: "decide({ pathname: '/dashboard/orders', cookies: {} })", expect: { type: 'redirect', to: '/login?from=/dashboard/orders' } },
+        { call: "decide({ pathname: '/dashboard', cookies: { token: 'abc' } })", expect: { type: 'next' } },
+        { call: "decide({ pathname: '/login', cookies: { token: 'abc' } })", expect: { type: 'redirect', to: '/dashboard' } },
+        { call: "decide({ pathname: '/', cookies: { bucket: 'b' } })", expect: { type: 'rewrite', to: '/home-b' } },
+        { call: "decide({ pathname: '/', cookies: { bucket: 'a' } })", expect: { type: 'next' } },
+      ],
+      explain: 'In a real `middleware.js` these map to `NextResponse.redirect(new URL(to, request.url))`, `NextResponse.rewrite(...)` and `NextResponse.next()`. Rule 2 prevents logged-in users from seeing the login page; rule 3 is an invisible A/B test because the URL stays `/`.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 7,
+      q: 'Write `matches(pattern, path)` for simple matcher patterns:\n- normal segments must be equal\n- `:name` matches exactly one segment\n- `:name*` (only as the last segment) matches zero or more remaining segments',
+      example: { title: 'segments of a path', code: "'/blog/a/b'.split('/').filter(Boolean) // ['blog', 'a', 'b']" },
+      starter: 'function matches(pattern, path) {\n  // TODO\n}\n',
+      solution: "function matches(pattern, path) {\n  const p = pattern.split('/').filter(Boolean);\n  const u = path.split('/').filter(Boolean);\n  for (let i = 0; i < p.length; i++) {\n    if (p[i].startsWith(':') && p[i].endsWith('*')) return true;\n    if (u[i] === undefined) return false;\n    if (!p[i].startsWith(':') && p[i] !== u[i]) return false;\n  }\n  return p.length === u.length;\n}",
+      tests: [
+        { call: "matches('/dashboard/:path*', '/dashboard')", expect: true, msg: ':path* also matches zero segments' },
+        { call: "matches('/dashboard/:path*', '/dashboard/orders/42')", expect: true },
+        { call: "matches('/dashboard/:path*', '/admin')", expect: false },
+        { call: "matches('/blog/:slug', '/blog/hello')", expect: true },
+        { call: "matches('/blog/:slug', '/blog/hello/world')", expect: false },
+        { call: "matches('/blog/:slug', '/blog')", expect: false },
+      ],
+      explain: '`:slug` = exactly one segment, `:path*` = zero or more, `:path+` = one or more. A frequent mistake is writing `/dashboard/:path+` and then wondering why `/dashboard` itself is not protected.',
+    },
+  ],
+};

@@ -1,0 +1,71 @@
+export default {
+  lesson: 'day-01-introduction-to-javascript',
+  minutes: 20,
+  intro: 'Check what JavaScript is, where it runs and how to add it to a page, then write your first console programs.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Which job does **JavaScript** do on a web page?',
+      options: ['It gives the page its structure (headings, paragraphs)', 'It styles the page (colours, fonts, layout)', 'It adds behaviour: reacting to clicks, changing content, talking to servers', 'It stores the page on the server'],
+      answer: 2,
+      explain: 'HTML = structure, CSS = style, **JavaScript = behaviour**. JS reacts to user actions, updates the page without reloading and fetches data. A common mix-up is thinking JS styles the page: it can change styles, but styling itself is CSS\'s job.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Where can JavaScript run today? (choose all that apply)',
+      options: ['In web browsers (Chrome, Firefox, Safari)', 'On servers with Node.js', 'In mobile apps (e.g. React Native)', 'In desktop apps (e.g. VS Code built with Electron)', 'Only inside Internet Explorer'],
+      answers: [0, 1, 2, 3],
+      explain: 'JavaScript started in the browser, but with **Node.js** (2009) it also runs on servers, and frameworks like React Native and Electron bring it to mobile and desktop. It has never been limited to one browser.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'You put `<script src="app.js" defer></script>` in the `<head>`. What does **defer** do?',
+      options: ['It stops the script from ever running', 'It downloads the script in parallel and runs it after the HTML is fully parsed', 'It runs the script before the HTML is read', 'It makes the script run twice'],
+      answer: 1,
+      explain: '`defer` downloads the file without blocking the page and runs it **after the HTML has been parsed**, in order. That is why scripts with `defer` can safely find elements on the page. Without it, a script in the `<head>` runs before the body exists.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'ECMAScript 2015 is better known by a short name that starts with "ES". What is it?',
+      accept: ['ES6', 'ES 6', 'ES2015', 'ES 2015'],
+      explain: 'ES2015 is usually called **ES6**. It was a huge update (let/const, arrow functions, classes, template literals, modules). Since then a new version is released every year (ES2016, ES2017 …).',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'What does this program print in the console? (one value per line)',
+      code: `console.log("Hello, UpSkillr!");
+console.log(10 + 5);
+console.log("10" + 5);
+// console.log("hidden");`,
+      expected: 'Hello, UpSkillr!\n15\n105',
+      explain: '`10 + 5` adds numbers (15), but `"10" + 5` joins text because one side is a string, giving `"105"`. The last line starts with `//`, so it is a **comment** and never runs.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 4,
+      q: 'Write your first program. Use `console.log` to print exactly these two lines:\n- `Welcome to JavaScript`\n- `Day 1 of 45`',
+      example: { title: 'printing a line', code: 'console.log("Good morning, Pune");' },
+      starter: '// Print the two lines below\n',
+      solution: 'console.log("Welcome to JavaScript");\nconsole.log("Day 1 of 45");',
+      tests: [{ log: 'Welcome to JavaScript\nDay 1 of 45', msg: 'Console shows both lines in order' }],
+      explain: 'Each `console.log(...)` prints one line. Text must be inside quotes, and the spelling, spaces and capital letters must match exactly. A common mistake is forgetting the quotes, which makes JavaScript treat the words as variable names.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 5,
+      q: 'Use JavaScript as a calculator. Asha bought **3 notebooks at ₹45 each** and **2 pens at ₹12 each**. Print, on separate lines:\n1. the cost of the notebooks\n2. the cost of the pens\n3. the total bill\n\nLet JavaScript calculate (use `*` and `+`), do not type the answers yourself.',
+      example: { title: 'calculating in the console', code: 'console.log(4 * 25);   // 100\nconsole.log(100 + 50); // 150' },
+      starter: '// notebooks\n\n// pens\n\n// total\n',
+      solution: 'console.log(3 * 45);\nconsole.log(2 * 12);\nconsole.log(3 * 45 + 2 * 12);',
+      tests: [{ log: '135\n24\n159', msg: 'Prints 135, 24 and 159 on three lines' }],
+      explain: '`*` multiplies and `+` adds. Multiplication happens before addition, so `3 * 45 + 2 * 12` = 135 + 24 = 159. Putting numbers inside quotes would turn them into text and break the maths.',
+    },
+  ],
+};

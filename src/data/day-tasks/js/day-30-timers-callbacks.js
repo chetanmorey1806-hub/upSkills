@@ -1,0 +1,71 @@
+export default {
+  lesson: 'day-30-timers-callbacks',
+  minutes: 35,
+  intro: 'Schedule work with setTimeout and setInterval, predict async order, and write error-first callbacks.',
+  tasks: [
+    {
+      type: 'output',
+      mins: 3,
+      q: 'Predict the order. What is printed?',
+      code: `console.log("1: order placed");
+setTimeout(() => console.log("2: delivery update"), 0);
+setTimeout(() => console.log("3: rating request"), 10);
+console.log("4: thank you");`,
+      expected: '1: order placed\n4: thank you\n2: delivery update\n3: rating request',
+      explain: 'Timer callbacks never interrupt running code. Even with a 0 ms delay, the callback waits until all the normal (synchronous) code has finished. Between timers, the shorter delay runs first.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What does `setTimeout(fn, 1000)` return, and what is it used for?',
+      options: ['The result of fn, after 1 second', 'A timer id that you can pass to clearTimeout to cancel it', 'A promise', 'Nothing (undefined)'],
+      answer: 1,
+      explain: 'Timers return an **id**. Save it if you might need to cancel: `const id = setTimeout(...); clearTimeout(id);`. The same goes for `setInterval` / `clearInterval`.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 6,
+      q: 'Countdown with setInterval. Write `countdown(from, done)` that logs `from`, `from-1`, … down to `1`, **one number every 20 ms** using `setInterval`, then logs `"Go!"`, stops the interval with `clearInterval` and calls `done()`.\n\n(The test waits for `done` to be called.)',
+      example: { title: 'repeating and stopping', code: 'let n = 0;\nconst id = setInterval(() => {\n  n++;\n  if (n === 3) clearInterval(id);\n}, 100);' },
+      starter: 'function countdown(from, done) {\n  // TODO\n}',
+      solution: 'function countdown(from, done) {\n  let n = from;\n  const id = setInterval(() => {\n    if (n > 0) {\n      console.log(n);\n      n--;\n    } else {\n      console.log("Go!");\n      clearInterval(id);\n      done();\n    }\n  }, 20);\n}',
+      tests: [{ call: 'new Promise((resolve) => countdown(3, resolve))', log: '3\n2\n1\nGo!', msg: 'Logs 3, 2, 1, Go! and then calls done()' }],
+      explain: 'Keep the interval id so you can stop it; without `clearInterval` the callback runs forever. Keep the counter outside the callback so it is remembered between ticks (a closure).',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 6,
+      q: 'Error-first callbacks. Write `loadUser(id, callback)` that simulates a slow server with `setTimeout(..., 10)`:\n- if `id` is a positive number, call `callback(null, { id, name: "User " + id })`\n- otherwise call `callback(new Error("Invalid id"))`',
+      example: { title: 'Node-style callback', code: 'readFile("a.txt", (err, data) => {\n  if (err) return console.log(err.message);\n  console.log(data);\n});' },
+      starter: 'function loadUser(id, callback) {\n  // TODO\n}',
+      solution: 'function loadUser(id, callback) {\n  setTimeout(() => {\n    if (typeof id === "number" && id > 0) callback(null, { id, name: "User " + id });\n    else callback(new Error("Invalid id"));\n  }, 10);\n}',
+      tests: [
+        { call: 'new Promise((res) => loadUser(7, (err, user) => res(err ? "ERR" : user.name)))', expect: 'User 7' },
+        { call: 'new Promise((res) => loadUser(-1, (err, user) => res(err ? err.message : "no error")))', expect: 'Invalid id' },
+        { call: 'new Promise((res) => { let sync = true; loadUser(1, () => res(sync ? "called synchronously" : "async")); sync = false; })', expect: 'async', msg: 'The callback is called later (asynchronously)' },
+      ],
+      explain: 'By convention the **first** callback argument is the error (`null` when all is well) and the data comes second. Callers must check `err` first. Calling the callback inside the timer keeps the function truly asynchronous.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 6,
+      q: 'Cancelling a timer. Write `scheduleReminder(message, ms)` that schedules `console.log(message)` after `ms` milliseconds and returns an object `{ cancel() }` that cancels it with `clearTimeout`.\n\nThe test schedules two reminders and cancels the second one.',
+      example: { title: 'returning a cancel handle', code: 'const id = setTimeout(sendOtp, 5000);\nfunction stop() { clearTimeout(id); }' },
+      starter: 'function scheduleReminder(message, ms) {\n  // TODO\n  return { cancel() {} };\n}',
+      solution: 'function scheduleReminder(message, ms) {\n  const id = setTimeout(() => console.log(message), ms);\n  return { cancel() { clearTimeout(id); } };\n}',
+      tests: [{ call: 'new Promise((res) => { scheduleReminder("Pay rent", 10); const r = scheduleReminder("Call bank", 20); r.cancel(); setTimeout(res, 60); })', log: 'Pay rent', msg: 'Only "Pay rent" is printed; the cancelled reminder never runs' }],
+      explain: '`clearTimeout(id)` cancels a timer that has not fired yet. Returning a small object with a `cancel` method hides the id from callers, which is a common pattern in real apps.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What is "callback hell" and what is a first step to reduce it (before learning Promises)?',
+      options: ['Callbacks that throw errors; use more callbacks', 'Deeply nested callbacks forming a pyramid; use named functions and early returns', 'Using setTimeout with 0 ms; use setInterval', 'Callbacks in loops; use var'],
+      answer: 1,
+      explain: 'Each async step nested inside the previous one creates a sideways pyramid that is hard to read and handle errors in. Named functions and early `return` on errors flatten it; **Promises** and async/await (next days) solve it properly.',
+    },
+  ],
+};

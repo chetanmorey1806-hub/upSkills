@@ -44,7 +44,10 @@ export default function DevVerifyTasks() {
   const [out, setOut] = useState({ status: 'running', log: [] });
 
   useEffect(() => {
+    let cancelled = false; // React StrictMode runs effects twice in dev: only the surviving run may grade
     (async () => {
+      await new Promise((r) => setTimeout(r, 50));
+      if (cancelled) return;
       const lessonIds = (tracks[track]?.topics || []).map((t) => t.id);
       const ids = dayTaskIds(track).filter((id) => !only || only.split(',').includes(id)).sort();
       const report = { track, files: ids.length, tasks: 0, passed: 0, errors: [] };
@@ -54,6 +57,7 @@ export default function DevVerifyTasks() {
         if (!d) { report.errors.push({ lesson: id, msg: 'no default export' }); continue; }
         schemaErrors(d, lessonIds, id).forEach((m) => report.errors.push({ lesson: id, msg: m }));
         for (let i = 0; i < (d.tasks || []).length; i++) {
+          if (cancelled) return;
           const t = d.tasks[i];
           report.tasks++;
           const good = await gradeTask(t, correctAnswer(t));
@@ -74,6 +78,7 @@ export default function DevVerifyTasks() {
       setOut({ status: 'done', report });
       document.title = 'VERIFY-DONE';
     })();
+    return () => { cancelled = true; };
   }, [track, only]);
 
   return <pre id="verify-out" style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{JSON.stringify(out, null, 1)}</pre>;

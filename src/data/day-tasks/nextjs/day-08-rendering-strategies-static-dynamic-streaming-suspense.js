@@ -1,0 +1,86 @@
+export default {
+  lesson: 'day-08-rendering-strategies-static-dynamic-streaming-suspense',
+  minutes: 30,
+  intro: 'Tell static from dynamic rendering, recognise the Dynamic APIs and stream slow parts of a page with Suspense.',
+  tasks: [
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which of these are **Dynamic APIs** that switch a route to dynamic rendering? (choose all that apply)',
+      options: ['await cookies()', 'await headers()', 'reading searchParams in a page', 'generateStaticParams()', 'await connection()', "import Link from 'next/link'"],
+      answers: [0, 1, 2, 4],
+      explain: 'Cookies, headers, searchParams and `connection()` depend on the incoming request, so the page cannot be pre-rendered at build time. `generateStaticParams` does the opposite (pre-renders pages), and `Link` has nothing to do with rendering mode.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'In the `next build` output, what does the symbol **○** next to a route mean?',
+      options: ['The route had a build error', 'Prerendered as static content', 'Server-rendered on demand for every request', 'The route uses the Edge runtime'],
+      answer: 1,
+      explain: '`○ (Static)` = prerendered at build time, `● (SSG)` = prerendered with generateStaticParams, `ƒ (Dynamic)` = rendered on demand per request. Reading the build output is the quickest way to check you did not make a page dynamic by accident.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the route segment config that forces a page to render on **every request**:\n\n`export const dynamic = \'__________\';`',
+      accept: ['force-dynamic', "'force-dynamic'", '"force-dynamic"'],
+      explain: "`dynamic = 'force-dynamic'` renders per request even if no Dynamic API is used. The other values are `'auto'` (default), `'force-static'` and `'error'` (fail the build if anything dynamic is used).",
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'A product page has a fast price and slow reviews. You wrap `<Reviews />` in `<Suspense fallback={<p>Loading reviews...</p>}>`. What does the user experience?',
+      options: [
+        'A blank page until the reviews are ready',
+        'The page (with price) arrives immediately with the fallback; reviews stream in and replace it when ready',
+        'Reviews are skipped completely',
+        'The browser fetches reviews with useEffect',
+      ],
+      answer: 1,
+      explain: 'Streaming sends the HTML shell and fallback first, then streams the finished `Reviews` HTML in the same response. Without Suspense the whole page would wait for the slowest component.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'This code imitates streaming: the shell is sent immediately and two slow parts finish later. In which order are the lines printed?',
+      code: `console.log('header');
+setTimeout(() => console.log('reviews'), 300);
+setTimeout(() => console.log('price'), 100);
+console.log('loading reviews...');`,
+      expected: 'header\nloading reviews...\nprice\nreviews',
+      explain: 'Synchronous work (the shell and the fallback) goes out first. The slow pieces arrive in the order they **finish**, not the order they were written. That is exactly how separate Suspense boundaries stream independently.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 6,
+      q: "Write `renderMode(route)` that predicts how Next.js renders a route. `route` has `dynamic` (`'auto'`, `'force-dynamic'` or `'force-static'`), `uses` (array of API names) and `noStore` (boolean). Rules:\n1. `'force-dynamic'` → `'dynamic'`\n2. `'force-static'` → `'static'`\n3. if `noStore` is true or `uses` contains any of `cookies`, `headers`, `searchParams`, `connection` → `'dynamic'`\n4. otherwise `'static'`",
+      example: { title: 'checking if two arrays overlap', code: "const hasAny = ['a', 'b'].some((x) => list.includes(x));" },
+      starter: 'function renderMode(route) {\n  // TODO\n}\n',
+      solution: "function renderMode(route) {\n  if (route.dynamic === 'force-dynamic') return 'dynamic';\n  if (route.dynamic === 'force-static') return 'static';\n  const dynamicApis = ['cookies', 'headers', 'searchParams', 'connection'];\n  if (route.noStore || route.uses.some((u) => dynamicApis.includes(u))) return 'dynamic';\n  return 'static';\n}",
+      tests: [
+        { call: "renderMode({ dynamic: 'auto', uses: [], noStore: false })", expect: 'static' },
+        { call: "renderMode({ dynamic: 'auto', uses: ['cookies'], noStore: false })", expect: 'dynamic' },
+        { call: "renderMode({ dynamic: 'auto', uses: [], noStore: true })", expect: 'dynamic' },
+        { call: "renderMode({ dynamic: 'force-static', uses: ['headers'], noStore: false })", expect: 'static' },
+        { call: "renderMode({ dynamic: 'force-dynamic', uses: [], noStore: false })", expect: 'dynamic' },
+      ],
+      explain: 'Static is the default goal: a route stays static until something request-specific appears. Route segment config overrides the automatic detection, which is why it is checked first.',
+    },
+    {
+      type: 'code',
+      lang: 'jsx',
+      mins: 8,
+      q: 'Practise **Suspense** in React. A slow `Reviews` component is loaded with `React.lazy` (given). Render `<h1>Wireless Mouse</h1>` immediately and wrap `<Reviews />` in `<Suspense>` with the fallback `<p id="fallback">Loading reviews...</p>`.',
+      example: { title: 'Suspense with a fallback', code: "<Suspense fallback={<Spinner />}>\n  <Comments />\n</Suspense>" },
+      starter: "const { Suspense, lazy } = React;\n\nconst Reviews = lazy(() => new Promise((resolve) => setTimeout(() => resolve({\n  default: () => <ul id=\"reviews\"><li>Great value</li><li>Works well</li></ul>,\n}), 50)));\n\nfunction App() {\n  // TODO: heading + Suspense around Reviews\n  return null;\n}\n",
+      solution: "const { Suspense, lazy } = React;\n\nconst Reviews = lazy(() => new Promise((resolve) => setTimeout(() => resolve({\n  default: () => <ul id=\"reviews\"><li>Great value</li><li>Works well</li></ul>,\n}), 50)));\n\nfunction App() {\n  return (\n    <div>\n      <h1>Wireless Mouse</h1>\n      <Suspense fallback={<p id=\"fallback\">Loading reviews...</p>}>\n        <Reviews />\n      </Suspense>\n    </div>\n  );\n}",
+      checks: [
+        { sel: 'h1', textEq: 'Wireless Mouse', msg: 'Render <h1>Wireless Mouse</h1> outside the Suspense boundary' },
+        { sel: '#reviews li', count: 2, msg: 'After loading, the 2 reviews must be shown' },
+        { sel: '#fallback', notExists: true, msg: 'The fallback must be replaced once the reviews are ready' },
+      ],
+      explain: 'Only the part inside `<Suspense>` waits; the heading renders at once. In Next.js the slow part would be an async Server Component, and the fallback would be streamed first with the real HTML following in the same response.',
+    },
+  ],
+};

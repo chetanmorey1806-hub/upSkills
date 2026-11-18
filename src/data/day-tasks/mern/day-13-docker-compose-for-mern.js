@@ -1,0 +1,82 @@
+export default {
+  lesson: 'day-13-docker-compose-for-mern',
+  minutes: 30,
+  intro: 'Containerise the MERN stack: images vs containers, a production Dockerfile, a multi-stage React build, docker compose services and health checks.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'What is the difference between a Docker **image** and a **container**?',
+      options: [
+        'They are the same thing',
+        'An image is a read-only template (layers); a container is a running instance of an image',
+        'A container is the template; an image is the running process',
+        'Images exist only on Docker Hub',
+      ],
+      answer: 1,
+      explain: 'Like a class and an object: the **image** (built from the Dockerfile) is the template, every `docker run` creates a **container** from it. Data written inside a container is lost when it is removed – use **volumes** for MongoDB data.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which lines/practices belong in a good **production Dockerfile** for the Express API? (choose all that apply)',
+      options: [
+        'FROM node:22-alpine',
+        'COPY package*.json ./ then RUN npm ci --omit=dev before copying the source (layer caching)',
+        'USER node (do not run as root)',
+        'COPY .env ./ so the secrets are inside the image',
+        'A .dockerignore that excludes node_modules and .git',
+      ],
+      answers: [0, 1, 2, 4],
+      explain: 'Small base image, dependencies installed in their own layer (rebuilt only when package files change), a non-root user and a `.dockerignore`. **Never** bake `.env` into an image – anyone who pulls the image gets your secrets; pass env vars at runtime (`env_file` / platform settings).',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the line that installs only production dependencies exactly as in package-lock.json:\n`RUN npm ________ --omit=dev`',
+      accept: ['ci'],
+      explain: '`npm ci` installs exactly the versions in `package-lock.json`, fails if it is out of sync and is faster than `npm install` – ideal for CI and Docker. `--omit=dev` leaves out Jest, ESLint, nodemon etc., making the image smaller and safer.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'In docker compose, the server connects to MongoDB with `MONGODB_URI=mongodb://mongo:27017/shop`. What is `mongo` here?',
+      options: ['A typo for localhost', 'The compose service name, resolved by Docker\'s internal DNS on the shared network', 'The MongoDB username', 'A Docker Hub account'],
+      answer: 1,
+      explain: 'Inside a compose network, each **service name** is a hostname. `localhost` inside the server container means the server container itself, which is the most common Docker networking mistake.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'Given this compose snippet, on which port do you open the React app **on your laptop**? Type only the number.',
+      code: "services:\n  client:\n    build: ./client\n    ports:\n      - \"8080:80\"\n  server:\n    build: ./server\n    ports:\n      - \"5000:5000\"",
+      expected: '8080',
+      explain: '`ports: "HOST:CONTAINER"`. Nginx listens on port **80 inside** the client container, published as **8080 on the host**, so you open `http://localhost:8080`. Mixing up the order is a very common mistake.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 8,
+      q: 'Containers need **liveness** and **readiness** endpoints (simulated state):\n- `GET /healthz` (liveness) → always 200 `{ status: \'alive\' }` while the process runs\n- `GET /readyz` (readiness) → 200 `{ status: \'ready\' }` only when `state.mongo` and `state.redis` are both `true`; otherwise **503** `{ status: \'not ready\', mongo, redis }`\n- `POST /test/state` `{ mongo, redis }` updates the simulated state\n- during shutdown (`POST /test/shutdown` sets `state.shuttingDown = true`) readiness must return 503 even if both are connected',
+      example: { title: '503 with details', code: "if (!ok) return res.status(503).json({ status: 'not ready', db: dbOk });" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst state = { mongo: true, redis: true, shuttingDown: false };\n\n// TODO: /healthz, /readyz, /test/state, /test/shutdown\n\napp.listen(5000);\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst state = { mongo: true, redis: true, shuttingDown: false };\n\napp.get('/healthz', (req, res) => res.json({ status: 'alive' }));\napp.get('/readyz', (req, res) => {\n  if (state.mongo && state.redis && !state.shuttingDown) return res.json({ status: 'ready' });\n  res.status(503).json({ status: 'not ready', mongo: state.mongo, redis: state.redis });\n});\napp.post('/test/state', (req, res) => {\n  Object.assign(state, { mongo: !!req.body.mongo, redis: !!req.body.redis });\n  res.json(state);\n});\napp.post('/test/shutdown', (req, res) => {\n  state.shuttingDown = true;\n  res.json(state);\n});\n\napp.listen(5000);\n",
+      tests: [
+        { name: 'alive and ready', steps: [
+          { method: 'GET', url: '/healthz', expect: { status: 200, json: { status: 'alive' } } },
+          { method: 'GET', url: '/readyz', expect: { status: 200, json: { status: 'ready' } } },
+        ] },
+        { name: 'redis down → not ready, still alive', steps: [
+          { method: 'POST', url: '/test/state', body: { mongo: true, redis: false }, expect: { status: 200 } },
+          { method: 'GET', url: '/readyz', expect: { status: 503, json: { status: 'not ready', mongo: true, redis: false } } },
+          { method: 'GET', url: '/healthz', expect: { status: 200 } },
+        ] },
+        { name: 'shutting down → not ready', steps: [
+          { method: 'POST', url: '/test/shutdown', expect: { status: 200 } },
+          { method: 'GET', url: '/readyz', expect: { status: 503 } },
+        ] },
+      ],
+      explain: '**Liveness** answers "should the container be restarted?" – it must not depend on the database, or a MongoDB outage would restart every API container in a loop. **Readiness** answers "may it receive traffic?". On SIGTERM, fail readiness first, finish in-flight requests, then close connections (graceful shutdown).',
+    },
+  ],
+};

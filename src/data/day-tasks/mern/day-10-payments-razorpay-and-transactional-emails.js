@@ -1,0 +1,107 @@
+export default {
+  lesson: 'day-10-payments-razorpay-and-transactional-emails',
+  minutes: 40,
+  intro: 'Practise the Razorpay flow: server-side amounts in paise, signature verification, idempotent webhooks, order states and reliable order emails.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Where must the **amount** for a Razorpay order be calculated?',
+      options: [
+        'In React, from the cart total, and sent to the API',
+        'On the server, from product prices in the database and the cart quantities',
+        'Razorpay calculates it automatically from the product names',
+        'In the webhook after the payment',
+      ],
+      answer: 1,
+      explain: 'Anything coming from the browser can be changed in DevTools: a user could pay ₹1 for a ₹79,900 phone. The client sends only **product ids and quantities**; the server loads prices from MongoDB, computes the total (in paise) and creates the Razorpay order.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 4,
+      q: 'Razorpay amounts are integers in **paise**. Write `toPaise(rupees)` that converts a rupee amount (may have 2 decimals) to an integer number of paise **without floating-point errors** (e.g. 19.99 × 100 = 1998.9999999999998 in JavaScript).',
+      example: { title: 'rounding to an integer', code: 'Math.round(2.5)   // 3\nMath.round(1998.9999999999998)   // 1999' },
+      starter: 'function toPaise(rupees) {\n  // TODO\n}\n',
+      solution: 'function toPaise(rupees) {\n  return Math.round(rupees * 100);\n}\n',
+      tests: [
+        { call: 'toPaise(499)', expect: 49900 },
+        { call: 'toPaise(19.99)', expect: 1999 },
+        { call: 'toPaise(0.1 + 0.2)', expect: 30 },
+        { call: 'toPaise(79900)', expect: 7990000 },
+      ],
+      explain: 'Floating-point numbers cannot represent most decimals exactly, so `19.99 * 100` is not exactly 1999. `Math.round` fixes it. Even better: store prices in **paise as integers** in MongoDB from the start and only format them as rupees in the UI.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: 'Build `POST /api/checkout` with body `{ items: [{ productId, qty }] }` (prices come from the server\'s `products` array, **ignore any price sent by the client**):\n- empty/missing items → **400** `{ error: \'Cart is empty\' }`\n- unknown product or qty not an integer ≥ 1 → **400** `{ error: \'Invalid cart item\' }`\n- qty more than stock → **409** `{ error: \'Out of stock: <name>\' }`\n- success → **201** `{ orderId: \'order_<n>\', amount, currency: \'INR\' }` where `amount` is the total in **paise** and n counts from 1',
+      example: { title: 'server-side total', code: "let total = 0;\nfor (const it of items) {\n  const p = products.find((x) => x.id === it.productId);\n  total += p.price * it.qty;\n}" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\n// prices in rupees\nconst products = [\n  { id: 1, name: 'Notebook', price: 60, stock: 100 },\n  { id: 2, name: 'Fountain Pen', price: 249.5, stock: 3 },\n];\nlet orderNo = 0;\n\n// TODO: POST /api/checkout\n\napp.listen(5000);\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst products = [\n  { id: 1, name: 'Notebook', price: 60, stock: 100 },\n  { id: 2, name: 'Fountain Pen', price: 249.5, stock: 3 },\n];\nlet orderNo = 0;\n\napp.post('/api/checkout', (req, res) => {\n  const items = (req.body || {}).items;\n  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Cart is empty' });\n  let amount = 0;\n  for (const it of items) {\n    const p = products.find((x) => x.id === it.productId);\n    if (!p || !Number.isInteger(it.qty) || it.qty < 1) return res.status(400).json({ error: 'Invalid cart item' });\n    if (it.qty > p.stock) return res.status(409).json({ error: 'Out of stock: ' + p.name });\n    amount += Math.round(p.price * 100) * it.qty;\n  }\n  orderNo += 1;\n  res.status(201).json({ orderId: 'order_' + orderNo, amount, currency: 'INR' });\n});\n\napp.listen(5000);\n",
+      tests: [
+        { name: 'amount from server prices, in paise', steps: [
+          { method: 'POST', url: '/api/checkout', body: { items: [{ productId: 1, qty: 2 }, { productId: 2, qty: 1, price: 1 }] }, expect: { status: 201, json: { orderId: 'order_1', amount: 36950, currency: 'INR' } } },
+        ] },
+        { name: 'empty and invalid carts', steps: [
+          { method: 'POST', url: '/api/checkout', body: { items: [] }, expect: { status: 400, json: { error: 'Cart is empty' } } },
+          { method: 'POST', url: '/api/checkout', body: { items: [{ productId: 9, qty: 1 }] }, expect: { status: 400, json: { error: 'Invalid cart item' } } },
+          { method: 'POST', url: '/api/checkout', body: { items: [{ productId: 1, qty: -2 }] }, expect: { status: 400 } },
+        ] },
+        { name: 'stock check → 409', steps: [
+          { method: 'POST', url: '/api/checkout', body: { items: [{ productId: 2, qty: 5 }] }, expect: { status: 409, json: { error: 'Out of stock: Fountain Pen' } } },
+        ] },
+      ],
+      explain: '2 × ₹60 + 1 × ₹249.50 = ₹369.50 = **36950 paise**; the fake `price: 1` from the client is ignored. Negative quantities are a classic exploit (they reduce the total), so validate `qty` as a positive integer. The real handler then calls `razorpay.orders.create({ amount, currency: \'INR\', receipt })` and saves a `pending` order.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: '**Idempotent webhook.** Razorpay may deliver the same event several times. `POST /api/webhooks/razorpay` with `{ id: eventId, event, orderId }` (signature already verified):\n- if this `eventId` was processed before → 200 `{ status: \'duplicate\' }` and change nothing\n- `event === \'payment.captured\'` → set the order to `paid` (only if it is `pending`) and push its id to `emails` (order-confirmation email queued once)\n- respond 200 `{ status: \'ok\' }`\n- `GET /api/orders/:id` → the order, `GET /api/emails` → the emails array',
+      example: { title: 'remembering processed ids', code: "const seen = new Set();\nif (seen.has(id)) return res.json({ status: 'duplicate' });\nseen.add(id);" },
+      starter: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst orders = [{ id: 'order_1', status: 'pending', amount: 36950 }];\nconst emails = [];\nconst processed = new Set();\n\n// TODO: webhook + GET routes\n\napp.listen(5000);\n",
+      solution: "const express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst orders = [{ id: 'order_1', status: 'pending', amount: 36950 }];\nconst emails = [];\nconst processed = new Set();\n\napp.post('/api/webhooks/razorpay', (req, res) => {\n  const { id, event, orderId } = req.body || {};\n  if (processed.has(id)) return res.json({ status: 'duplicate' });\n  processed.add(id);\n  if (event === 'payment.captured') {\n    const order = orders.find((o) => o.id === orderId);\n    if (order && order.status === 'pending') {\n      order.status = 'paid';\n      emails.push(order.id);\n    }\n  }\n  res.json({ status: 'ok' });\n});\n\napp.get('/api/orders/:id', (req, res) => {\n  const order = orders.find((o) => o.id === req.params.id);\n  if (!order) return res.status(404).json({ error: 'Order not found' });\n  res.json(order);\n});\napp.get('/api/emails', (req, res) => res.json(emails));\n\napp.listen(5000);\n",
+      tests: [
+        { name: 'payment.captured marks the order paid', steps: [
+          { method: 'POST', url: '/api/webhooks/razorpay', body: { id: 'evt_1', event: 'payment.captured', orderId: 'order_1' }, expect: { status: 200, json: { status: 'ok' } } },
+          { method: 'GET', url: '/api/orders/order_1', expect: { status: 200, json: { status: 'paid' } } },
+          { method: 'GET', url: '/api/emails', expect: { status: 200, json: ['order_1'] } },
+        ] },
+        { name: 'duplicate delivery is ignored', steps: [
+          { method: 'POST', url: '/api/webhooks/razorpay', body: { id: 'evt_1', event: 'payment.captured', orderId: 'order_1' }, expect: { status: 200 } },
+          { method: 'POST', url: '/api/webhooks/razorpay', body: { id: 'evt_1', event: 'payment.captured', orderId: 'order_1' }, expect: { status: 200, json: { status: 'duplicate' } } },
+          { method: 'GET', url: '/api/emails', expect: { status: 200, length: 1 } },
+        ] },
+        { name: 'a second event for a paid order sends no second email', steps: [
+          { method: 'POST', url: '/api/webhooks/razorpay', body: { id: 'evt_1', event: 'payment.captured', orderId: 'order_1' }, expect: { status: 200 } },
+          { method: 'POST', url: '/api/webhooks/razorpay', body: { id: 'evt_2', event: 'payment.captured', orderId: 'order_1' }, expect: { status: 200, json: { status: 'ok' } } },
+          { method: 'GET', url: '/api/emails', expect: { status: 200, length: 1 } },
+        ] },
+      ],
+      explain: 'Webhooks are delivered **at least once**, so handlers must be **idempotent**: store processed event ids (a unique index in MongoDB) and only move the order from `pending` to `paid` once. Respond 200 quickly and send the email from a queue (BullMQ) so a slow mail server never makes Razorpay retry.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Payment signature verification: which statements are TRUE? (choose all that apply)',
+      options: [
+        'The checkout signature is HMAC-SHA256 of "razorpay_order_id|razorpay_payment_id" with your key secret',
+        'Compare signatures with crypto.timingSafeEqual',
+        'The webhook signature (X-Razorpay-Signature) is computed over the RAW request body, so use express.raw() for that route',
+        'If the browser says "payment successful" you can mark the order paid without verification',
+        'The key secret may be shipped to React to verify there',
+      ],
+      answers: [0, 1, 2],
+      explain: 'Verify on the **server**: `createHmac(\'sha256\', secret).update(orderId + \'|\' + paymentId).digest(\'hex\')`. Webhooks are signed over the exact raw bytes, and `express.json()` would change them. The browser\'s success callback can be faked, and the secret must never leave the server.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Razorpay sends the webhook signature in which HTTP header? (type the header name)',
+      accept: ['X-Razorpay-Signature', 'x-razorpay-signature'],
+      explain: 'Read it with `req.get(\'x-razorpay-signature\')`, compute `HMAC_SHA256(rawBody, webhookSecret)` and compare in constant time. Reject (400) when it does not match – otherwise anyone could POST "payment.captured" to your endpoint and get free orders.',
+    },
+  ],
+};

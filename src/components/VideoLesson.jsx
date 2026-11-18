@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Maximize, Volume2, VolumeX, Captions, Download, ListVideo, RotateCcw } from 'lucide-react';
-import { buildScenes, totalSeconds, fmtTime, plain } from '../video/scenes.js';
+import { Play, Pause, SkipBack, SkipForward, Maximize, Volume2, VolumeX, Captions, Download, ListVideo, RotateCcw, Languages, Gauge } from 'lucide-react';
+import { buildScenes, totalSeconds, fmtTime } from '../video/scenes.js';
 import { drawFrame, W, H } from '../video/draw.js';
+import { LANGS } from '../video/i18n.js';
+import { translateTexts, cached, engineFor, prepareBuiltIn } from '../video/translate.js';
 
 const PREF_KEY = 'upskillr-video-prefs';
 
@@ -20,9 +22,9 @@ export function resolveColor(c) {
   } catch { return '#6366f1'; }
 }
 
-function sentencesOf(text) {
-  const parts = String(text).match(/[^.!?]+[.!?]*["')\]]*\s*/g) || [String(text)];
-  // merge very short parts, split very long ones (Chrome stops long utterances)
+// split text into speakable chunks (Chrome stops very long utterances)
+function chunks(text) {
+  const parts = String(text).match(/[^.!?।]+[.!?।]*["')\]]*\s*/g) || [String(text)];
   const out = [];
   parts.forEach((p) => {
     let s = p.trim();
@@ -35,18 +37,31 @@ function sentencesOf(text) {
     if (out.length && out[out.length - 1].length < 40) out[out.length - 1] += ` ${s}`;
     else out.push(s);
   });
-  return out.length ? out : [''];
+  return out;
 }
 
+const DEFAULT_PREFS = { speed: 1, voice: true, captions: true, lang: 'en', voices: {} };
 function loadPrefs() {
-  try { return { speed: 1, voice: true, captions: true, voiceName: '', ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') }; } catch { return { speed: 1, voice: true, captions: true, voiceName: '' }; }
+  try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') }; } catch { return DEFAULT_PREFS; }
+}
+
+// pick the best installed voice for a language
+function autoVoice(voices, lang) {
+  const order = LANGS.find((l) => l.id === lang)?.tts || ['en'];
+  for (const code of order) {
+    const list = voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(code.toLowerCase()));
+    if (list.length) return list.find((v) => /natural|online|neural/i.test(v.name)) || list.find((v) => /google/i.test(v.name)) || list[0];
+  }
+  return null;
 }
 
 /**
  * Props: topic, track (track object), label ("Day 11"), toolName, lessonKey
  */
 export default function VideoLesson({ topic, track, label, toolName, lessonKey }) {
-  const scenes = useMemo(() => buildScenes(topic, track, { toolName, label }), [topic, track, toolName, label]);
+  const [prefs, setPrefs] = useState(loadPrefs);
+  const lang = prefs.lang || 'en';
+  const scenes = useMemo(() => buildScenes(topic, track, { toolName, label, lang }), [topic, track, toolName, label, lang]);
   const total = useMemo(() => totalSeconds(scenes), [scenes]);
   const color = useMemo(() => resolveColor(track?.color), [track]);
   const chapters = useMemo(() => {
@@ -55,27 +70,28 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     return out;
   }, [scenes]);
 
-  const [prefs, setPrefs] = useState(loadPrefs);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [recording, setRecording] = useState(false);
   const [voices, setVoices] = useState([]);
   const [showList, setShowList] = useState(true);
+  const [engine, setEngine] = useState('none');
+  const [busy, setBusy] = useState('');
   const [, force] = useState(0);
 
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
-  const st = useRef({ elapsed: 0, last: 0, speaking: false, sent: 0, sents: [], token: 0 });
+  const st = useRef({ elapsed: 0, last: 0, speaking: false, unit: 0, units: [], token: 0, waiting: false, time: 0 });
   const recRef = useRef(null);
 
   const hasSpeech = typeof window !== 'undefined' && 'speechSynthesis' in window;
   const scene = scenes[Math.min(idx, scenes.length - 1)];
   const doneBefore = useMemo(() => scenes.slice(0, idx).reduce((a, s) => a + s.est, 0), [scenes, idx]);
+  const voice = useMemo(() => voices.find((v) => v.name === prefs.voices?.[lang]) || autoVoice(voices, lang), [voices, prefs.voices, lang]);
 
   useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch { /* ignore */ } }, [prefs]);
-
-  // reset when lesson changes
   useEffect(() => { setIdx(0); setPlaying(false); st.current.elapsed = 0; }, [lessonKey]);
+  useEffect(() => { let on = true; engineFor(lang).then((e) => on && setEngine(e)); return () => { on = false; }; }, [lang]);
 
   // voices
   useEffect(() => {
@@ -86,35 +102,69 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     return () => { window.speechSynthesis.removeEventListener?.('voiceschanged', load); window.speechSynthesis.cancel(); };
   }, [hasSpeech]);
 
+  // narration units of a scene in the current language: [{ text, part, item }]
+  const unitsOf = useCallback((sc) => {
+    const out = [];
+    sc.say.forEach((it, item) => {
+      const text = it.x && lang !== 'en' ? (cached(lang, it.t) || it.t) : it.t;
+      chunks(text).forEach((c) => out.push({ text: c, part: it.part, item }));
+    });
+    return out.length ? out : [{ text: '', item: 0 }];
+  }, [lang]);
+
+  const needsTranslation = useCallback((sc) => lang !== 'en' && sc.say.some((it) => it.x && !cached(lang, it.t)), [lang]);
+  const translateScene = useCallback((sc) => translateTexts(sc.say.filter((it) => it.x).map((it) => it.t), lang), [lang]);
+
   const stopSpeech = useCallback(() => {
     st.current.token += 1;
     st.current.speaking = false;
     if (hasSpeech) window.speechSynthesis.cancel();
   }, [hasSpeech]);
 
-  // speak the narration from sentence `from`
+  // speak the narration from unit `from`
   const speak = useCallback((sc, from = 0) => {
     const s = st.current;
-    s.sents = sentencesOf(sc.narration);
-    s.sent = from;
+    s.units = unitsOf(sc);
+    s.unit = Math.min(from, s.units.length - 1);
     if (!hasSpeech || !prefs.voice || recording) { s.speaking = false; return; }
     window.speechSynthesis.cancel();
     const token = ++s.token;
-    const voice = voices.find((v) => v.name === prefs.voiceName) || voices.find((v) => /en-IN/i.test(v.lang)) || voices.find((v) => /^en/i.test(v.lang));
-    const list = s.sents.slice(from);
+    const list = s.units.slice(s.unit);
     if (!list.length) { s.speaking = false; return; }
     s.speaking = true;
-    list.forEach((txt, k) => {
-      const u = new SpeechSynthesisUtterance(txt);
-      if (voice) u.voice = voice;
-      u.lang = voice?.lang || 'en-IN';
-      u.rate = Math.min(2, Math.max(0.6, prefs.speed));
-      u.onstart = () => { if (token === s.token) s.sent = from + k; };
-      u.onend = () => { if (token === s.token && k === list.length - 1) s.speaking = false; };
-      u.onerror = () => { if (token === s.token && k === list.length - 1) s.speaking = false; };
-      window.speechSynthesis.speak(u);
+    list.forEach((u, k) => {
+      const ut = new SpeechSynthesisUtterance(u.text);
+      if (voice) ut.voice = voice;
+      ut.lang = voice?.lang || (lang === 'en' ? 'en-IN' : `${lang}-IN`);
+      ut.rate = Math.min(2, Math.max(0.5, prefs.speed));
+      ut.onstart = () => { if (token === s.token) s.unit = from + k; };
+      const end = () => { if (token === s.token && k === list.length - 1) s.speaking = false; };
+      ut.onend = end;
+      ut.onerror = end;
+      window.speechSynthesis.speak(ut);
     });
-  }, [hasSpeech, prefs.voice, prefs.voiceName, prefs.speed, voices, recording]);
+  }, [hasSpeech, prefs.voice, prefs.speed, voice, lang, recording, unitsOf]);
+
+  // start a scene: translate first (if needed), then speak; prefetch the next scenes
+  const startScene = useCallback((sc, from = 0) => {
+    const s = st.current;
+    const token = ++s.token;
+    if (needsTranslation(sc)) {
+      s.waiting = true;
+      setBusy('translating');
+      // never block the video for long: after 10 s continue (content in English for this slide)
+      Promise.race([translateScene(sc).catch(() => {}), new Promise((r) => setTimeout(r, 10000))]).then(() => {
+        if (token !== s.token) return;
+        s.waiting = false;
+        setBusy('');
+        speak(sc, from);
+      });
+    } else {
+      s.waiting = false;
+      speak(sc, from);
+    }
+    if (lang !== 'en') scenes.slice(sc.index + 1, sc.index + 3).forEach((n) => { if (needsTranslation(n)) translateScene(n); });
+  }, [needsTranslation, translateScene, speak, lang, scenes]);
 
   const render = useCallback(() => {
     const cv = canvasRef.current;
@@ -122,24 +172,31 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     const ctx = cv.getContext('2d');
     const s = st.current;
     const p = Math.min(1, s.elapsed / scene.est);
-    let cap = '';
-    if (prefs.captions || recording) {
-      const sents = s.sents.length ? s.sents : sentencesOf(scene.narration);
-      const i = prefs.voice && hasSpeech && !recording && s.speaking ? s.sent : Math.min(sents.length - 1, Math.floor(p * sents.length));
-      cap = plain(sents[Math.max(0, i)] || '');
+    const units = s.units.length ? s.units : unitsOf(scene);
+    const narrating = prefs.voice && hasSpeech && !recording && s.speaking;
+    const ui = narrating ? s.unit : Math.min(units.length - 1, Math.floor(p * units.length));
+    const cur = units[Math.max(0, ui)] || {};
+    // which code part is being explained (walkthrough)
+    let part;
+    if (scene.type === 'walk') {
+      for (let k = Math.max(0, ui); k >= 0; k -= 1) if (units[k]?.part != null) { part = units[k].part; break; }
+      if (part == null) part = 0;
     }
+    const partText = scene.type === 'walk' ? scene.parts.map((pt) => (pt.translate && lang !== 'en' ? cached(lang, pt.say) || pt.say : pt.say)) : null;
     drawFrame(ctx, scene, p, {
       color, course: track?.name || '', label, title: topic.title, index: idx, total: scenes.length,
-      globalProgress: (doneBefore + Math.min(s.elapsed, scene.est)) / total, caption: cap,
+      globalProgress: (doneBefore + Math.min(s.elapsed, scene.est)) / total,
+      caption: prefs.captions || recording ? cur.text || '' : '',
+      time: s.time, part, partText,
     });
-  }, [scene, prefs.captions, prefs.voice, recording, hasSpeech, color, track, label, topic.title, idx, scenes.length, doneBefore, total]);
+  }, [scene, prefs.captions, prefs.voice, recording, hasSpeech, color, track, label, topic.title, idx, scenes.length, doneBefore, total, unitsOf, lang]);
 
-  // start narration when scene changes while playing
+  // scene change
   useEffect(() => {
     st.current.elapsed = 0;
-    st.current.sents = sentencesOf(scene?.narration || '');
-    st.current.sent = 0;
-    if (playing && scene) speak(scene, 0);
+    st.current.units = scene ? unitsOf(scene) : [];
+    st.current.unit = 0;
+    if (playing && scene) startScene(scene, 0);
     render();
   }, [idx, scene]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -152,11 +209,12 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
       const s = st.current;
       const dt = Math.min(0.1, (now - s.last) / 1000);
       s.last = now;
-      s.elapsed += dt * prefs.speed;
+      s.time += dt;
+      if (!s.waiting) s.elapsed += dt * prefs.speed;
       render();
-      if (now - (s.uiAt || 0) > 250) { s.uiAt = now; force((x) => x + 1); } // refresh time / seek bar
+      if (now - (s.uiAt || 0) > 250) { s.uiAt = now; force((x) => x + 1); }
       const narrating = prefs.voice && hasSpeech && !recording && s.speaking;
-      if (s.elapsed >= scene.est && !narrating) {
+      if (!s.waiting && s.elapsed >= scene.est && !narrating) {
         if (idx < scenes.length - 1) { setIdx(idx + 1); return; }
         setPlaying(false);
         stopSpeech();
@@ -171,17 +229,28 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
 
   const play = () => {
     if (idx === scenes.length - 1 && st.current.elapsed >= scene.est) { setIdx(0); st.current.elapsed = 0; }
+    if (lang !== 'en') prepareBuiltIn(lang); // user gesture → allows the on-device model download
     setPlaying(true);
-    const s = st.current;
-    speak(scene, s.sents.length ? Math.min(s.sent, s.sents.length - 1) : 0);
+    startScene(scene, st.current.unit || 0);
   };
-  const pause = () => { setPlaying(false); stopSpeech(); };
+  const pause = () => { setPlaying(false); stopSpeech(); setBusy(''); };
   const toggle = () => (playing ? pause() : play());
   const go = (i) => {
     const n = Math.max(0, Math.min(scenes.length - 1, i));
     stopSpeech();
     st.current.elapsed = 0;
-    if (n === idx) { if (playing) speak(scene, 0); render(); force((x) => x + 1); } else setIdx(n);
+    st.current.unit = 0;
+    if (n === idx) { if (playing) startScene(scene, 0); render(); force((x) => x + 1); } else setIdx(n);
+  };
+
+  const restartSpeech = () => { if (playing) { stopSpeech(); setTimeout(() => startScene(scene, st.current.unit), 0); } };
+  const setLang = (l) => {
+    stopSpeech();
+    if (l !== 'en') prepareBuiltIn(l, (x) => setBusy(x < 1 ? `downloading ${Math.round(x * 100)}%` : ''));
+    setPrefs({ ...prefs, lang: l });
+    st.current.elapsed = 0;
+    st.current.unit = 0;
+    // scenes are rebuilt for the new language; the scene effect restarts the narration
   };
 
   // keyboard
@@ -197,7 +266,6 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  // stop speech when unmounting
   useEffect(() => () => { if (hasSpeech) window.speechSynthesis.cancel(); }, [hasSpeech]);
 
   const fullscreen = () => {
@@ -211,15 +279,15 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     if (!cv?.captureStream || typeof MediaRecorder === 'undefined') { alert('Your browser cannot record video. Please use Chrome, Edge or Firefox.'); return; }
     const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find((m) => MediaRecorder.isTypeSupported?.(m));
     const rec = new MediaRecorder(cv.captureStream(30), mime ? { mimeType: mime, videoBitsPerSecond: 4_000_000 } : undefined);
-    const chunks = [];
-    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    const parts = [];
+    rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
     rec.onstop = () => {
       recRef.current = null;
       setRecording(false);
-      const blob = new Blob(chunks, { type: rec.mimeType || 'video/webm' });
+      const blob = new Blob(parts, { type: rec.mimeType || 'video/webm' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `UpSkillr-${(track?.short || 'course').replace(/\W+/g, '-')}-${(label || topic.id).replace(/\W+/g, '-')}.${/mp4/.test(rec.mimeType) ? 'mp4' : 'webm'}`;
+      a.download = `UpSkillr-${(track?.short || 'course').replace(/\W+/g, '-')}-${(label || topic.id).replace(/\W+/g, '-')}-${lang}.${/mp4/.test(rec.mimeType) ? 'mp4' : 'webm'}`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     };
@@ -246,9 +314,23 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     }
   };
 
+  const langVoices = voices.filter((v) => (LANGS.find((l) => l.id === lang)?.tts || []).some((c) => v.lang.toLowerCase().startsWith(c.toLowerCase())));
+  const exactVoice = voice && voice.lang.toLowerCase().startsWith(lang);
+  const engineNote = lang === 'en' ? null
+    : engine === 'builtin' ? '✓ Lesson content is translated on your device (free, built into your browser).'
+      : engine === 'claude' ? '✓ Lesson content is translated with your Claude API key (from the AI tools).'
+        : '⚠ Your browser cannot translate. Intro, steps and code explanations are in this language; the lesson content is spoken in English. Use the latest Chrome or Edge, or add your Claude API key in the AI Lab.';
+
   return (
     <div className="vl" ref={wrapRef}>
       <div className="vl-main">
+        <div className="vl-langbar">
+          <Languages size={16} />
+          {LANGS.map((l) => (
+            <button key={l.id} className={`vl-lang ${lang === l.id ? 'on' : ''}`} onClick={() => setLang(l.id)}>{l.label}</button>
+          ))}
+          {busy && <span className="vl-busy">{busy.startsWith('down') ? `⬇ Language model ${busy}` : '⏳ Translating…'}</span>}
+        </div>
         <div className="vl-stage" onClick={toggle}>
           <canvas ref={canvasRef} width={W} height={H} />
           {!playing && !recording && (
@@ -271,10 +353,14 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
           <span className="vl-time">{fmtTime(elapsedTotal)} / {fmtTime(total)}</span>
           <span className="vl-chap">{curChapter?.name}</span>
           <span className="vl-spacer" />
-          <select value={prefs.speed} onChange={(e) => { const v = Number(e.target.value); setPrefs({ ...prefs, speed: v }); if (playing) { stopSpeech(); setTimeout(() => speak(scene, st.current.sent), 0); } }} title="Speed">
-            {[0.75, 1, 1.25, 1.5, 2].map((v) => <option key={v} value={v}>{v}x</option>)}
-          </select>
-          <button className={`vl-btn ${prefs.voice ? 'on' : ''}`} disabled={!hasSpeech} onClick={() => { const v = !prefs.voice; setPrefs({ ...prefs, voice: v }); if (!v) stopSpeech(); else if (playing) speak(scene, st.current.sent); }} title={hasSpeech ? 'Voice narration' : 'Your browser has no text-to-speech'}>
+          <label className="vl-speed" title="Speed">
+            <Gauge size={16} />
+            <input type="range" min="0.5" max="2" step="0.05" value={prefs.speed}
+              onChange={(e) => setPrefs({ ...prefs, speed: Number(e.target.value) })}
+              onMouseUp={restartSpeech} onTouchEnd={restartSpeech} onKeyUp={restartSpeech} />
+            <b>{prefs.speed.toFixed(2).replace(/0$/, '')}x</b>
+          </label>
+          <button className={`vl-btn ${prefs.voice ? 'on' : ''}`} disabled={!hasSpeech} onClick={() => { const v = !prefs.voice; setPrefs({ ...prefs, voice: v }); if (!v) stopSpeech(); else if (playing) startScene(scene, st.current.unit); }} title={hasSpeech ? 'Voice narration' : 'Your browser has no text-to-speech'}>
             {prefs.voice ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
           <button className={`vl-btn ${prefs.captions ? 'on' : ''}`} onClick={() => setPrefs({ ...prefs, captions: !prefs.captions })} title="Subtitles"><Captions size={18} /></button>
@@ -282,24 +368,39 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
           <button className="vl-btn" onClick={fullscreen} title="Full screen"><Maximize size={18} /></button>
         </div>
         <div className="vl-extra">
-          {hasSpeech && voices.length > 0 && (
+          {[0.75, 1, 1.25, 1.5].map((v) => (
+            <button key={v} className={`chip ${Math.abs(prefs.speed - v) < 0.01 ? 'active' : ''}`} onClick={() => { setPrefs({ ...prefs, speed: v }); restartSpeech(); }}>{v}x</button>
+          ))}
+          {hasSpeech && (
             <label>🎙 Voice{' '}
-              <select value={prefs.voiceName} onChange={(e) => { setPrefs({ ...prefs, voiceName: e.target.value }); if (playing) { stopSpeech(); setTimeout(() => speak(scene, st.current.sent), 0); } }}>
-                <option value="">Auto (English – India)</option>
-                {voices.map((v) => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
+              <select value={prefs.voices?.[lang] || ''} onChange={(e) => { setPrefs({ ...prefs, voices: { ...(prefs.voices || {}), [lang]: e.target.value } }); restartSpeech(); }}>
+                <option value="">Auto {voice ? `(${voice.name})` : ''}</option>
+                {langVoices.map((v) => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
               </select>
             </label>
           )}
           {recording
             ? <button className="btn small" onClick={cancelRecord}>■ Stop recording &amp; save</button>
             : <button className="btn small" onClick={record} title="Plays the whole video once and saves it as a video file"><Download size={14} /> Download video</button>}
-          <span className="muted small">Shortcuts: Space = play/pause, ← → = previous/next slide</span>
         </div>
-        {recording && <p className="muted small vl-note">Recording… the video plays once from the start and downloads automatically at the end (subtitles are burned in; browser voice cannot be recorded).</p>}
+        {(engineNote || (hasSpeech && voices.length > 0 && !exactVoice)) && (
+          <div className="vl-notes">
+            {engineNote && <p className="muted small">{engineNote}</p>}
+            {hasSpeech && voices.length > 0 && !exactVoice && (
+              <p className="muted small">
+                {voice
+                  ? `⚠ No ${LANGS.find((l) => l.id === lang)?.label} voice is installed, so “${voice.name}” is used. `
+                  : '⚠ No voice for this language is installed, subtitles are shown instead. '}
+                Microsoft Edge has natural Indian voices for English, Hindi and Marathi (e.g. Neerja, Swara, Aarohi). On Windows you can also add them in Settings → Time &amp; language → Speech.
+              </p>
+            )}
+          </div>
+        )}
+        <p className="muted small vl-note">Shortcuts: Space = play/pause, ← → = previous/next slide.{recording ? ' Recording… the video plays once and downloads automatically at the end (subtitles are burned in; the browser voice cannot be recorded).' : ''}</p>
       </div>
       {showList && (
         <aside className="vl-list">
-          <h4>Chapters · {scenes.length} slides · {fmtTime(total)}</h4>
+          <h4>{scenes.length} slides · {fmtTime(total)}</h4>
           <ol>
             {chapters.map((c, i) => {
               const end = chapters[i + 1]?.start ?? scenes.length;

@@ -7,7 +7,7 @@ const C = {
   text: '#e8ecf8', muted: '#94a3c4', accent: '#22d3ee', accent2: '#6366f1', yellow: '#fde047', green: '#34d399', red: '#f87171',
   code: '#1e1e2e', codeText: '#d4d4d4',
 };
-const FONT = '"Inter", "Segoe UI", system-ui, -apple-system, sans-serif';
+const FONT = '"Inter", "Segoe UI", "Noto Sans Devanagari", "Nirmala UI", Mangal, system-ui, -apple-system, sans-serif';
 const MONO = '"JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace';
 
 const ease = (x) => 1 - (1 - Math.min(1, Math.max(0, x))) ** 3;
@@ -173,7 +173,7 @@ function hlLine(line) {
 }
 
 // code editor window; `chars` = how many characters are typed so far
-function drawEditor(ctx, x, y, w, h, { code, chars = Infinity, title = 'code', tool = '', runState = 0 }) {
+function drawEditor(ctx, x, y, w, h, { code, chars = Infinity, title = 'code', tool = '', runState = 0, focus = null, color = '#22d3ee' }) {
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,.45)';
   ctx.shadowBlur = 30;
@@ -224,12 +224,31 @@ function drawEditor(ctx, x, y, w, h, { code, chars = Infinity, title = 'code', t
     }
   });
   const visible = Math.floor((h - 60) / lh);
-  const start = Math.max(0, all.length - visible);
+  let start = Math.max(0, all.length - visible);
+  let fRows = null;
+  if (focus) {
+    let lineNo = 0;
+    const rowsLine = all.map((r) => { if (r.num !== '') lineNo = r.num; return lineNo - 1; });
+    const f0 = Math.max(0, rowsLine.indexOf(focus[0]));
+    const f1 = Math.max(f0, rowsLine.lastIndexOf(focus[1]));
+    fRows = [f0, f1];
+    start = Math.max(0, Math.min(all.length - visible, f0 - 2));
+  }
   ctx.beginPath();
   ctx.rect(x, y + 44, w, h - 46);
   ctx.clip();
+  if (fRows) {
+    const ry0 = y + 62 + (fRows[0] - start) * lh - lh / 2 - 2;
+    const rh = (fRows[1] - fRows[0] + 1) * lh + 4;
+    ctx.fillStyle = `${color}2e`;
+    ctx.fillRect(x + 4, ry0, w - 8, rh);
+    ctx.fillStyle = color;
+    ctx.fillRect(x + 4, ry0, 4, rh);
+  }
   all.slice(start).forEach(({ text: ln, num }, i) => {
     const ly = y + 62 + i * lh;
+    const dim = fRows && (start + i < fRows[0] || start + i > fRows[1]);
+    ctx.globalAlpha = dim ? 0.35 : 1;
     ctx.font = `400 ${fs - 2}px ${MONO}`;
     ctx.fillStyle = '#5a5a72';
     ctx.textAlign = 'right';
@@ -242,6 +261,7 @@ function drawEditor(ctx, x, y, w, h, { code, chars = Infinity, title = 'code', t
       ctx.fillText(t, cx, ly);
       cx += ctx.measureText(t).width;
     });
+    ctx.globalAlpha = 1;
     if (i === all.length - 1 - start && chars < code.length) {
       ctx.fillStyle = C.accent;
       ctx.fillRect(cx + 1, ly - 9, 2, 18);
@@ -302,6 +322,17 @@ function chrome(ctx, meta) {
   rg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg;
   ctx.fillRect(0, 0, W, H);
+  // floating shapes (animated)
+  const tm = meta.time || 0;
+  for (let k = 0; k < 7; k += 1) {
+    const r = 40 + ((k * 37) % 90);
+    const span = W + 2 * r;
+    const bx = ((((k * 211 + tm * (8 + k * 2) * (k % 2 ? 1 : -1)) % span) + span) % span) - r;
+    const by = 110 + ((k * 97) % 480) + Math.sin(tm * 0.4 + k) * 24;
+    ctx.fillStyle = k % 3 === 0 ? `${meta.color}14` : k % 3 === 1 ? 'rgba(34,211,238,.05)' : 'rgba(99,102,241,.06)';
+    if (k % 2) { ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill(); }
+    else { ctx.save(); ctx.translate(bx, by); ctx.rotate(tm * 0.1 + k); rr(ctx, -r * 0.7, -r * 0.7, r * 1.4, r * 1.4, r * 0.3); ctx.fill(); ctx.restore(); }
+  }
   // subtle grid
   ctx.strokeStyle = 'rgba(255,255,255,.025)';
   ctx.lineWidth = 1;
@@ -424,7 +455,9 @@ function sBullets(ctx, s, p, meta) {
   const items = s.items || [];
   const avail = BODY_BOTTOM - y;
   const joined = items.join('\n');
-  const size = fitSize(ctx, joined, W - 200, avail - items.length * 14, 27, 16, 1.38);
+  const artW = s.art ? 280 : 0;
+  if (s.art) drawArt(ctx, s.art, W - 170, (y + BODY_BOTTOM) / 2, 190, meta.color, meta.time);
+  const size = fitSize(ctx, joined, W - 200 - artW, avail - items.length * 14, 27, 16, 1.38);
   items.forEach((it, i) => {
     const appear = s.reveal ? clamp01((p * 1.15 - (i / Math.max(1, items.length)) * 0.85) * items.length * 1.2) : 1;
     if (appear <= 0) return;
@@ -441,7 +474,7 @@ function sBullets(ctx, s, p, meta) {
     } else {
       rr(ctx, 70, y + size * 0.62 - 6, 12, 12, 3); ctx.fill();
     }
-    const h = drawRich(ctx, it, 110, y, W - 200, size, { lh: 1.38 });
+    const h = drawRich(ctx, it, 110, y, W - 200 - artW, size, { lh: 1.38 });
     ctx.restore();
     y += h + 14;
   });
@@ -450,13 +483,15 @@ function sBullets(ctx, s, p, meta) {
 function sText(ctx, s, p, meta) {
   const y = heading(ctx, s.heading, BODY_TOP + 8, { color: meta.color, size: 34 });
   const avail = BODY_BOTTOM - y;
-  const size = fitSize(ctx, s.body, W - 140, avail, 28, 16, 1.5);
+  const artW = s.art ? 280 : 0;
+  if (s.art) drawArt(ctx, s.art, W - 170, (y + BODY_BOTTOM) / 2, 190, meta.color, meta.time);
+  const size = fitSize(ctx, s.body, W - 140 - artW, avail, 28, 16, 1.5);
   // reveal paragraph by paragraph
   const paras = s.body.split(/\n{2,}/);
   let yy = y;
   paras.forEach((para, i) => {
     const a = ease(clamp01(p * paras.length * 1.6 - i * 1.0 + 0.6));
-    yy += drawRich(ctx, para, 70, yy, W - 140, size, { lh: 1.5, alpha: a }) + size * 0.5;
+    yy += drawRich(ctx, para, 70, yy, W - 140 - artW, size, { lh: 1.5, alpha: a }) + size * 0.5;
   });
 }
 
@@ -484,19 +519,16 @@ function sTip(ctx, s, p, meta) {
   ctx.font = `700 30px ${FONT}`;
   ctx.fillStyle = C.yellow;
   ctx.textBaseline = 'middle';
-  ctx.fillText('💡  Pro Tip', bx + 36, by + 50);
+  ctx.fillText(`💡  ${s.L?.proTip || 'Pro Tip'}`, bx + 36, by + 50);
   drawRich(ctx, s.body, bx + 36, by + 90, bw - 72, size, { lh: 1.5 });
   ctx.restore();
   void meta;
 }
 
-function sHowto(ctx, s, p, meta) {
-  sBullets(ctx, { ...s, heading: `Practical: practise in the ${s.toolName}`, kicker: 'Hands-on', numbered: true, reveal: true }, p, meta);
-}
 
 // tool window demo: type code -> move cursor -> click Run -> output
 function sPractical(ctx, s, p, meta) {
-  const y = heading(ctx, s.title, BODY_TOP + 4, { kicker: `Live demo · ${s.toolName}`, color: meta.color, size: 28 });
+  const y = heading(ctx, s.title, BODY_TOP + 4, { kicker: s.kicker || `Live demo · ${s.toolName}`, color: meta.color, size: 28 });
   const top = y - 6;
   const hgt = BODY_BOTTOM - top + 18;
   const edW = s.output || s.requests ? 700 : W - 120;
@@ -517,7 +549,7 @@ function sPractical(ctx, s, p, meta) {
     ctx.font = `700 15px ${FONT}`;
     ctx.fillStyle = C.muted;
     ctx.textBaseline = 'middle';
-    ctx.fillText(s.requests ? '⇄  RESPONSE' : '▣  OUTPUT', ox + 18, top + 22);
+    ctx.fillText(s.requests ? `⇄  ${s.L?.response || 'RESPONSE'}` : `▣  ${s.L?.output || 'OUTPUT'}`, ox + 18, top + 22);
     ctx.fillStyle = C.line;
     ctx.fillRect(ox, top + 42, ow, 1);
     if (clicked) {
@@ -543,7 +575,7 @@ function sPractical(ctx, s, p, meta) {
     } else {
       ctx.font = `italic 400 15px ${FONT}`;
       ctx.fillStyle = '#5b6787';
-      ctx.fillText(chars < s.code.length ? 'Typing the code…' : 'Click ▶ Run to see the output', ox + 18, top + 70);
+      ctx.fillText(chars < s.code.length ? (s.L?.typing || 'Typing the code…') : (s.L?.clickRun || 'Click ▶ Run to see the output'), ox + 18, top + 70);
     }
     ctx.restore();
   }
@@ -557,9 +589,9 @@ function sPractical(ctx, s, p, meta) {
 }
 
 function sPractice(ctx, s, p, meta) {
-  let y = heading(ctx, s.task, BODY_TOP + 8, { kicker: `Practice task ${s.n}`, color: meta.color, size: 28 });
+  let y = heading(ctx, s.task, BODY_TOP + 8, { kicker: `${s.L?.practiceTask || 'Practice task'} ${s.n}`, color: meta.color, size: 28 });
   if (s.hint) {
-    y += drawRich(ctx, `💡 Hint: ${s.hint}`, 60, y - 4, W - 120, 20, { color: C.muted, maxLines: 2 }) + 12;
+    y += drawRich(ctx, `💡 ${s.L?.hint || 'Hint'}: ${s.hint}`, 60, y - 4, W - 120, 20, { color: C.muted, maxLines: 2 }) + 12;
   }
   const pauseEnd = 0.38;
   if (p < pauseEnd) {
@@ -578,20 +610,20 @@ function sPractice(ctx, s, p, meta) {
     ctx.textBaseline = 'middle';
     ctx.fillText('⏸', cx, cy);
     ctx.font = `600 22px ${FONT}`;
-    ctx.fillText(`Pause the video and try it in the ${s.toolName}`, cx, cy + 110);
+    ctx.fillText(s.L?.pauseTry ? s.L.pauseTry(s.toolName) : `Pause the video and try it in the ${s.toolName}`, cx, cy + 110);
     ctx.restore();
   } else {
     ctx.font = `700 16px ${FONT}`;
     ctx.fillStyle = C.green;
     ctx.textBaseline = 'middle';
-    ctx.fillText('✔ SOLUTION', 60, y + 4);
+    ctx.fillText(`✔ ${s.L?.solution || 'SOLUTION'}`, 60, y + 4);
     const chars = Math.floor(s.solution.length * clamp01((p - pauseEnd) / 0.4));
     drawEditor(ctx, 60, y + 20, W - 120, BODY_BOTTOM - y - 4, { code: s.solution, chars, title: 'solution', tool: s.toolName });
   }
 }
 
 function sQa(ctx, s, p, meta) {
-  const y = heading(ctx, s.q, BODY_TOP + 8, { kicker: `Interview question ${s.n}/${s.total}`, color: meta.color, size: 30 });
+  const y = heading(ctx, s.q, BODY_TOP + 8, { kicker: `${s.L?.interviewQ || 'Interview question'} ${s.n}/${s.total}`, color: meta.color, size: 30 });
   const a = ease(clamp01((p - 0.18) * 3));
   ctx.save();
   ctx.globalAlpha = a;
@@ -605,9 +637,11 @@ function sQa(ctx, s, p, meta) {
   ctx.font = `700 16px ${FONT}`;
   ctx.fillStyle = C.green;
   ctx.textBaseline = 'middle';
-  ctx.fillText('ANSWER', 88, y + 28);
+  ctx.fillText(s.L?.answer || 'ANSWER', 88, y + 28);
   drawRich(ctx, s.a, 88, y + 50, W - 176, size, { lh: 1.5 });
   ctx.restore();
+  const free = BODY_BOTTOM - (y + boxH);
+  if (free > 150) drawArt(ctx, 'chat', W / 2, y + boxH + free / 2 + 10, Math.min(170, free - 20), meta.color, meta.time);
 }
 
 function sOutro(ctx, s, p, meta) {
@@ -615,15 +649,17 @@ function sOutro(ctx, s, p, meta) {
   ctx.save();
   ctx.globalAlpha = a;
   drawLogo(ctx, W / 2 - 50, 100, 100);
+  drawArt(ctx, 'trophy', 190, 430, 150, meta.color, meta.time);
+  drawArt(ctx, 'check', W - 190, 430, 140, meta.color, (meta.time || 0) + 1);
   ctx.textAlign = 'center';
   ctx.font = `800 40px ${FONT}`;
   ctx.fillStyle = '#fff';
   ctx.textBaseline = 'middle';
-  ctx.fillText('🎉 Well done!', W / 2, 250);
+  ctx.fillText(`🎉 ${s.L?.wellDone || 'Well done!'}`, W / 2, 250);
   ctx.font = `500 22px ${FONT}`;
   ctx.fillStyle = C.muted;
   const t = s.title.length > 90 ? `${s.title.slice(0, 90)}…` : s.title;
-  ctx.fillText(`You completed: ${t}`, W / 2, 296);
+  ctx.fillText(`${s.L?.completed || 'You completed'}: ${t}`, W / 2, 296);
   ctx.textAlign = 'left';
   (s.items || []).forEach((it, i) => {
     const b = ease(clamp01(p * 3 - 0.5 - i * 0.25));
@@ -644,11 +680,237 @@ function sOutro(ctx, s, p, meta) {
   ctx.textAlign = 'center';
   ctx.font = `600 18px ${FONT}`;
   ctx.fillStyle = C.accent;
-  ctx.fillText('UpSkillr  ·  Learn any tech, one day at a time', W / 2, 590);
+  ctx.fillText(`UpSkillr  ·  ${s.L?.tagline || 'Learn any tech, one day at a time'}`, W / 2, 590);
   ctx.restore();
 }
 
-const DRAW = { intro: sIntro, bullets: sBullets, text: sText, code: sCode, tip: sTip, howto: sHowto, practical: sPractical, practice: sPractice, qa: sQa, outro: sOutro };
+
+// ---------- illustrations ----------
+export function drawArt(ctx, kind, cx, cy, size, color, t = 0) {
+  const s = size / 100;
+  ctx.save();
+  ctx.translate(cx, cy + Math.sin(t * 1.2) * 6);
+  ctx.scale(s, s);
+  const g = ctx.createLinearGradient(-50, -50, 50, 50);
+  g.addColorStop(0, color);
+  g.addColorStop(1, '#22d3ee');
+  const halo = ctx.createRadialGradient(0, 0, 10, 0, 0, 90);
+  halo.addColorStop(0, `${color}44`);
+  halo.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(0, 0, 90, 0, 7); ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = g;
+  if (kind === 'book') {
+    ctx.beginPath(); ctx.moveTo(0, -30); ctx.quadraticCurveTo(-25, -42, -55, -34); ctx.lineTo(-55, 34); ctx.quadraticCurveTo(-25, 26, 0, 38); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -30); ctx.quadraticCurveTo(25, -42, 55, -34); ctx.lineTo(55, 34); ctx.quadraticCurveTo(25, 26, 0, 38); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 0.7;
+    [-14, -2, 10].forEach((y) => { ctx.beginPath(); ctx.moveTo(-44, y); ctx.lineTo(-12, y + 3); ctx.stroke(); ctx.beginPath(); ctx.moveTo(12, y + 3); ctx.lineTo(44, y); ctx.stroke(); });
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fde047';
+    const sp = 0.6 + 0.4 * Math.sin(t * 3);
+    ctx.save(); ctx.translate(40, -52); ctx.scale(sp, sp); ctx.beginPath();
+    for (let i = 0; i < 8; i += 1) { const a = (i * Math.PI) / 4; const r = i % 2 ? 4 : 13; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+    ctx.fill(); ctx.restore();
+  } else if (kind === 'target') {
+    [44, 30, 16].forEach((r, i) => { ctx.fillStyle = i % 2 ? '#fff' : g; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); });
+    const k = Math.min(1, (t % 3) / 0.6);
+    ctx.save(); ctx.translate(60 - 60 * k, -60 + 60 * k); ctx.strokeStyle = '#fde047'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(34, -34); ctx.stroke();
+    ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(4, -16); ctx.lineTo(16, -4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  } else if (kind === 'bulb') {
+    const glow = 0.5 + 0.5 * Math.sin(t * 2.5);
+    ctx.fillStyle = `rgba(253,224,71,${0.25 + glow * 0.35})`;
+    ctx.beginPath(); ctx.arc(0, -12, 58, 0, 7); ctx.fill();
+    ctx.fillStyle = '#fde047';
+    ctx.beginPath(); ctx.arc(0, -14, 34, Math.PI * 0.8, Math.PI * 2.2); ctx.lineTo(14, 26); ctx.lineTo(-14, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#94a3b8'; rr(ctx, -15, 30, 30, 16, 4); ctx.fill();
+    ctx.strokeStyle = '#fde047';
+    for (let i = 0; i < 5; i += 1) { const a = Math.PI * (1.1 + i * 0.2); ctx.beginPath(); ctx.moveTo(Math.cos(a) * 52, -14 + Math.sin(a) * 52); ctx.lineTo(Math.cos(a) * (64 + glow * 6), -14 + Math.sin(a) * (64 + glow * 6)); ctx.stroke(); }
+  } else if (kind === 'chat') {
+    ctx.fillStyle = g; rr(ctx, -60, -46, 84, 56, 14); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-40, 10); ctx.lineTo(-48, 28); ctx.lineTo(-24, 10); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `800 34px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', -18, -18);
+    ctx.fillStyle = '#34d399'; rr(ctx, -6, 0, 70, 46, 14); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    [0, 1, 2].forEach((i) => { ctx.globalAlpha = 0.4 + 0.6 * Math.max(0, Math.sin(t * 4 - i)); ctx.beginPath(); ctx.arc(14 + i * 15, 23, 5, 0, 7); ctx.fill(); });
+    ctx.globalAlpha = 1;
+  } else if (kind === 'laptop') {
+    ctx.fillStyle = g; rr(ctx, -50, -40, 100, 64, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0b1020'; rr(ctx, -42, -32, 84, 48, 4); ctx.fill();
+    ctx.fillStyle = '#34d399'; ctx.font = `700 16px ${MONO}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.fillText('</>', -36, -16);
+    ctx.fillStyle = '#fde047'; ctx.fillRect(-36, 2, 20 + ((t * 30) % 40), 4);
+    ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.moveTo(-62, 28); ctx.lineTo(62, 28); ctx.lineTo(54, 40); ctx.lineTo(-54, 40); ctx.closePath(); ctx.fill();
+  } else if (kind === 'keyboard') {
+    ctx.fillStyle = g; rr(ctx, -56, -26, 112, 52, 10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    for (let r = 0; r < 3; r += 1) for (let c = 0; c < 7; c += 1) {
+      const on = Math.floor(t * 6) % 21 === r * 7 + c;
+      ctx.globalAlpha = on ? 1 : 0.55; rr(ctx, -48 + c * 14, -18 + r * 13, 10, 9, 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (kind === 'play') {
+    ctx.fillStyle = '#16a34a'; ctx.beginPath(); ctx.arc(0, 0, 46, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(-14, -22); ctx.lineTo(24, 0); ctx.lineTo(-14, 22); ctx.closePath(); ctx.fill();
+  } else if (kind === 'check') {
+    ctx.fillStyle = g; rr(ctx, -44, -50, 88, 100, 10); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.globalAlpha = 0.6;
+    [-28, -12, 4].forEach((y) => { ctx.beginPath(); ctx.moveTo(-28, y); ctx.lineTo(28, y); ctx.stroke(); });
+    ctx.globalAlpha = 1; ctx.strokeStyle = '#34d399'; ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(-18, 26); ctx.lineTo(-4, 38); ctx.lineTo(24, 12); ctx.stroke();
+  } else if (kind === 'trophy') {
+    ctx.fillStyle = '#fde047';
+    ctx.beginPath(); ctx.moveTo(-34, -44); ctx.lineTo(34, -44); ctx.quadraticCurveTo(34, 10, 0, 16); ctx.quadraticCurveTo(-34, 10, -34, -44); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#fde047'; ctx.beginPath(); ctx.arc(-38, -26, 14, Math.PI * 0.5, Math.PI * 1.5); ctx.stroke(); ctx.beginPath(); ctx.arc(38, -26, 14, -Math.PI * 0.5, Math.PI * 0.5); ctx.stroke();
+    ctx.fillStyle = '#fde047'; ctx.fillRect(-6, 16, 12, 18); rr(ctx, -28, 34, 56, 12, 4); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// flowchart of steps: numbered boxes in a snake layout with animated connectors
+function sFlow(ctx, s, p, meta) {
+  let y = heading(ctx, s.heading, BODY_TOP + 4, { kicker: s.kicker, color: meta.color, size: 30 });
+  if (s.sub) y += drawRich(ctx, s.sub, 60, y - 8, W - 120, 19, { color: C.muted, maxLines: 2 }) + 6;
+  const items = s.items || [];
+  if (!items.length) { drawArt(ctx, 'laptop', W / 2, (y + BODY_BOTTOM) / 2, 160, meta.color, meta.time); return; }
+  const cols = items.length <= 3 ? items.length : Math.ceil(items.length / 2);
+  const rows = Math.ceil(items.length / cols);
+  const gap = 46;
+  const bw = (W - 120 - gap * (cols - 1)) / cols;
+  const bh = Math.min(150, (BODY_BOTTOM - y - (rows - 1) * 34) / rows);
+  const pos = items.map((_, i) => {
+    const r = Math.floor(i / cols);
+    const c = r % 2 ? cols - 1 - (i % cols) : i % cols;
+    return { x: 60 + c * (bw + gap), y: y + r * (bh + 34) };
+  });
+  const shown = Math.min(items.length, Math.floor(p * 1.25 * items.length + 0.6));
+  pos.forEach((a, i) => {
+    const b = pos[i + 1];
+    if (!b || i + 1 >= shown) return;
+    ctx.save();
+    ctx.strokeStyle = meta.color;
+    ctx.lineWidth = 4;
+    ctx.setLineDash([10, 8]);
+    ctx.lineDashOffset = -(meta.time || 0) * 30;
+    let x1; let y1; let x2; let y2;
+    if (Math.abs(a.y - b.y) < 1) { x1 = a.x < b.x ? a.x + bw : a.x; x2 = a.x < b.x ? b.x : b.x + bw; y1 = a.y + bh / 2; y2 = y1; }
+    else { x1 = a.x + bw / 2; x2 = x1; y1 = a.y + bh; y2 = b.y; }
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.setLineDash([]);
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    ctx.fillStyle = meta.color;
+    ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 - 14 * Math.cos(ang - 0.5), y2 - 14 * Math.sin(ang - 0.5)); ctx.lineTo(x2 - 14 * Math.cos(ang + 0.5), y2 - 14 * Math.sin(ang + 0.5)); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  });
+  items.forEach((it, i) => {
+    if (i >= shown) return;
+    const { x, y: by } = pos[i];
+    const a = ease(clamp01(p * 1.25 * items.length + 0.6 - i));
+    const active = i === shown - 1;
+    ctx.save();
+    ctx.globalAlpha *= Math.max(0.15, a);
+    ctx.fillStyle = active ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.05)';
+    ctx.strokeStyle = active ? meta.color : 'rgba(255,255,255,.12)';
+    ctx.lineWidth = active ? 3 : 1.5;
+    rr(ctx, x, by, bw, bh, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = meta.color;
+    ctx.beginPath(); ctx.arc(x + 26, by + 26, 16, 0, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `800 16px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1), x + 26, by + 27);
+    ctx.textAlign = 'left';
+    const size = fitSize(ctx, it, bw - 64, bh - 18, 20, 12, 1.3);
+    drawRich(ctx, it, x + 52, by + 12, bw - 64, size, { lh: 1.3, maxLines: 6 });
+    ctx.restore();
+  });
+}
+
+// "how to practise" pipeline: 4 stages with icons and a moving dot
+function sHowto(ctx, s, p, meta) {
+  const y = heading(ctx, s.heading, BODY_TOP + 4, { kicker: s.kicker, color: meta.color, size: 30 });
+  const stages = s.pipeline || [];
+  const icons = ['laptop', 'keyboard', 'play', 'check'];
+  const n = stages.length;
+  const cw = (W - 120) / n;
+  const cy = y + 70;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(60 + cw / 2, cy); ctx.lineTo(60 + cw * (n - 0.5), cy); ctx.stroke();
+  const prog = clamp01(p * 1.6);
+  ctx.strokeStyle = meta.color;
+  ctx.beginPath(); ctx.moveTo(60 + cw / 2, cy); ctx.lineTo(60 + cw / 2 + cw * (n - 1) * prog, cy); ctx.stroke();
+  ctx.fillStyle = '#fde047';
+  ctx.beginPath(); ctx.arc(60 + cw / 2 + cw * (n - 1) * prog, cy, 9, 0, 7); ctx.fill();
+  ctx.restore();
+  stages.forEach((st, i) => {
+    const cx = 60 + cw * (i + 0.5);
+    const on = prog * (n - 1) + 0.05 >= i;
+    ctx.save();
+    ctx.globalAlpha = on ? 1 : 0.35;
+    drawArt(ctx, icons[i % icons.length], cx, cy, 92, meta.color, (meta.time || 0) + i);
+    ctx.font = `700 19px ${FONT}`;
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${i + 1}. ${st}`, cx, cy + 74);
+    ctx.restore();
+  });
+  let yy = cy + 112;
+  (s.items || []).forEach((it, i) => {
+    const a = ease(clamp01(p * 2 - 0.6 - i * 0.15));
+    if (a <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = meta.color;
+    rr(ctx, 70, yy + 8, 10, 10, 3); ctx.fill();
+    drawRich(ctx, it, 96, yy, W - 200, 19, { lh: 1.3, maxLines: 1 });
+    ctx.restore();
+    yy += 30;
+  });
+}
+
+// code walkthrough: highlight one part of the code at a time and explain it
+function sWalk(ctx, s, p, meta) {
+  const y = heading(ctx, s.heading, BODY_TOP + 4, { kicker: s.kicker, color: meta.color, size: 28 });
+  const top = y - 6;
+  const hgt = BODY_BOTTOM - top + 18;
+  const edW = 760;
+  const parts = s.parts || [];
+  const cur = Math.max(0, Math.min(parts.length - 1, meta.part ?? Math.floor(p * parts.length)));
+  const part = parts[cur];
+  drawEditor(ctx, 60, top, edW, hgt, { code: s.code, title: 'main', tool: s.toolName, focus: part ? [part.from, part.to] : null, color: meta.color });
+  const ox = 60 + edW + 24;
+  const ow = W - ox - 60;
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,.05)';
+  ctx.strokeStyle = meta.color;
+  ctx.lineWidth = 2;
+  rr(ctx, ox, top, ow, hgt, 16);
+  ctx.fill();
+  ctx.stroke();
+  ctx.font = `700 15px ${FONT}`;
+  ctx.fillStyle = meta.color;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${(s.L?.part || 'Part').toUpperCase()} ${cur + 1} / ${parts.length}`, ox + 22, top + 28);
+  parts.forEach((_, i) => { ctx.fillStyle = i === cur ? meta.color : i < cur ? `${meta.color}88` : 'rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(ox + 26 + i * 18, top + 54, 5, 0, 7); ctx.fill(); });
+  if (part) {
+    const txt = (meta.partText && meta.partText[cur]) || part.say;
+    const size = fitSize(ctx, txt, ow - 44, hgt - 170, 24, 14, 1.45);
+    drawRich(ctx, txt, ox + 22, top + 76, ow - 44, size, { lh: 1.45 });
+    if (part.note && !part.translate) drawRich(ctx, `// ${part.note}`, ox + 22, top + hgt - 64, ow - 44, 14, { color: '#6a9955', maxLines: 2 });
+  }
+  drawArt(ctx, 'laptop', ox + ow - 56, top + 30, 50, meta.color, meta.time);
+  ctx.restore();
+}
+
+const DRAW = { intro: sIntro, bullets: sBullets, text: sText, code: sCode, tip: sTip, howto: sHowto, practical: sPractical, practice: sPractice, qa: sQa, outro: sOutro, flow: sFlow, walk: sWalk };
 
 /**
  * meta: { color, course, label, title, index, total, globalProgress, chapter, caption }

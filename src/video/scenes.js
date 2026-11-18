@@ -1,5 +1,10 @@
 // Turns a lesson object into a list of video "scenes" (slides with narration).
 // Every lesson in every course gets a branded, narrated video lesson automatically.
+// Narration is a list of items { t, x, part? }:
+//   t = text, x = true when t is English lesson content that must be translated for hi/mr,
+//   part = index of the code part highlighted while this item is spoken (code walkthrough).
+import { tx } from './i18n.js';
+import { explainCode, looksLikeProgram } from './codeExplain.js';
 
 const FENCE_RE = /```[\w-]*\n?([\s\S]*?)```/g;
 
@@ -20,14 +25,12 @@ export function plain(s = '') {
     .trim();
 }
 
-// text with markdown fences removed (fences become separate code scenes)
 function splitFences(s = '') {
   const codes = [];
   const text = String(s).replace(FENCE_RE, (_, c) => { codes.push(c.replace(/\s+$/, '')); return '\n'; });
   return { text, codes };
 }
 
-// split long text into pages of ~maxChars at paragraph / sentence boundaries
 function paginate(text, maxChars = 520) {
   const paras = String(text).split(/\n{2,}|\n(?=[-*•] )/).map((p) => p.trim()).filter(Boolean);
   const pages = [];
@@ -53,10 +56,9 @@ function paginate(text, maxChars = 520) {
 
 const clip = (s, n) => (s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, '')}…` : s);
 
-// estimate how long the narration takes at rate 1 (≈ 2.6 words / sec)
-export function speechSeconds(text) {
+export function speechSeconds(text, lang = 'en') {
   const words = String(text || '').split(/\s+/).filter(Boolean).length;
-  return words / 2.6;
+  return (words / 2.6) * (lang === 'en' ? 1 : 1.2);
 }
 
 function codeOf(ex) {
@@ -75,28 +77,34 @@ function outputOf(ex) {
   return String(out);
 }
 
+// helpers to build narration items
+const own = (t) => ({ t, x: false }); // already in the target language
+const en = (t) => ({ t: plain(t), x: true }); // English lesson content → translated when needed
+
 /**
  * @param {object} t      lesson
- * @param {object} tr     track ({ name, short, unit })
- * @param {object} opts   { toolName, label }   label e.g. "Day 11"
+ * @param {object} tr     track ({ name, short, unit, lang })
+ * @param {object} opts   { toolName, label, lang }
  */
-export function buildScenes(t, tr, { toolName = 'Practice Tool', label = '' } = {}) {
+export function buildScenes(t, tr, { toolName = 'Practice Tool', label = '', lang = 'en' } = {}) {
+  const X = tx(lang);
+  const L = X.L;
   const scenes = [];
+  const ch = (name, n) => `${L.chapters[name] || name}${n ? ` ${n}` : ''}`;
   const add = (s) => scenes.push({ minDur: 4, ...s });
   const course = tr?.name || '';
+  const proseTrack = tr?.lang === 'soft';
 
   // 1. Intro
   add({
-    type: 'intro', chapter: 'Introduction', course, label, title: t.title, summary: t.summary || '', module: t.module || '', level: t.level || '', duration: t.duration || '',
-    narration: `Welcome to UpSkillr. This is the ${course} course${label ? `, ${label}` : ''}. Today's topic is: ${plain(t.title)}. ${plain(t.summary || '')}`,
-    minDur: 6,
+    type: 'intro', chapter: ch('Introduction'), course, label, title: t.title, summary: t.summary || '', module: t.module || '', level: t.level || '', duration: t.duration || '',
+    say: [own(X.intro(course, label, plain(t.title))), en(t.summary || '')], minDur: 6,
   });
 
   // 2. Objectives
   if (t.objectives?.length) {
     const items = t.objectives.slice(0, 6);
-    add({ type: 'bullets', chapter: 'Objectives', heading: 'After this video you will be able to', items, reveal: true,
-      narration: `After this video you will be able to: ${items.map(plain).join('. ')}.` });
+    add({ type: 'bullets', art: 'target', chapter: ch('Objectives'), heading: L.objectives, items, reveal: true, say: [own(X.objectives), ...items.map(en)] });
   }
 
   // 3. Theory
@@ -104,61 +112,61 @@ export function buildScenes(t, tr, { toolName = 'Practice Tool', label = '' } = 
     const { text, codes } = splitFences(th.content || '');
     const pages = paginate(text);
     pages.forEach((pg, pi) => add({
-      type: 'text', chapter: `Theory ${i + 1}`, heading: th.heading + (pages.length > 1 ? `  (${pi + 1}/${pages.length})` : ''), body: pg,
-      narration: `${pi === 0 ? `${plain(th.heading)}. ` : ''}${plain(pg)}`,
+      type: 'text', art: 'book', chapter: ch('Theory', i + 1), heading: th.heading + (pages.length > 1 ? `  (${pi + 1}/${pages.length})` : ''), body: pg,
+      say: [...(pi === 0 ? [lang === 'en' ? en(th.heading) : own(X.theory(plain(th.heading)))] : []), en(pg)],
     }));
     if (th.points?.length) {
       const items = th.points.slice(0, 7);
-      add({ type: 'bullets', chapter: `Theory ${i + 1}`, heading: `${th.heading}: key points`, items, reveal: true,
-        narration: `Key points. ${items.map(plain).join('. ')}.` });
+      add({ type: 'bullets', art: 'bulb', chapter: ch('Theory', i + 1), heading: `${th.heading}: ${L.keyPoints}`, items, reveal: true, say: [own(X.keyPoints), ...items.map(en)] });
     }
     const syntax = th.syntax || codes[0];
     if (syntax) {
-      add({ type: 'code', chapter: `Theory ${i + 1}`, heading: th.syntax ? 'Syntax' : th.heading, code: syntax, file: 'syntax',
-        narration: `Here is the ${th.syntax ? 'syntax' : 'code'}. Read it line by line.` , minDur: Math.min(14, 4 + syntax.split('\n').length * 0.6) });
+      add({ type: 'code', chapter: ch('Theory', i + 1), heading: th.syntax ? L.syntax : th.heading, code: syntax, file: 'syntax',
+        say: [own(X.syntax)], minDur: Math.min(14, 4 + syntax.split('\n').length * 0.6) });
     }
-    if (th.tip) add({ type: 'tip', chapter: `Theory ${i + 1}`, body: th.tip, narration: `Tip. ${plain(th.tip)}` });
+    if (th.tip) add({ type: 'tip', chapter: ch('Theory', i + 1), heading: L.proTip, body: th.tip, say: [own(X.tip), en(th.tip)] });
   });
 
-  // 4. Practical: tool introduction
-  add({
-    type: 'howto', chapter: 'Practical', toolName,
-    items: [
-      'Open the lesson’s “Examples” tab',
-      `Click the “▶ Try” / “Open in ${toolName}” button on any example`,
-      `Or open Practice Tools → ${toolName} and type the code yourself`,
-      'Press Run and compare your output with the expected result',
-      'Change one value at a time and run again: that is how you learn',
-    ],
-    narration: `Now let's practise this practically in the ${toolName}. Open the Examples tab of this lesson and click the Try button on an example, or open Practice Tools and choose ${toolName}. Type the code, press Run, and compare your output with the expected result. Then change one value at a time and run it again.`,
-    minDur: 8,
-  });
+  // 4. Practical: how to practise (pipeline graphic)
+  add({ type: 'howto', chapter: ch('Practical'), toolName, heading: L.practiseIn(toolName), kicker: L.handsOn, items: L.howtoItems(toolName), pipeline: L.pipeline, say: [own(X.howto(toolName))], minDur: 10 });
 
-  // 5. Worked examples: steps -> live demo in the tool
+  // 5. Worked examples: steps (flowchart) -> code walkthrough -> live demo in the tool
   (t.examples || []).forEach((ex, i) => {
-    const steps = (ex.steps || []).slice(0, 7);
-    add({ type: 'bullets', chapter: `Example ${i + 1}`, kicker: `Example ${i + 1}`, heading: ex.title, sub: ex.scenario || '', items: steps, reveal: true, numbered: true,
-      narration: `Example ${i + 1}: ${plain(ex.title)}. ${plain(ex.scenario || '')} ${steps.length ? `Steps: ${steps.map((s, k) => `${k + 1}. ${plain(s)}`).join('. ')}.` : ''}` });
+    const steps = (ex.steps || []).slice(0, 6);
+    add({
+      type: 'flow', chapter: ch('Example', i + 1), kicker: `${L.example} ${i + 1}`, heading: ex.title, sub: ex.scenario || '', items: steps,
+      say: [own(X.example(i + 1, plain(ex.title))), en(ex.scenario || ''), ...(steps.length ? [own(X.steps)] : []), ...steps.flatMap((s, k) => [own(X.step(k + 1)), en(s)])],
+    });
     const code = codeOf(ex);
     if (code) {
       const output = outputOf(ex);
       const reqs = ex.api?.requests?.length ? ex.api.requests.slice(0, 4).map((r) => `${r.method} ${r.url}`) : null;
       const lines = code.split('\n').length;
+      if (!proseTrack && lines >= 3 && looksLikeProgram(code)) {
+        const parts = explainCode(code, lang, 6);
+        if (parts.length >= 2) {
+          add({
+            type: 'walk', chapter: ch('Example', i + 1), kicker: L.codeWalk, heading: ex.title, code, parts, toolName,
+            say: [own(X.walkIntro), ...parts.map((p, k) => ({ t: p.translate ? plain(p.say) : p.say, x: p.translate, part: k }))],
+            minDur: 6 + parts.length * 3,
+          });
+        }
+      }
       add({
-        type: 'practical', chapter: `Example ${i + 1}`, toolName, title: ex.title, code, output, requests: reqs,
-        narration: `Let's do it in the ${toolName}. We type the code, then press Run. ${output ? 'And here is the output.' : ''} ${plain(ex.explanation || '')}`.trim(),
+        type: 'practical', chapter: ch('Example', i + 1), toolName, title: ex.title, code, output, requests: reqs, kicker: `${L.liveDemo} · ${toolName}`,
+        say: [own(X.run(toolName)), ...(output ? [own(X.output)] : []), en(ex.explanation || '')],
         minDur: Math.min(30, 8 + lines * 0.45),
       });
     } else if (ex.explanation) {
-      add({ type: 'text', chapter: `Example ${i + 1}`, heading: 'Explanation', body: ex.explanation, narration: plain(ex.explanation) });
+      add({ type: 'text', art: 'book', chapter: ch('Example', i + 1), heading: ex.title, body: ex.explanation, say: [en(ex.explanation)] });
     }
   });
 
   // 6. Practice: pause and try
   (t.practice || []).slice(0, 3).forEach((pr, i) => {
     add({
-      type: 'practice', chapter: `Practice ${i + 1}`, n: i + 1, task: pr.task, hint: pr.hint || '', solution: pr.solution || '', toolName,
-      narration: `Practice task ${i + 1}. ${plain(pr.task)}. Pause the video and try it yourself in the ${toolName}. Hint: ${plain(pr.hint || 'read the examples again')}. Now let's look at the solution.`,
+      type: 'practice', chapter: ch('Practice', i + 1), n: i + 1, task: pr.task, hint: pr.hint || '', solution: pr.solution || '', toolName,
+      say: [own(X.practice(i + 1)), en(pr.task), own(X.pause(toolName)), ...(pr.hint ? [own(X.hint), en(pr.hint)] : []), own(X.solution)],
       minDur: Math.min(30, 14 + String(pr.solution || '').split('\n').length * 0.5),
     });
   });
@@ -166,19 +174,22 @@ export function buildScenes(t, tr, { toolName = 'Practice Tool', label = '' } = 
   // 7. Interview revision
   const iv = (t.interview || []).slice(0, 4);
   iv.forEach((q, i) => add({
-    type: 'qa', chapter: 'Interview Q&A', n: i + 1, total: iv.length, q: q.q, a: clip(q.a || '', 560),
-    narration: `Interview question ${i + 1}. ${plain(q.q)} Answer: ${plain(clip(q.a || '', 560))}`,
+    type: 'qa', art: 'chat', chapter: ch('Interview Q&A'), n: i + 1, total: iv.length, q: q.q, a: clip(q.a || '', 560),
+    say: [own(X.qa(i + 1)), en(q.q), own(X.answer), en(clip(q.a || '', 560))],
   }));
 
   // 8. Outro
   add({
-    type: 'outro', chapter: 'Summary', title: t.title, course, label,
-    items: ['Re-watch any chapter from the list', `Practise in the ${toolName}`, `Take the ${t.quiz?.length || 5}-question quiz`, 'Mark the topic as completed'],
-    narration: `Great work! You finished ${plain(t.title)}. Practise the tasks in the ${toolName}, then take the quiz to test yourself. See you in the next video on UpSkillr.`,
-    minDur: 7,
+    type: 'outro', chapter: ch('Summary'), title: t.title, course, label,
+    items: L.outroItems(toolName, t.quiz?.length || 5),
+    say: [own(X.outro(plain(t.title), toolName))], minDur: 7,
   });
 
-  return scenes.map((s, i) => ({ ...s, index: i, est: Math.max(s.minDur, speechSeconds(s.narration) + 1.2) }));
+  return scenes.map((s, i) => {
+    const say = s.say.filter((it) => it.t && it.t.trim());
+    const text = say.map((it) => it.t).join(' ');
+    return { ...s, say, narration: text, L, lang, index: i, est: Math.max(s.minDur, speechSeconds(text, lang) + 1.2) };
+  });
 }
 
 export const totalSeconds = (scenes) => scenes.reduce((a, s) => a + s.est, 0);
