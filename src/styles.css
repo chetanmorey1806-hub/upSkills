@@ -1452,3 +1452,82 @@ body { background: radial-gradient(1100px 500px at 100% -10%, color-mix(in srgb,
 .dropdown > *, .dropdown-children > * { min-width: 0; }
 .dropdown[data-cols='1'] { max-width: min(380px, calc(100vw - 24px)); }
 .topnav-inner { max-width: none; padding: 0 6px; }
+
+/* ================= Account menu (topbar) ================= */
+.um { position: relative; margin-left: .7rem; flex-shrink: 0; }
+.um + .menu-btn { margin-left: .5rem; }
+.um-btn { display: flex; align-items: center; gap: .45rem; padding: .25rem .7rem .25rem .25rem; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font: inherit; font-weight: 600; font-size: .9rem; transition: border-color .2s, box-shadow .2s; }
+.um-btn:hover { border-color: var(--primary); box-shadow: 0 6px 16px -10px rgba(79, 70, 229, .6); }
+.um-ava { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .9rem; background: var(--grad); flex-shrink: 0; }
+.um-ava.big { width: 42px; height: 42px; font-size: 1.1rem; }
+.um-drop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; min-width: 240px; padding: .5rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: popIn .25s var(--ease); display: flex; flex-direction: column; }
+.um-head { display: flex; gap: .6rem; align-items: center; padding: .5rem .5rem .7rem; border-bottom: 1px solid var(--border); margin-bottom: .3rem; }
+.um-drop a, .um-out { padding: .55rem .7rem; border-radius: 10px; color: var(--text); font: inherit; font-size: .92rem; text-align: left; background: none; border: none; cursor: pointer; }
+.um-drop a:hover, .um-out:hover { background: var(--surface2); }
+.um-out { color: var(--bad); font-weight: 600; }
+.drawer-logout { margin: 1rem 16px 0; justify-content: center; color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, var(--border)); }
+@media (max-width: 1180px) { .um { margin-left: auto; } }
+@media (max-width: 480px) { .um-name { display: none; } .um-btn { padding: .2rem; } }
+.ld-user { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; }
+.ld-ava { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; background: var(--grad); }
+
+/* ================= Sign in / Register ================= */
+.au { min-height: 100vh; display: grid; grid-template-columns: minmax(340px, 44%) 1fr; background: var(--bg); }
+.au-side { position: relative; overflow: hidden; isolation: isolate; color: #fff; padding: 2.2rem 2.6rem; display: flex; flex-direction: column; background: var(--grad); background-size: 200% 200%; animation: ldGrad 12s ease infinite; }
+.au-blob { position: absolute; z-index: -1; border-radius: 50%; background: rgba(255,255,255,.13); animation: blob 14s ease-in-out infinite; }
+.au-blob.a { width: 360px; height: 360px; top: -120px; right: -120px; }
+.au-blob.b { width: 260px; height: 260px; bottom: -80px; left: -70px; animation-delay: -5s; }
+.au-blob.c { width: 140px; height: 140px; top: 45%; right: 12%; animation-delay: -9s; background: rgba(255,255,255,.09); }
+.au-brand { display: inline-flex; align-items: center; gap: .6rem; color: #fff; font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; }
+.au-brand .brand-logo-svg { filter: drop-shadow(0 6px 14px rgba(0,0,0,.25)); animation: floaty 5s ease-in-out infinite; }
+.au-side-body { margin: auto 0; max-width: 460px; }
+.au-side-body h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); letter-spacing: -.02em; animation: popIn .7s var(--ease) .1s backwards; }
+.au-side-body p { opacity: .92; font-size: 1.05rem; animation: popIn .7s var(--ease) .2s backwards; }
+.au-side-body ul { list-style: none; padding: 0; margin: 1.6rem 0 0; display: grid; gap: .8rem; }
+.au-side-body li { display: flex; align-items: center; gap: .7rem; padding: .7rem .9rem; border-radius: 14px; background: rgba(255,255,255,.12); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: auLi .7s var(--ease) calc(var(--d) + .25s) backwards; }
+@keyframes auLi { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+.au-credit { font-size: .85rem; opacity: .9; }
+.au-main { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 16px; position: relative; }
+.au-back { position: absolute; top: 1.3rem; left: 1.5rem; display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); font-weight: 600; font-size: .9rem; }
+.au-back:hover { color: var(--primary); }
+.au-card { width: 100%; max-width: 440px; padding: 2.2rem 2rem; border-radius: 24px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: auCard .6s var(--ease); }
+@keyframes auCard { from { opacity: 0; transform: translateY(20px) scale(.97); } to { opacity: 1; transform: none; } }
+.au-logo { width: 72px; height: 72px; margin: -3.6rem auto .8rem; display: grid; place-items: center; border-radius: 22px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: pbLogo .8s var(--ease) .15s backwards; }
+.au-card h1 { text-align: center; font-size: 1.55rem; margin-bottom: .3rem; }
+.au-card > p.muted { text-align: center; margin-bottom: 1.2rem; }
+.au-card form { display: grid; gap: .85rem; }
+.au-field { display: flex; flex-direction: column; gap: .3rem; }
+.au-label { font-size: .85rem; font-weight: 600; }
+.au-input { display: flex; align-items: center; gap: .55rem; padding: 0 .8rem; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--muted); transition: border-color .2s, box-shadow .2s, background .2s; }
+.au-input:focus-within { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent); color: var(--primary); }
+.au-input input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 16px; padding: .72rem 0; }
+.au-field.bad .au-input { border-color: var(--bad); }
+.au-err { display: flex; align-items: center; gap: .3rem; color: var(--bad); font-size: .8rem; animation: popIn .25s var(--ease); }
+.au-eye { background: none; border: none; color: var(--muted); cursor: pointer; display: grid; place-items: center; padding: .2rem; }
+.au-eye:hover { color: var(--primary); }
+.au-alert, .au-ok { display: flex; gap: .5rem; align-items: flex-start; padding: .7rem .9rem; border-radius: 12px; font-size: .9rem; margin-bottom: 1rem; animation: popIn .3s var(--ease); }
+.au-alert { background: color-mix(in srgb, var(--bad) 11%, transparent); color: var(--bad); animation: auShake .4s; }
+.au-ok { background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok); }
+.au-alert svg, .au-ok svg { flex-shrink: 0; margin-top: 2px; }
+@keyframes auShake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.au-strength { display: flex; align-items: center; gap: .3rem; margin-top: -.4rem; font-size: .78rem; color: var(--muted); }
+.au-strength i { width: 42px; height: 5px; border-radius: 5px; background: var(--border); }
+.au-strength.w1 i:nth-child(1) { background: var(--bad); }
+.au-strength.w2 i:nth-child(-n+2) { background: #d97706; }
+.au-strength.w3 i { background: var(--ok); }
+.au-strength span { margin-left: .3rem; }
+.au-remember { font-size: .88rem; }
+.au-submit { justify-content: center; padding: .85rem 1rem; font-size: 1.02rem; border-radius: 14px; margin-top: .2rem; }
+.au-spin { width: 17px; height: 17px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: auSpin .7s linear infinite; }
+@keyframes auSpin { to { transform: rotate(360deg); } }
+.au-note { text-align: center; margin: 1rem 0 0; }
+@media (max-width: 860px) {
+  .au { grid-template-columns: 1fr; }
+  .au-side { padding: 1.4rem 1.2rem 3.6rem; }
+  .au-side-body { margin: 1.2rem 0 0; }
+  .au-side-body h2 { font-size: 1.6rem; }
+  .au-side-body ul, .au-credit { display: none; }
+  .au-main { padding: 0 14px 2.5rem; margin-top: -2.4rem; }
+  .au-back { display: none; }
+  .au-card { padding: 2rem 1.3rem 1.6rem; }
+}

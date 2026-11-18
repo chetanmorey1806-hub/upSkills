@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth, logout } from '../auth.js';
 import {
   BookOpenCheck, Code2, ClipboardCheck, Hammer, MessageCircle, Sparkles, ArrowRight, LayoutDashboard,
-  GraduationCap, Laptop, Trophy, Briefcase, Rocket, CheckCircle2, Flame, Menu, X,
+  GraduationCap, Laptop, Trophy, Briefcase, Rocket, CheckCircle2, Flame, Menu, X, LogIn, UserPlus, LogOut,
 } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import { TrackIcon } from '../components/Icons.jsx';
@@ -106,6 +107,7 @@ const JOURNEY = [
 
 export default function Landing() {
   const ref = useReveal();
+  const user = useAuth();
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -131,8 +133,18 @@ export default function Landing() {
             <a href="#courses" onClick={go('courses')}>Courses</a>
             <a href="#career" onClick={go('career')}>Career prep</a>
             <a href="#journey" onClick={go('journey')}>How it works</a>
-            <Link to="/dashboard" className="btn small"><LayoutDashboard size={15} /> Dashboard</Link>
-            <Link to="/home" className="btn small primary">Start learning <ArrowRight size={15} /></Link>
+            {user ? (
+              <>
+                <span className="ld-user"><span className="ld-ava">{(user.name || user.username).charAt(0).toUpperCase()}</span>{user.name?.split(' ')[0] || user.username}</span>
+                <Link to="/dashboard" className="btn small primary"><LayoutDashboard size={15} /> Dashboard</Link>
+                <button className="btn small" onClick={logout}><LogOut size={15} /> Logout</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn small"><LogIn size={15} /> Sign in</Link>
+                <Link to="/register" className="btn small primary"><UserPlus size={15} /> Register</Link>
+              </>
+            )}
           </nav>
           <button className="ld-burger" onClick={() => setMenu(!menu)} aria-label={menu ? 'Close menu' : 'Open menu'} aria-expanded={menu}>{menu ? <X size={22} /> : <Menu size={22} />}</button>
         </div>
@@ -147,10 +159,19 @@ export default function Landing() {
             <h1>Become job-ready in <br /><RotatingWord /></h1>
             <p>Learn step by step with clear theory and examples, practise in built-in IDEs, take interview test series, build a final project and train your soft skills — all in one place.</p>
             <div className="ld-cta">
-              <Link to="/home" className="btn primary ld-big">Start learning free <ArrowRight size={18} /></Link>
-              <Link to="/dashboard" className="btn ld-big"><LayoutDashboard size={18} /> My dashboard</Link>
+              {user ? (
+                <>
+                  <Link to="/home" className="btn primary ld-big">Continue learning <ArrowRight size={18} /></Link>
+                  <Link to="/dashboard" className="btn ld-big"><LayoutDashboard size={18} /> My dashboard</Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/register" className="btn primary ld-big"><UserPlus size={18} /> Register free</Link>
+                  <Link to="/login" className="btn ld-big"><LogIn size={18} /> Sign in</Link>
+                </>
+              )}
             </div>
-            <div className="ld-trust"><CheckCircle2 size={15} /> No sign-up needed · progress saved in your browser · works on mobile</div>
+            <div className="ld-trust"><CheckCircle2 size={15} /> {user ? `Signed in as ${user.username}` : 'Free account · your own progress, tests and projects'} · works on mobile</div>
           </div>
           <div className="ld-hero-art" aria-hidden="true">
             <div className="ld-window">

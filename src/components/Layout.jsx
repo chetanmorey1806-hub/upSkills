@@ -6,6 +6,7 @@ import {
   Brain, ListChecks, Library, GraduationCap,
 } from 'lucide-react';
 import Logo from './Logo.jsx';
+import { useAuth, logout } from '../auth.js';
 import { tracks, trackGroups } from '../data/index.js';
 
 const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
@@ -260,7 +261,38 @@ function useScrollReveal(rootRef, key) {
   }, [rootRef, key]);
 }
 
+function UserMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const h = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+  if (!user) return null;
+  const first = user.name?.split(' ')[0] || user.username;
+  return (
+    <div className="um" ref={ref}>
+      <button className="um-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Account menu">
+        <span className="um-ava">{(user.name || user.username).charAt(0).toUpperCase()}</span>
+        <span className="um-name">{first}</span>
+      </button>
+      {open && (
+        <div className="um-drop">
+          <div className="um-head"><span className="um-ava big">{(user.name || user.username).charAt(0).toUpperCase()}</span><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
+          <Link to="/dashboard" onClick={() => setOpen(false)}>My dashboard</Link>
+          <Link to="/" onClick={() => setOpen(false)}>Home page</Link>
+          <button className="um-out" onClick={() => { setOpen(false); onLogout(); }}>Logout</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Layout({ children }) {
+  const user = useAuth();
+  const doLogout = () => { logout(); window.location.hash = '#/'; };
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -322,6 +354,7 @@ export default function Layout({ children }) {
             <span className="search-ic"><Search size={14} /></span>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
           </form>
+          <UserMenu user={user} onLogout={doLogout} />
           <button
             className={`menu-btn ${open ? 'is-open' : ''}`}
             onClick={() => setOpen(!open)}
@@ -343,6 +376,7 @@ export default function Layout({ children }) {
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
           </form>
           <DrawerMenu key={pathname} menu={menu} cur={cur} />
+          {user && <button className="btn drawer-logout" onClick={doLogout}>Logout ({user.username})</button>}
         </nav>
       </header>
 

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { tracks, trackGroups, trackOrder, topicKey, findTopic } from '../data/index.js';
 import { useProgress } from '../progress.js';
+import { useAuth } from '../auth.js';
 import { codingProblems, javaProjects, softSkillModules, JAVA_TRACKS } from '../data/javaCareer.js';
 import { useLocalState, downloadFile } from '../components/careerUtils.js';
 import ProgressBar from '../components/ProgressBar.jsx';
@@ -64,6 +65,8 @@ function Tile({ icon: I, label, value, sub, to, tone }) {
 export default function Dashboard() {
   const p = useProgress();
   const [name, setName] = useLocalState('xlpbi-student-name', '');
+  const authUser = useAuth();
+  const shownName = name || authUser?.name?.split(' ')[0] || '';
   const [editing, setEditing] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const fileRef = useRef(null);
@@ -188,7 +191,7 @@ export default function Dashboard() {
               <input className="input" autoFocus placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setEditing(false)} />
             </form>
           ) : (
-            <h1>{greet}{name ? `, ${name}` : ''} 👋 <button className="db-edit" onClick={() => setEditing(true)} aria-label="Edit name"><Pencil size={15} /></button></h1>
+            <h1>{greet}{shownName ? `, ${shownName}` : ''} 👋 <button className="db-edit" onClick={() => setEditing(true)} aria-label="Edit name"><Pencil size={15} /></button></h1>
           )}
           <p>{s.doneLessons ? `You have completed ${s.doneLessons} lessons. Keep going — one lesson a day adds up fast.` : 'Welcome! Start your first lesson today and your progress will appear here.'}</p>
           <div className="db-hero-chips">

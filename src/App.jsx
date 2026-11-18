@@ -33,6 +33,8 @@ import JavaInterview from './pages/JavaInterview.jsx';
 import JavaProjects from './pages/JavaProjects.jsx';
 import SoftSkills from './pages/SoftSkills.jsx';
 import Landing from './pages/Landing.jsx';
+import AuthPage from './pages/AuthPage.jsx';
+import { RequireAuth } from './auth.js';
 import Dashboard from './pages/Dashboard.jsx';
 import TestSeries from './pages/TestSeries.jsx';
 import Projects from './pages/Projects.jsx';
@@ -101,7 +103,9 @@ export default function App() {
       <ScrollTop />
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="*" element={<AppShell />} />
+        <Route path="/login" element={<AuthPage mode="login" />} />
+        <Route path="/register" element={<AuthPage mode="register" />} />
+        <Route path="*" element={<RequireAuth><AppShell /></RequireAuth>} />
       </Routes>
     </>
   );
