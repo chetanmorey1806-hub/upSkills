@@ -3,10 +3,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search,
   ClipboardCheck, MessageCircle, Trophy, Hammer, LayoutDashboard, ChevronDown, BarChart3, Globe, Layers, BookMarked,
-  Brain, ListChecks, Library, GraduationCap,
+  Brain, ListChecks, Library, GraduationCap, PlayCircle, Film,
 } from 'lucide-react';
 import Logo from './Logo.jsx';
-import { useAuth, logout } from '../auth.js';
+import { useAuth, logout, firstName } from '../auth.js';
 import { tracks, trackGroups } from '../data/index.js';
 
 const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
@@ -34,6 +34,15 @@ function buildMenu() {
         ...groupsWith((g, ks, I) => (ks.length === 1
           ? { to: `/track/${ks[0]}`, label: courseName(ks[0]), icon: I }
           : { label: g.name, icon: I, children: ks.map((k) => ({ to: `/track/${k}`, label: courseName(k), icon: BookMarked })) })),
+      ],
+    },
+    {
+      key: 'videos', label: 'Videos', icon: PlayCircle,
+      items: [
+        { to: '/videos', label: 'All Video Lessons', icon: Film },
+        ...groupsWith((g, ks, I) => (ks.length === 1
+          ? { to: `/videos?group=${g.key}&course=${ks[0]}`, label: courseName(ks[0]), icon: I }
+          : { label: g.name, icon: I, children: ks.map((k) => ({ to: `/videos?group=${g.key}&course=${k}`, label: courseName(k), icon: PlayCircle })) })),
       ],
     },
     {
@@ -80,6 +89,7 @@ function buildMenu() {
     {
       key: 'projects', label: 'Projects', icon: Hammer,
       items: [
+        { to: '/tools/web-projects', label: 'Web Dev Projects', icon: Globe },
         { to: '/tools/python-projects', label: 'Python Projects', icon: Terminal },
         { to: '/tools/mern-projects', label: 'MERN Projects', icon: Layers },
         { to: '/tools/java-projects', label: 'Java Projects', icon: Coffee },
@@ -271,16 +281,16 @@ function UserMenu({ user, onLogout }) {
     return () => document.removeEventListener('mousedown', h);
   }, [open]);
   if (!user) return null;
-  const first = user.name?.split(' ')[0] || user.username;
+  const first = firstName(user);
   return (
     <div className="um" ref={ref}>
       <button className="um-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Account menu">
-        <span className="um-ava">{(user.name || user.username).charAt(0).toUpperCase()}</span>
+        <span className="um-ava">{first.charAt(0).toUpperCase()}</span>
         <span className="um-name">{first}</span>
       </button>
       {open && (
         <div className="um-drop">
-          <div className="um-head"><span className="um-ava big">{(user.name || user.username).charAt(0).toUpperCase()}</span><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
+          <div className="um-head"><span className="um-ava big">{first.charAt(0).toUpperCase()}</span><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
           <Link to="/dashboard" onClick={() => setOpen(false)}>My dashboard</Link>
           <Link to="/" onClick={() => setOpen(false)}>Home page</Link>
           <button className="um-out" onClick={() => { setOpen(false); onLogout(); }}>Logout</button>

@@ -55,8 +55,8 @@ export function buildWebDoc({ html = '', css = '', js = '', libs = [] }) {
   const script = `${libBody}<script>\n${esc(js)}\n<\/script>`;
   if (/<html[\s>]/i.test(html)) {
     let doc = html;
-    doc = /<\/head>/i.test(doc) ? doc.replace(/<\/head>/i, `${CONSOLE_HOOK}${style}</head>`) : doc.replace(/<html[^>]*>/i, (m) => `${m}<head>${CONSOLE_HOOK}${style}</head>`);
-    doc = /<\/body>/i.test(doc) ? doc.replace(/<\/body>(?![\s\S]*<\/body>)/i, `${script}</body>`) : doc + script;
+    doc = /<\/head>/i.test(doc) ? doc.replace(/<\/head>/i, () => `${CONSOLE_HOOK}${style}</head>`) : doc.replace(/<html[^>]*>/i, (m) => `${m}<head>${CONSOLE_HOOK}${style}</head>`);
+    doc = /<\/body>/i.test(doc) ? doc.replace(/<\/body>(?![\s\S]*<\/body>)/i, () => `${script}</body>`) : doc + script;
     return doc;
   }
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">${CONSOLE_HOOK}${style}</head><body>\n${html}\n${script}</body></html>`;

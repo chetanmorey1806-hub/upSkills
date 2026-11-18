@@ -17,13 +17,17 @@ import RichText, { Inline } from '../components/RichText.jsx';
 import CodeBlock from '../components/CodeBlock.jsx';
 import DataTable from '../components/DataTable.jsx';
 import Quiz from '../components/Quiz.jsx';
+import VideoLesson from '../components/VideoLesson.jsx';
+import DayTask from '../components/DayTask.jsx';
 
 const TABS = [
+  ['video', '🎬 Video'],
   ['theory', '📘 Theory'],
   ['examples', '🧪 Examples'],
   ['interview', '💬 Interview Q&A'],
   ['practice', '🛠 Practice'],
   ['quiz', '🏆 Quiz'],
+  ['task', '📝 Day Task'],
 ];
 
 function Reveal({ label, children }) {
@@ -136,12 +140,19 @@ export default function TopicPage() {
         {TABS.map(([k, l]) => (
           <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
             {l}
-            <span className="count">
+            {k !== 'video' && k !== 'task' && <span className="count">
               {k === 'theory' ? t.theory?.length : k === 'examples' ? t.examples?.length : k === 'interview' ? t.interview?.length : k === 'practice' ? t.practice?.length : t.quiz?.length}
-            </span>
+            </span>}
           </button>
         ))}
       </div>
+
+      {tab === 'video' && (
+        <div>
+          <VideoLesson topic={t} track={tr} label={topicLabel(track, t, index)} toolName={lab[1]} lessonKey={key} />
+          <div className="center" style={{ marginTop: 16 }}><button className="btn primary" onClick={() => setTab('theory')}>Next: Read the theory →</button></div>
+        </div>
+      )}
 
       {tab === 'theory' && (
         <div>
@@ -347,6 +358,8 @@ export default function TopicPage() {
           ))}
         </div>
       )}
+
+      {tab === 'task' && <DayTask track={track} lesson={t} />}
 
       {tab === 'quiz' && (
         <Quiz key={key} questions={t.quiz} onFinish={(s) => p.setQuiz(key, s)} />

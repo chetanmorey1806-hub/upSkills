@@ -157,3 +157,10 @@ export function RequireAuth({ children }) {
   if (!user) return createElement(Navigate, { to: '/login', replace: true, state: { from: loc.pathname + loc.search } });
   return children;
 }
+
+// "Er. Chetan D Morey" -> "Chetan" (skips titles like Er., Dr., Mr., Ms., Prof.)
+export function firstName(user) {
+  const parts = String(user?.name || user?.username || '').trim().split(/\s+/);
+  const p = parts.find((w) => !/^(er|dr|mr|mrs|ms|miss|prof|shri|smt)\.?$/i.test(w));
+  return p || user?.username || '';
+}

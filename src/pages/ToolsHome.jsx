@@ -18,6 +18,7 @@ const GROUPS = [
     ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Self-introduction builder, speaking practice with filler-word and speed analysis, HR answers, STAR stories, group discussion and email writing.'],
   ]],
   ['MERN stack career & placement', [
+    ['/tools/web-projects', Hammer, 'Web Development Final Projects', '8 web projects built right here with live preview: portfolio, Bootstrap landing page, calculator, to-do with localStorage, quiz, form validation, GitHub finder (Fetch API) and a React expense tracker, plus your own idea. Automated checks, milestones, score and certificate.'],
     ['/tools/mern-projects', Hammer, 'MERN Final Projects', '4 MERN projects (Task Manager, Student Records with pagination, Auth & Roles, E-commerce Cart & Orders): write the Express API here and run 8 automated API tests each, then React, MongoDB and deployment milestones, viva questions, score and certificate.'],
     ['/tools/mongo-lab', Database, 'MongoDB Shell Lab', 'mongosh in your browser: shop, college and blog databases, find/update/delete, aggregation with $lookup, indexes and explain(), table view and 32 auto-checked query challenges.'],
     ['/tools/test-series?course=grp:mern', Trophy, 'MERN Interview Test Series', 'Timed MCQ tests and spoken/typed mock interviews for the whole MERN path: JavaScript, React, Node, Express, MongoDB, TypeScript and system design.'],

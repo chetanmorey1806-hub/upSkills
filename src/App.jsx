@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout.jsx';
 import Home from './pages/Home.jsx';
 import TrackPage from './pages/TrackPage.jsx';
@@ -11,6 +11,7 @@ import DaxLab from './pages/DaxLab.jsx';
 import PowerQueryLab from './pages/PowerQueryLab.jsx';
 import CodePlayground from './pages/CodePlayground.jsx';
 import ApiLab from './pages/ApiLab.jsx';
+import Videos from './pages/Videos.jsx';
 import MongoLab from './pages/MongoLab.jsx';
 import MernProjects from './pages/MernProjects.jsx';
 import Courses from './pages/Courses.jsx';
@@ -34,7 +35,9 @@ import JavaProjects from './pages/JavaProjects.jsx';
 import SoftSkills from './pages/SoftSkills.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthPage from './pages/AuthPage.jsx';
+import { WebProjectList, WebProjectWorkspace } from './pages/WebProjects.jsx';
 import { RequireAuth } from './auth.js';
+const DevVerifyTasks = import.meta.env.DEV ? lazy(() => import('./pages/DevVerifyTasks.jsx')) : null;
 import Dashboard from './pages/Dashboard.jsx';
 import TestSeries from './pages/TestSeries.jsx';
 import Projects from './pages/Projects.jsx';
@@ -65,6 +68,7 @@ function AppShell() {
         <Route path="/tools/playground" element={<CodePlayground />} />
         <Route path="/tools/api-lab" element={<ApiLab />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/videos" element={<Videos />} />
         <Route path="/tools/java-ide" element={<JavaIDE />} />
         <Route path="/tools/python-ide" element={<PythonIDE />} />
         <Route path="/tools/sql-lab" element={<SqlLab />} />
@@ -83,6 +87,8 @@ function AppShell() {
         <Route path="/tools/java-projects" element={<JavaProjects />} />
         <Route path="/tools/java-projects/:id" element={<JavaProjects />} />
         <Route path="/tools/soft-skills" element={<SoftSkills />} />
+        <Route path="/tools/web-projects" element={<WebProjectList />} />
+        <Route path="/tools/web-projects/:id" element={<WebProjectWorkspace />} />
         <Route path="/tools/test-series" element={<TestSeries />} />
         <Route path="/tools/test-series/:course" element={<TestSeries />} />
         <Route path="/tools/python-projects" element={<Projects />} />
@@ -91,6 +97,7 @@ function AppShell() {
         <Route path="/tools/mern-projects" element={<MernProjects />} />
         <Route path="/tools/mern-projects/:id" element={<MernProjects />} />
         <Route path="/search" element={<SearchPage />} />
+        {DevVerifyTasks && <Route path="/dev/verify-tasks/:track" element={<Suspense fallback={<p>Loading verifier…</p>}><DevVerifyTasks /></Suspense>} />}
         <Route path="*" element={<Home />} />
       </Routes>
     </Layout>

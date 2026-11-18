@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth, logout } from '../auth.js';
+import { useAuth, logout, firstName } from '../auth.js';
 import {
   BookOpenCheck, Code2, ClipboardCheck, Hammer, MessageCircle, Sparkles, ArrowRight, LayoutDashboard,
   GraduationCap, Laptop, Trophy, Briefcase, Rocket, CheckCircle2, Flame, Menu, X, LogIn, UserPlus, LogOut,
@@ -135,7 +135,7 @@ export default function Landing() {
             <a href="#journey" onClick={go('journey')}>How it works</a>
             {user ? (
               <>
-                <span className="ld-user"><span className="ld-ava">{(user.name || user.username).charAt(0).toUpperCase()}</span>{user.name?.split(' ')[0] || user.username}</span>
+                <span className="ld-user"><span className="ld-ava">{firstName(user).charAt(0).toUpperCase()}</span>{firstName(user)}</span>
                 <Link to="/dashboard" className="btn small primary"><LayoutDashboard size={15} /> Dashboard</Link>
                 <button className="btn small" onClick={logout}><LogOut size={15} /> Logout</button>
               </>

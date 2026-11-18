@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { tracks, trackGroups, trackOrder, topicKey, findTopic } from '../data/index.js';
 import { useProgress } from '../progress.js';
-import { useAuth } from '../auth.js';
+import { useAuth, firstName } from '../auth.js';
 import { codingProblems, javaProjects, softSkillModules, JAVA_TRACKS } from '../data/javaCareer.js';
 import { useLocalState, downloadFile } from '../components/careerUtils.js';
 import ProgressBar from '../components/ProgressBar.jsx';
@@ -66,7 +66,7 @@ export default function Dashboard() {
   const p = useProgress();
   const [name, setName] = useLocalState('xlpbi-student-name', '');
   const authUser = useAuth();
-  const shownName = name || authUser?.name?.split(' ')[0] || '';
+  const shownName = name || (authUser ? firstName(authUser) : '');
   const [editing, setEditing] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const fileRef = useRef(null);

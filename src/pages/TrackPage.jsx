@@ -66,6 +66,13 @@ export default function TrackPage() {
           <Link to="/tools/java-ide">☕ Java IDE</Link>
         </div>
       )}
+      {t.group === 'web' && (
+        <Link to="/tools/web-projects" className="card ts-banner" style={{ '--c': t.color }}>
+          <span>🌐</span>
+          <div><b>Web Development Final Projects</b><div className="muted small">Build 8 real projects here with live preview and automated checks: portfolio, Bootstrap landing page, calculator, to-do, quiz, form validation, GitHub finder and a React app</div></div>
+          <span className="btn small primary">Build a project →</span>
+        </Link>
+      )}
       {t.topics.some((x) => x.quiz?.length || x.interview?.length) && (
         <Link to={`/tools/test-series/${track}`} className="card ts-banner" style={{ '--c': t.color }}>
           <span>🎯</span>
