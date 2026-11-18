@@ -46,11 +46,35 @@ function buildTests(sel) {
   return { topics, tests };
 }
 
-const mcqOf = (topics) => topics.flatMap((t) => (t.quiz || []).map((q) => ({ ...q, source: `${tracks[t.track]?.short} · ${t.title}` })));
-const qaOf = (topics) => topics.flatMap((t) => (t.interview || []).map((q) => ({ ...q, topic: t })));
+const SETS = 5;
+const LEVEL = { Beginner: 'Easy', Intermediate: 'Medium', Advanced: 'Hard' };
+const normLevel = (l) => LEVEL[l] || l || 'Medium';
 
-function pickMock(topics, n) {
-  const all = shuffle(qaOf(topics));
+// Splits one course's whole question bank into SETS full-length practice sets.
+// Every lesson contributes to every set (round-robin), so each set covers the full syllabus,
+// and the sets together use every MCQ and interview question exactly once.
+function buildSets(course) {
+  const topics = (tracks[course]?.topics || []).map((t) => ({ ...t, track: course }));
+  const sets = Array.from({ length: SETS }, (_, i) => ({
+    id: `${course}#set${i + 1}`, n: i + 1, title: `Practice Set ${i + 1}`, course, topics, mcq: [], iv: [],
+    label: `${tracks[course]?.short || tracks[course]?.name} · Set ${i + 1}`,
+  }));
+  const order = { Easy: 0, Medium: 1, Hard: 2 };
+  topics.forEach((t, ti) => {
+    (t.quiz || []).forEach((q, j) => sets[(ti + j) % SETS].mcq.push({ ...q, source: t.title }));
+    [...(t.interview || [])]
+      .map((q) => ({ ...q, level: normLevel(q.level), topic: t }))
+      .sort((a, b) => (order[a.level] ?? 1) - (order[b.level] ?? 1))
+      .forEach((q, j) => sets[(ti * 2 + j) % SETS].iv.push(q));
+  });
+  return sets;
+}
+
+const mcqOf = (topics) => topics.flatMap((t) => (t.quiz || []).map((q) => ({ ...q, source: `${tracks[t.track]?.short} · ${t.title}` })));
+const qaOf = (topics) => topics.flatMap((t) => (t.interview || []).map((q) => ({ ...q, level: normLevel(q.level), topic: t })));
+
+function pickMock(pool, n) {
+  const all = shuffle(pool);
   const by = (l) => all.filter((q) => q.level === l);
   const want = { Easy: Math.ceil(n * 0.3), Medium: Math.ceil(n * 0.45), Hard: n };
   const out = [];
@@ -62,7 +86,7 @@ function pickMock(topics, n) {
 
 /* ------------------------------ MCQ run ------------------------------ */
 function McqRun({ test, onExit }) {
-  const [qs] = useState(() => (test.grand ? shuffle(mcqOf(test.topics)).slice(0, 40) : mcqOf(test.topics)));
+  const [qs] = useState(() => test.mcq || (test.grand ? shuffle(mcqOf(test.topics)).slice(0, 40) : mcqOf(test.topics)));
   const minutes = Math.max(5, Math.round(qs.length * 1));
   const [left, setLeft] = useState(minutes * 60);
   const [done, setDone] = useState(null);
@@ -99,7 +123,7 @@ function McqRun({ test, onExit }) {
 const RATE = [[2, '💪 Nailed it'], [1, '🙂 Partly'], [0, '😕 Missed']];
 
 function MockRun({ test, onExit }) {
-  const [qs] = useState(() => pickMock(test.topics, test.grand ? 10 : 8));
+  const [qs] = useState(() => (test.iv ? pickMock(test.iv, Math.min(12, test.iv.length)) : pickMock(qaOf(test.topics), test.grand ? 10 : 8)));
   const [i, setI] = useState(0);
   const [answer, setAnswer] = useState('');
   const [revealed, setRevealed] = useState(false);
@@ -211,10 +235,80 @@ function MockRun({ test, onExit }) {
   );
 }
 
+/* --------------------------- Interview Q&A sheet --------------------------- */
+function QaSheet({ test, onExit, onMock }) {
+  const [lvl, setLvl] = useState('All');
+  const [open, setOpen] = useState(false);
+  const list = test.iv.filter((q) => lvl === 'All' || q.level === lvl);
+  return (
+    <div>
+      <div className="run-head card">
+        <div><b>📖 {test.label}: Interview Q&amp;A sheet</b><div className="muted small">{test.iv.length} questions from all {test.topics.length} lessons · try to answer each one aloud before you open the model answer</div></div>
+        <button className="btn small" onClick={onExit}>← Back to sets</button>
+      </div>
+      <div className="row-btns">
+        {['All', 'Easy', 'Medium', 'Hard'].map((l) => <button key={l} className={`btn small ${lvl === l ? 'primary' : ''}`} onClick={() => setLvl(l)}>{l} ({l === 'All' ? test.iv.length : test.iv.filter((q) => q.level === l).length})</button>)}
+        <button className="btn small" onClick={() => setOpen((o) => !o)}>{open ? 'Collapse all' : 'Expand all'}</button>
+        <button className="btn small primary" onClick={onMock}>🎤 Start mock interview</button>
+      </div>
+      {list.map((q, n) => (
+        <details key={`${lvl}-${open}-${n}`} className="card qa" open={open}>
+          <summary><span className="qa-q">Q{n + 1}. {q.q}</span><span className={`lvl lvl-${q.level}`}>{q.level}</span></summary>
+          <div className="qa-a"><div className="muted small">{q.topic.title}</div><RichText text={q.a} /></div>
+        </details>
+      ))}
+    </div>
+  );
+}
+
+function SetCards({ course, res, start }) {
+  const sets = buildSets(course);
+  const done = sets.filter((t) => (res[t.id]?.mcq?.best || 0) >= PASS && (res[t.id]?.mock?.best || 0) >= PASS).length;
+  return (
+    <div className="set-group">
+      <div className="set-group-head">
+        <h2>{tracks[course].name}</h2>
+        <span className={`badge ${done === SETS ? 'ok' : ''}`}>{done}/{SETS} sets cleared</span>
+      </div>
+      <div className="grid3">
+        {sets.map((t) => {
+          const r = res[t.id] || {};
+          const cleared = (r.mcq?.best || 0) >= PASS && (r.mock?.best || 0) >= PASS;
+          const lv = (l) => t.iv.filter((q) => q.level === l).length;
+          return (
+            <div key={t.id} className={`card test-card ${cleared ? 'passed' : ''}`}>
+              <div className="test-card-top">
+                <span className="test-no">{t.n}</span>
+                <div>
+                  <h3>{t.title}</h3>
+                  <div className="muted small">Full syllabus · all {t.topics.length} lessons</div>
+                </div>
+              </div>
+              <div className="muted small test-topics">{t.mcq.length} MCQs ({t.mcq.length} min) · {t.iv.length} interview Qs: {lv('Easy')} easy, {lv('Medium')} medium, {lv('Hard')} hard</div>
+              <div className="test-modes">
+                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!t.mcq.length}>📝 MCQ paper</button>
+                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!t.iv.length}>🎤 Mock interview</button>
+                <button className="btn small" onClick={() => start(t, 'sheet')} disabled={!t.iv.length}>📖 Q&amp;A sheet</button>
+              </div>
+              <div className="test-scores small">
+                <span>MCQ: {r.mcq ? <b className={r.mcq.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mcq.best}%</b> : '–'}</span>
+                <span>Interview: {r.mock ? <b className={r.mock.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mock.best}%</b> : '–'}</span>
+                {cleared && <span className="badge ok">✓ Cleared</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------ Dashboard ------------------------------ */
 export default function TestSeries() {
   const [params, setParams] = useSearchParams();
   const sel = params.get('course') || 'python';
+  const view = params.get('view') === 'lessons' ? 'lessons' : 'sets';
+  const setView = (v) => setParams({ course: sel, ...(v === 'lessons' ? { view: v } : {}) });
   const [run, setRun] = useState(null);
   const [store, setStore] = useState(readStore);
   const { topics, tests } = useMemo(() => buildTests(sel), [sel]);
@@ -227,7 +321,9 @@ export default function TestSeries() {
   const start = (test, mode) => { setRun({ test, mode }); window.scrollTo(0, 0); };
   const label = sel.startsWith('grp:') ? trackGroups.find((g) => `grp:${g.key}` === sel)?.name : tracks[sel]?.name;
 
-  if (run) return run.mode === 'mcq' ? <McqRun test={run.test} onExit={exit} /> : <MockRun test={run.test} onExit={exit} />;
+  if (run?.mode === 'mcq') return <McqRun test={run.test} onExit={exit} />;
+  if (run?.mode === 'sheet') return <QaSheet test={run.test} onExit={exit} onMock={() => start(run.test, 'mock')} />;
+  if (run) return <MockRun key={run.test.id} test={run.test} onExit={exit} />;
 
   const res = store.results || {};
   const taken = tests.filter((t) => res[t.id]);
@@ -239,10 +335,10 @@ export default function TestSeries() {
     <div>
       <div className="page-head">
         <h1>🎯 Interview Test Series</h1>
-        <p className="muted">Numbered tests for every course. Each test has a timed <b>MCQ test</b> and a <b>mock interview</b> where you answer real interview questions by speaking or typing, then compare with the model answer.</p>
+        <p className="muted">Separate practice sets for every course: timed <b>MCQ papers</b>, <b>mock interviews</b> where you answer real interview questions by speaking or typing, and full <b>interview Q&amp;A sheets</b> with model answers for revision.</p>
         <div className="quiz-settings">
           <label>Course
-            <select value={sel} onChange={(e) => setParams({ course: e.target.value })}>
+            <select value={sel} onChange={(e) => setParams({ course: e.target.value, ...(view === 'lessons' ? { view } : {}) })}>
               <optgroup label="Full paths">{groupOpts.map((g) => <option key={g.key} value={`grp:${g.key}`}>{g.name} (all courses)</option>)}</optgroup>
               <optgroup label="Single course">{options.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</optgroup>
             </select>
@@ -250,6 +346,19 @@ export default function TestSeries() {
         </div>
       </div>
 
+      <div className="tabs">
+        <button className={`tab ${view === 'sets' ? 'active' : ''}`} onClick={() => setView('sets')}>📚 5 Practice Sets per course</button>
+        <button className={`tab ${view === 'lessons' ? 'active' : ''}`} onClick={() => setView('lessons')}>🧩 Lesson-wise tests</button>
+      </div>
+
+      {view === 'sets' ? (
+        <>
+          <p className="muted">Each course has <b>{SETS} full-length practice sets</b>. Every set covers the <b>whole syllabus</b>, and the {SETS} sets together use <b>every MCQ and interview question</b> in the course exactly once. Clear a set by scoring ≥{PASS}% in both its MCQ paper and its mock interview. Use the Q&amp;A sheet to revise before the mock.</p>
+          {(sel.startsWith('grp:') ? (trackGroups.find((g) => `grp:${g.key}` === sel)?.tracks || []) : [sel])
+            .filter((k) => tracks[k]?.topics?.length)
+            .map((k) => <SetCards key={k} course={k} res={res} start={start} />)}
+        </>
+      ) : (<>
       <div className="ts-stats">
         <div className="card"><b>{tests.length}</b><span>Tests in {label}</span></div>
         <div className="card"><b>{taken.length}</b><span>Attempted</span></div>
@@ -287,6 +396,8 @@ export default function TestSeries() {
           );
         })}
       </div>
+
+      </>)}
 
       {history.length > 0 && (
         <div className="card">

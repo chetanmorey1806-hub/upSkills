@@ -18,6 +18,15 @@ const htmlExtra = load(import.meta.glob('./html-extra/*.js', { eager: true })).s
 const cssDays = load(import.meta.glob('./css-days/*.js', { eager: true })).sort(byDay);
 const jsDays = load(import.meta.glob('./js-days/*.js', { eager: true })).sort(byDay);
 const reactDays = load(import.meta.glob('./react-days/*.js', { eager: true })).sort(byDay);
+const bootstrapDays = load(import.meta.glob('./bootstrap-days/*.js', { eager: true })).sort(byDay);
+const nodeDays = load(import.meta.glob('./node-days/*.js', { eager: true })).sort(byDay);
+const nextjsDays = load(import.meta.glob('./nextjs-days/*.js', { eager: true })).sort(byDay);
+const vueDays = load(import.meta.glob('./vue-days/*.js', { eager: true })).sort(byDay);
+const mongodbDays = load(import.meta.glob('./mongodb-days/*.js', { eager: true })).sort(byDay);
+const reactproDays = load(import.meta.glob('./reactpro-days/*.js', { eager: true })).sort(byDay);
+const tsDays = load(import.meta.glob('./ts-days/*.js', { eager: true })).sort(byDay);
+const mernDays = load(import.meta.glob('./mern-days/*.js', { eager: true })).sort(byDay);
+const mernInterview = load(import.meta.glob('./mern-interview/*.js', { eager: true })).sort((a, b) => (a.extraNo || 0) - (b.extraNo || 0));
 const javaGlob = {
   corejava: load(import.meta.glob('./corejava-days/*.js', { eager: true })),
   collections: load(import.meta.glob('./collections-days/*.js', { eager: true })),
@@ -128,6 +137,51 @@ export const tracks = {
     key: 'react', name: 'React 30-Day Course', short: 'React', icon: '⚛️', color: '#0891b2', unit: 'Day', lang: 'web', group: 'web',
     tagline: '6 modules, 30 days: JSX, components, props, state, hooks, routing, Redux Toolkit, performance, testing, TypeScript and deployment.',
     topics: reactDays,
+  },
+  bootstrap: {
+    key: 'bootstrap', name: 'Bootstrap 5 (15 Days)', short: 'Bootstrap', icon: '🅱️', color: '#7952b3', unit: 'Day', lang: 'web', group: 'web',
+    tagline: 'Responsive grid, utilities, components (navbar, cards, forms, modals, carousel), JS plugins, theming / dark mode and React-Bootstrap.',
+    topics: bootstrapDays,
+  },
+  node: {
+    key: 'node', name: 'Node.js + Express (30 Days)', short: 'Node & Express', icon: '🟩', color: '#3c873a', unit: 'Day', lang: 'web', group: 'web',
+    tagline: 'Node core, npm, fs, events, streams, Express routing & middleware, REST APIs, MongoDB/Mongoose, MySQL, JWT auth, security, testing, Socket.io and deployment.',
+    topics: nodeDays,
+  },
+  mongodb: {
+    key: 'mongodb', name: 'MongoDB & Mongoose (15 Days)', short: 'MongoDB', icon: '🍃', color: '#13aa52', unit: 'Day', lang: 'web', group: 'mern',
+    tagline: 'NoSQL basics, CRUD, query operators, aggregation pipeline, indexes & explain, schema design, transactions, Mongoose models/populate/middleware, Atlas and interview prep, with a built-in MongoDB shell.',
+    topics: mongodbDays,
+  },
+  reactpro: {
+    key: 'reactpro', name: 'Advanced React for MERN (12 Days)', short: 'Advanced React', icon: '⚛️', color: '#087ea4', unit: 'Day', lang: 'web', group: 'mern',
+    tagline: 'React internals and React 19, TanStack Query, Redux Toolkit/Zustand, advanced forms, patterns, performance, auth UI, Tailwind, testing with MSW, React + TypeScript and machine-coding rounds.',
+    topics: reactproDays,
+  },
+  ts: {
+    key: 'ts', name: 'TypeScript for MERN (12 Days)', short: 'TypeScript', icon: '🔷', color: '#3178c6', unit: 'Day', lang: 'web', group: 'mern',
+    tagline: 'Types, functions, interfaces, narrowing, generics, classes, utility and advanced types, then TypeScript with React, Node, Express, Mongoose and Zod.',
+    topics: tsDays,
+  },
+  mern: {
+    key: 'mern', name: 'MERN Full Stack: Integration & Deployment (15 Days)', short: 'MERN Full Stack', icon: '🚀', color: '#0f766e', unit: 'Day', lang: 'web', group: 'mern',
+    tagline: 'Connect React, Express and MongoDB end to end: CRUD, JWT + refresh-token auth, RBAC, security, uploads, search & pagination, Socket.IO, payments, caching, testing, Docker, CI/CD, deployment and a capstone.',
+    topics: mernDays,
+  },
+  merninterview: {
+    key: 'merninterview', name: 'MERN Interview Preparation', short: 'MERN Interview', icon: '🎯', color: '#be123c', unit: 'Topic', lang: 'web', group: 'mern',
+    tagline: 'JavaScript, async JS, coding round polyfills, web fundamentals, React, machine coding, Node.js, Express/REST, MongoDB, system design, DevOps and project/HR round: 300+ interview questions with answers.',
+    topics: mernInterview,
+  },
+  nextjs: {
+    key: 'nextjs', name: 'Next.js (20 Days)', short: 'Next.js', icon: '▲', color: '#111827', unit: 'Day', lang: 'web', group: 'web',
+    tagline: 'App Router, Server & Client Components, data fetching & caching, Server Actions, route handlers, Prisma, Auth.js, middleware, SEO and Vercel deployment.',
+    topics: nextjsDays,
+  },
+  vue: {
+    key: 'vue', name: 'Vue.js 3 (25 Days)', short: 'Vue.js', icon: '💚', color: '#42b883', unit: 'Day', lang: 'web', group: 'web',
+    tagline: 'Templates & directives, reactivity, computed & watchers, components, props/emits/slots, Composition API, composables, Vue Router, Pinia, testing and Nuxt.',
+    topics: vueDays,
   },
   corejava: {
     key: 'corejava', name: 'Core Java 45-Day Course', short: 'Core Java', icon: '☕', color: '#e76f00', unit: 'Day', lang: 'java', group: 'java',
@@ -261,11 +315,12 @@ export const tracks = {
   },
 };
 
-export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech', 'python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools', 'mysql', 'dotnet', 'dotnetextra', 'ai', 'softskills'];
+export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'reactpro', 'ts', 'mongodb', 'mern', 'merninterview', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech', 'python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools', 'mysql', 'dotnet', 'dotnetextra', 'ai', 'softskills', 'bootstrap', 'node', 'nextjs', 'vue'];
 export const trackGroups = [
   { key: 'ai', name: 'Artificial Intelligence', tracks: ['ai'] },
   { key: 'data', name: 'Data Analytics', tracks: ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides'] },
-  { key: 'web', name: 'Web Development', tracks: ['html', 'htmlextra', 'css', 'js', 'react'] },
+  { key: 'mern', name: 'MERN Stack', tracks: ['html', 'css', 'js', 'react', 'reactpro', 'ts', 'node', 'mongodb', 'mern', 'merninterview'] },
+  { key: 'web', name: 'Web Development', tracks: ['html', 'htmlextra', 'css', 'bootstrap', 'js', 'react', 'node', 'nextjs', 'vue'] },
   { key: 'java', name: 'Java Full Stack', tracks: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech'] },
   { key: 'python', name: 'Python Full Stack', tracks: ['python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools'] },
   { key: 'dotnet', name: '.NET Full Stack', tracks: ['dotnet', 'dotnetextra'] },

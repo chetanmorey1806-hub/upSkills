@@ -67,7 +67,7 @@ export default {
         'Start the REPL with `node`, type the three lines, then `.exit` (here the lines are piped in with printf to record the session)',
       ],
       code: "node -v\nnpm -v\nnode -e \"console.log('Hello from node -e')\"\nnode -p \"Math.max(3, 9, 4) * 2\"\n\n# REPL session (normally you type these lines after running `node`)\nprintf '1 + 2\\nconst marks = [70, 85, 90]\\nmarks.map(m => m + 5)\\n_.length\\n.exit\\n' | node -i",
-      result: '@@R1@@',
+      result: "v24.13.0\n11.6.2\nHello from node -e\n18\nWelcome to Node.js v24.13.0.\nType \".help\" for more information.\n> 3\n> undefined\n> [ 75, 90, 95 ]\n> 3\n>",
       explanation:
         '`node -v` / `npm -v` print the installed versions (yours may differ; use Node 22 LTS or newer). `-e` only runs code, so you need console.log; `-p` prints the value of the expression automatically. In the REPL each expression result is printed after `>`; `const` declarations print `undefined`, and `_` holds the last result (the mapped array), so `_.length` is 3.',
     },
@@ -80,7 +80,7 @@ export default {
         'Try `mul`, `sub` and a wrong operation too',
       ],
       code: "// calc.js   run: node calc.js add 10 5\nconst [op, a, b] = process.argv.slice(2); // skip node path and script path\nconst x = Number(a);\nconst y = Number(b);\n\nconsole.log('Raw arguments:', process.argv.slice(2));\nconsole.log('Types:', typeof a, typeof x);\n\nconst ops = {\n  add: (p, q) => p + q,\n  sub: (p, q) => p - q,\n  mul: (p, q) => p * q,\n};\n\nif (!ops[op]) {\n  console.log('Usage: node calc.js <add|sub|mul> <a> <b>');\n  process.exit(1);\n}\nconsole.log(`${x} ${op} ${y} = ${ops[op](x, y)}`);",
-      result: '@@R2@@',
+      result: "$ node calc.js add 10 5\nRaw arguments: [ 'add', '10', '5' ]\nTypes: string number\n10 add 5 = 15",
       explanation:
         '`process.argv.slice(2)` returns only your arguments. They arrive as strings ("10"), so `Number()` converts them; without it `"10" + "5"` would give "105". `process.exit(1)` ends the program with a non-zero exit code, which signals failure to the shell and CI tools.',
     },
@@ -94,7 +94,7 @@ export default {
         'Run `npm pkg set` to edit fields from the command line',
       ],
       code: "npm init -y > /dev/null\nnpm pkg set description=\"My first Node API\" scripts.start=\"node index.js\"\ncat package.json",
-      result: '@@R3@@',
+      result: "{\n  \"name\": \"my-api\",\n  \"version\": \"1.0.0\",\n  \"description\": \"My first Node API\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\",\n    \"start\": \"node index.js\"\n  },\n  \"keywords\": [],\n  \"author\": \"\",\n  \"license\": \"ISC\",\n  \"type\": \"commonjs\"\n}",
       explanation:
         '`npm init -y` uses the folder name as `name`, `1.0.0` as `version` and `index.js` as `main`. `npm pkg set` safely edits package.json from the terminal (you can also edit it by hand; it must stay valid JSON, so no comments and no trailing commas). The `type` field `commonjs` means `.js` files use `require` (Day 3 covers ES Modules).',
     },
@@ -108,7 +108,7 @@ export default {
         'Notice that `pregreet` runs automatically before `greet`',
       ],
       code: "# File: greet.js\nconst name = process.argv[2] || 'World';\nconsole.log(`Hello, ${name}!`);\n\n# File: package.json\n{\n  \"name\": \"scripts-demo\",\n  \"version\": \"1.0.0\",\n  \"scripts\": {\n    \"start\": \"node greet.js\",\n    \"pregreet\": \"node -p \\\"'Preparing greeting...'\\\"\",\n    \"greet\": \"node greet.js\"\n  }\n}\n\n# Terminal\nnpm start\nnpm run greet -- Asha",
-      result: '@@R4@@',
+      result: "\n> scripts-demo@1.0.0 start\n> node greet.js\n\nHello, World!\n\n> scripts-demo@1.0.0 pregreet\n> node -p \"'Preparing greeting...'\"\n\nPreparing greeting...\n\n> scripts-demo@1.0.0 greet\n> node greet.js Asha\n\nHello, Asha!",
       explanation:
         'npm prints a header (`> package@version script` and the command) before running each script. `npm start` needs no `run`. Arguments after `--` are appended to the command, so `greet.js` receives "Asha". Because a script named `pregreet` exists, npm runs it automatically before `greet`.',
     },
@@ -120,8 +120,8 @@ export default {
         'Create `ranges.js` with the code below',
         'Run `node ranges.js`',
       ],
-      code: "# Terminal\nnpm init -y > /dev/null\nnpm install semver@7 --silent\nnode -p \"require('./package.json').dependencies\"\n\n# File: ranges.js\nconst semver = require('semver');\nconst versions = ['4.17.0', '4.18.3', '4.21.2', '5.0.0'];\nfor (const range of ['^4.18.2', '~4.18.2', '4.18.2']) {\n  const ok = versions.filter(v => semver.satisfies(v, range));\n  console.log(range.padEnd(8), '->', ok.join(', ') || 'none');\n}\nconsole.log('^0.2.3 allows 0.3.0?', semver.satisfies('0.3.0', '^0.2.3'));",
-      result: '@@R5@@',
+      code: "# File: ranges.js\nconst semver = require('semver');\nconst versions = ['4.17.0', '4.18.2', '4.18.3', '4.21.2', '5.0.0'];\nfor (const range of ['^4.18.2', '~4.18.2', '4.18.2']) {\n  const ok = versions.filter(v => semver.satisfies(v, range));\n  console.log(range.padEnd(8), '->', ok.join(', ') || 'none');\n}\nconsole.log('^0.2.3 allows 0.3.0?', semver.satisfies('0.3.0', '^0.2.3'));\n\n# Terminal\nnpm init -y > /dev/null\nnpm install semver@7 --silent\nnode -p \"require('./package.json').dependencies\"\nnode ranges.js",
+      result: "{ semver: '^7.8.6' }\n^4.18.2  -> 4.18.2, 4.18.3, 4.21.2\n~4.18.2  -> 4.18.2, 4.18.3\n4.18.2   -> 4.18.2\n^0.2.3 allows 0.3.0? false",
       explanation:
         '`npm install semver@7` saved `"semver": "^7.x.x"` in dependencies (caret by default). The script shows that `^4.18.2` accepts minor and patch updates but not 5.0.0, `~4.18.2` only accepts 4.18.x patches, and the exact version accepts only itself. For 0.x versions the caret is stricter, so 0.3.0 is rejected.',
     },

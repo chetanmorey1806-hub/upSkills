@@ -1,4 +1,6 @@
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { API_LOAD_KEY } from './ApiLab.jsx';
+import { MONGO_LOAD_KEY } from './MongoLab.jsx';
 import { openInPlayground } from '../components/playgroundRuntime.js';
 import { useEffect, useState } from 'react';
 import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL, isDotnet, isAI, isSoft } from '../data/index.js';
@@ -62,7 +64,7 @@ export default function TopicPage() {
     try { localStorage.setItem('xlpbi-last-topic', JSON.stringify({ track, id, at: new Date().toISOString() })); } catch { /* ignore */ }
   }, [track, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!found) return <p>Topic not found. <Link to="/">Go home</Link></p>;
+  if (!found) return <p>Topic not found. <Link to="/home">Go home</Link></p>;
   const { topic: t, index, list } = found;
   const tr = tracks[track];
   const key = topicKey(track, t.id);
@@ -93,7 +95,7 @@ export default function TopicPage() {
   const openJava = (payload) => { try { sessionStorage.setItem(JAVA_LOAD_KEY, JSON.stringify(payload)); } catch { /* ignore */ } navigate('/tools/java-ide'); };
   const codeLabel = soft ? 'Sample answer / Template' : ai ? 'Prompt / Code' : dn ? (dnSql ? 'T-SQL / Code' : dnWeb ? 'Code' : 'C# / Code') : my ? 'MySQL' : py ? (track === 'sql' ? 'SQL' : 'Python / Code') : java ? 'Java / Code' : web ? (track === 'react' ? 'JSX' : track === 'css' ? 'CSS' : track === 'js' ? 'JavaScript' : 'Code') : isExcel ? 'Formula / Code' : 'DAX / M';
   const pqTopic = !isExcel && /power query|\bM\b|m language|dataflow/i.test(`${t.module || ''} ${t.title}`);
-  const lab = soft ? ['/tools/soft-skills', 'Soft Skills Lab'] : ai ? aiLab : dnSql ? ['/tools/ssms-lab', 'SSMS Lab'] : dnWeb ? ['/tools/playground', 'Code Playground'] : dn ? ['/tools/csharp-ide', 'C# IDE'] : my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
+  const lab = track === 'mongodb' ? ['/tools/mongo-lab', 'MongoDB Shell Lab'] : track === 'mern' ? ['/tools/api-lab', 'API Lab'] : track === 'node' ? ['/tools/api-lab', 'API Lab'] : soft ? ['/tools/soft-skills', 'Soft Skills Lab'] : ai ? aiLab : dnSql ? ['/tools/ssms-lab', 'SSMS Lab'] : dnWeb ? ['/tools/playground', 'Code Playground'] : dn ? ['/tools/csharp-ide', 'C# IDE'] : my ? ['/tools/mysql-workbench', 'MySQL Workbench Lab'] : track === 'sql' ? ['/tools/sql-lab', 'SQL Lab'] : py ? ['/tools/python-ide', 'Python IDE'] : java ? ['/tools/java-ide', 'Java IDE'] : web ? ['/tools/playground', 'Code Playground'] : isExcel ? ['/tools/formula-lab', 'Formula Lab'] : pqTopic ? ['/tools/power-query-lab', 'Power Query Lab'] : ['/tools/dax-lab', 'DAX Lab'];
 
   const setTab = (k) => setParams({ tab: k }, { replace: true });
 
@@ -223,6 +225,16 @@ export default function TopicPage() {
               {ex.java?.files && (
                 <button className="btn small primary try-btn" onClick={() => openJava({ files: ex.java.files, stdin: ex.java.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
                   ☕ Open in Java IDE
+                </button>
+              )}
+              {ex.mongo?.query && (
+                <button className="btn small primary try-btn" onClick={() => { try { sessionStorage.setItem(MONGO_LOAD_KEY, JSON.stringify({ query: ex.mongo.query, dataset: ex.mongo.dataset || 'shop', title: ex.title, expected: ex.result || '' })); } catch { /* ignore */ } navigate('/tools/mongo-lab'); }}>
+                  🍃 Run in MongoDB Lab
+                </button>
+              )}
+              {ex.api?.code && (
+                <button className="btn small primary try-btn" onClick={() => { try { sessionStorage.setItem(API_LOAD_KEY, JSON.stringify({ code: ex.api.code, requests: ex.api.requests || [], title: ex.title, expected: ex.result || '' })); } catch { /* ignore */ } navigate('/tools/api-lab'); }}>
+                  ▶ Open in API Lab
                 </button>
               )}
               {ex.playground && (

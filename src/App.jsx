@@ -10,6 +10,9 @@ import FormulaLab from './pages/FormulaLab.jsx';
 import DaxLab from './pages/DaxLab.jsx';
 import PowerQueryLab from './pages/PowerQueryLab.jsx';
 import CodePlayground from './pages/CodePlayground.jsx';
+import ApiLab from './pages/ApiLab.jsx';
+import MongoLab from './pages/MongoLab.jsx';
+import MernProjects from './pages/MernProjects.jsx';
 import Courses from './pages/Courses.jsx';
 import JavaIDE from './pages/JavaIDE.jsx';
 import PythonIDE from './pages/PythonIDE.jsx';
@@ -29,6 +32,8 @@ import SearchPage from './pages/SearchPage.jsx';
 import JavaInterview from './pages/JavaInterview.jsx';
 import JavaProjects from './pages/JavaProjects.jsx';
 import SoftSkills from './pages/SoftSkills.jsx';
+import Landing from './pages/Landing.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 import TestSeries from './pages/TestSeries.jsx';
 import Projects from './pages/Projects.jsx';
 import ProjectWorkspace from './pages/ProjectWorkspace.jsx';
@@ -41,12 +46,13 @@ function ScrollTop() {
   return null;
 }
 
-export default function App() {
+function AppShell() {
   return (
     <Layout>
-      <ScrollTop />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
         <Route path="/roadmap" element={<Roadmap />} />
         <Route path="/track/:track" element={<TrackPage />} />
         <Route path="/track/:track/:id" element={<TopicPage />} />
@@ -55,6 +61,7 @@ export default function App() {
         <Route path="/tools/dax-lab" element={<DaxLab />} />
         <Route path="/tools/power-query-lab" element={<PowerQueryLab />} />
         <Route path="/tools/playground" element={<CodePlayground />} />
+        <Route path="/tools/api-lab" element={<ApiLab />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/tools/java-ide" element={<JavaIDE />} />
         <Route path="/tools/python-ide" element={<PythonIDE />} />
@@ -77,9 +84,24 @@ export default function App() {
         <Route path="/tools/test-series" element={<TestSeries />} />
         <Route path="/tools/python-projects" element={<Projects />} />
         <Route path="/tools/python-projects/:id" element={<ProjectWorkspace />} />
+        <Route path="/tools/mongo-lab" element={<MongoLab />} />
+        <Route path="/tools/mern-projects" element={<MernProjects />} />
+        <Route path="/tools/mern-projects/:id" element={<MernProjects />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="*" element={<Home />} />
       </Routes>
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <>
+      <ScrollTop />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="*" element={<AppShell />} />
+      </Routes>
+    </>
   );
 }

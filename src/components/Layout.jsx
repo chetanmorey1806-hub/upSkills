@@ -1,22 +1,26 @@
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import { Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search, ClipboardCheck, MessageCircle, Trophy, Hammer } from 'lucide-react';
+import { Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search, ClipboardCheck, MessageCircle, Trophy, Hammer, LayoutDashboard } from 'lucide-react';
 import Logo from './Logo.jsx';
 
 const ic = (I) => <I size={16} strokeWidth={2} />;
 const links = [
-  { to: '/', label: 'Home', icon: ic(Home), end: true },
+  { to: '/home', label: 'Home', icon: ic(Home), end: true },
+  { to: '/dashboard', label: 'Dashboard', icon: ic(LayoutDashboard) },
   { to: '/courses', label: 'Courses', icon: ic(BookOpen) },
   { to: '/roadmap', label: 'Roadmap', icon: ic(MapIcon) },
   { to: '/tools', label: 'Practice Tools', icon: ic(Wrench), end: true },
   { to: '/tools/ai-lab', label: 'AI Lab', icon: ic(Sparkles) },
   { to: '/tools/ai-app-builder', label: 'AI App Builder', icon: ic(Rocket) },
   { to: '/tools/playground', label: 'Web', icon: ic(Code2) },
+  { to: '/tools/api-lab', label: 'API Lab', icon: ic(Server) },
   { to: '/tools/java-ide', label: 'Java', icon: ic(Coffee) },
   { to: '/tools/java-interview', label: 'Interview Prep', icon: ic(ClipboardCheck) },
   { to: '/tools/soft-skills', label: 'Soft Skills', icon: ic(MessageCircle) },
   { to: '/tools/test-series', label: 'Test Series', icon: ic(Trophy) },
   { to: '/tools/python-projects', label: 'Python Projects', icon: ic(Hammer) },
+  { to: '/tools/mern-projects', label: 'MERN Projects', icon: ic(Rocket) },
+  { to: '/tools/mongo-lab', label: 'MongoDB', icon: ic(Database) },
   { to: '/tools/python-ide', label: 'Python', icon: ic(Terminal) },
   { to: '/tools/mysql-workbench', label: 'MySQL', icon: ic(Database) },
   { to: '/tools/csharp-ide', label: 'C#', icon: ic(Cpu) },

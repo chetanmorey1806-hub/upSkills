@@ -49,7 +49,7 @@ function Counter({ to, suffix = '+' }) {
     const run = () => {
       const t0 = performance.now();
       const step = (t) => {
-        const k = Math.min(1, (t - t0) / 1400);
+        const k = Math.max(0, Math.min(1, (t - t0) / 1400));
         setV(Math.round(to * (1 - (1 - k) ** 3)));
         if (k < 1) raf = requestAnimationFrame(step);
       };

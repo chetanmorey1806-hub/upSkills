@@ -33,7 +33,7 @@ function toSrc(p, keys) {
       i += m[0].length;
     } else if (ch === '*') {
       const m = /^\*([A-Za-z_$][\w$]*)?/.exec(p.slice(i));
-      keys.push(m[1] || '0');
+      keys.push(m[1] ? `*${m[1]}` : '0');
       src += '(.*)';
       i += m[0].length;
     } else {
@@ -54,6 +54,38 @@ export function compilePath(path, { end = true } = {}) {
   return { re, keys };
 }
 
+
+// SHA-1 + weak ETag exactly like Express (etag package): W/"<byteLength hex>-<base64 sha1, 27 chars>"
+function sha1Bytes(bytes) {
+  const ml = bytes.length;
+  const withPad = new Uint8Array(((ml + 9 + 63) >> 6) << 6);
+  withPad.set(bytes); withPad[ml] = 0x80;
+  const dv = new DataView(withPad.buffer);
+  dv.setUint32(withPad.length - 4, (ml * 8) >>> 0); dv.setUint32(withPad.length - 8, Math.floor(ml / 0x20000000));
+  let [h0, h1, h2, h3, h4] = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+  const w = new Uint32Array(80);
+  for (let o = 0; o < withPad.length; o += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+    for (let i = 16; i < 80; i++) { const x = w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]; w[i] = (x << 1) | (x >>> 31); }
+    let [a, b, c, d, e] = [h0, h1, h2, h3, h4];
+    for (let i = 0; i < 80; i++) {
+      const [f, k] = i < 20 ? [(b & c) | (~b & d), 0x5a827999] : i < 40 ? [b ^ c ^ d, 0x6ed9eba1] : i < 60 ? [(b & c) | (b & d) | (c & d), 0x8f1bbcdc] : [b ^ c ^ d, 0xca62c1d6];
+      const t = (((a << 5) | (a >>> 27)) + f + e + k + w[i]) >>> 0;
+      e = d; d = c; c = (b << 30) | (b >>> 2); b = a; a = t;
+    }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0; h4 = (h4 + e) >>> 0;
+  }
+  const out = new Uint8Array(20); const odv = new DataView(out.buffer);
+  [h0, h1, h2, h3, h4].forEach((h, i) => odv.setUint32(i * 4, h));
+  return out;
+}
+function weakEtag(text) {
+  const bytes = new TextEncoder().encode(text);
+  if (bytes.length === 0) return 'W/"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
+  const b64 = btoa(String.fromCharCode(...sha1Bytes(bytes))).slice(0, 27);
+  return `W/"${bytes.length.toString(16)}-${b64}"`;
+}
+
 function matchPath(layer, path) {
   const m = layer.match.re.exec(path);
   if (!m) return null;
@@ -61,15 +93,19 @@ function matchPath(layer, path) {
   layer.match.keys.forEach((k, idx) => {
     const v = m[idx + 1];
     if (v === undefined) return;
-    params[k] = k === '0' || /^\*/.test(k) ? v : decodeURIComponent(v);
+    if (k === '0') params[k] = v;
+    // Express 5 named wildcards (*name) give an array of decoded path segments
+    else if (k[0] === '*') params[k.slice(1)] = v.split('/').filter((x) => x !== '').map((x) => { try { return decodeURIComponent(x); } catch { return x; } });
+    else params[k] = decodeURIComponent(v);
   });
   return { params, matched: m[0] };
 }
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
 
-function makeRouter() {
+function makeRouter(opts = {}) {
   const stack = [];
+  const paramFns = {};
   const router = function routerHandle(req, res, next) { return router.handle(req, res, next); };
   router.stack = stack;
   router.__isRouter = true;
@@ -94,11 +130,44 @@ function makeRouter() {
     [...METHODS, 'all'].forEach((m) => { r[m] = (...fns) => { addRoute(m, path, fns); return r; }; });
     return r;
   };
-  router.param = () => router;
+  router.param = (name, fn) => {
+    if (typeof fn !== 'function') throw new TypeError('invalid param() call for ' + name + ', got ' + fn);
+    (paramFns[name] ||= []).push(fn);
+    return router;
+  };
+  router.__mergeParams = !!opts.mergeParams;
 
   router.handle = (req, res, done) => {
     let idx = 0;
     const basePath = req.__path ?? req.path;
+    const parentParams = router.__mergeParams ? (req.__parentParams || {}) : {};
+    const paramCalled = {};
+    // run router.param() callbacks (once per value per request) before the layer
+    const runParams = (params, cb) => {
+      const names = Object.keys(params).filter((k) => paramFns[k] && paramCalled[k] !== params[k]);
+      let i = 0;
+      const step = (e) => {
+        if (e) return cb(e);
+        if (res.headersSent) return undefined;
+        const k = names[i];
+        if (k === undefined) return cb();
+        const fns = paramFns[k];
+        let j = 0;
+        const inner = (e2) => {
+          if (e2) return cb(e2);
+          if (res.headersSent) return undefined;
+          const f = fns[j++];
+          if (!f) { paramCalled[k] = params[k]; i += 1; return step(); }
+          try {
+            const r = f(req, res, inner, params[k], k);
+            if (r && typeof r.then === 'function') r.then(undefined, (e3) => cb(e3 || new Error('Rejected promise')));
+          } catch (e3) { cb(e3); }
+          return undefined;
+        };
+        return inner();
+      };
+      return step();
+    };
     const next = (err) => {
       if (res.headersSent && !err) return;
       if (err === 'route' || err === 'router') err = undefined;
@@ -111,22 +180,28 @@ function makeRouter() {
         const method = req.method.toLowerCase();
         if (layer.method !== 'all' && layer.method !== method && !(method === 'head' && layer.method === 'get')) return next(err);
       }
-      req.params = { ...(req.__parentParams || {}), ...m.params };
+      req.params = { ...parentParams, ...m.params };
       const isErrHandler = layer.fn.length === 4;
       if (err && !isErrHandler) return next(err);
       if (!err && isErrHandler) return next();
+      if (!err && Object.keys(m.params).some((k) => paramFns[k] && paramCalled[k] !== m.params[k])) {
+        const saved = req.params;
+        return runParams(m.params, (e) => { if (e) return next(e); req.params = saved; return go(); });
+      }
+      return go();
+      function go() {
       const call = () => {
         if (layer.kind === 'use') {
           const prevBase = req.baseUrl;
           const removed = m.matched === '/' ? '' : m.matched;
           if (layer.fn.__isRouter) {
-            const parentParams = req.params;
+            const childParams = req.params;
             req.baseUrl = prevBase + removed;
             req.__path = path.slice(removed.length) || '/';
-            req.__parentParams = parentParams;
+            req.__parentParams = childParams;
             req.url = req.__path + (req.__search || '');
             return layer.fn.handle(req, res, (e) => {
-              req.baseUrl = prevBase; req.__path = basePath; req.url = basePath + (req.__search || ''); req.__parentParams = undefined;
+              req.baseUrl = prevBase; req.__path = basePath; req.url = basePath + (req.__search || ''); req.__parentParams = parentParams; req.params = childParams;
               next(e);
             });
           }
@@ -139,6 +214,8 @@ function makeRouter() {
         if (r && typeof r.then === 'function') r.then(undefined, (e) => next(e || new Error('Rejected promise')));
       } catch (e) {
         next(e);
+      }
+      return undefined;
       }
     };
     next();
@@ -170,7 +247,7 @@ export function createExpress(log) {
     apps.push(app);
     return app;
   }
-  express.Router = () => makeRouter();
+  express.Router = (opts) => makeRouter(opts);
   express.json = (opts = {}) => function jsonParser(req, res, next) {
     const ct = (req.headers['content-type'] || '').toLowerCase();
     if (req.__rawBody != null && req.__rawBody !== '' && (ct.includes('json') || (opts.type && ct.includes(opts.type)))) {
@@ -224,15 +301,16 @@ export function makeReqRes({ method, url, headers = {}, body }, onFinish) {
     header(k, v) { return this.set(k, v); },
     get(k) { return resHeaders[k.toLowerCase()]; },
     type(t) { const map = { json: 'application/json; charset=utf-8', html: 'text/html; charset=utf-8', text: 'text/plain; charset=utf-8' }; resHeaders['content-type'] = map[t] || t; return this; },
-    json(obj) { if (!resHeaders['content-type']) resHeaders['content-type'] = 'application/json; charset=utf-8'; return this.__end(JSON.stringify(obj === undefined ? null : obj)); },
+    json(obj) { this.__etagOk = true; if (!resHeaders['content-type']) resHeaders['content-type'] = 'application/json; charset=utf-8'; return this.__end(JSON.stringify(obj === undefined ? null : obj)); },
     send(b) {
+      this.__etagOk = true;
       if (b === undefined) return this.__end('');
       if (typeof b === 'object' && b !== null) return this.json(b);
       if (typeof b === 'number') { this.statusCode = b; return this.__end(STATUS_TEXT[b] || String(b)); }
       if (!resHeaders['content-type']) resHeaders['content-type'] = 'text/html; charset=utf-8';
       return this.__end(String(b));
     },
-    sendStatus(c) { this.statusCode = c; resHeaders['content-type'] = 'text/plain; charset=utf-8'; return this.__end(STATUS_TEXT[c] || String(c)); },
+    sendStatus(c) { this.__etagOk = true; this.statusCode = c; resHeaders['content-type'] = 'text/plain; charset=utf-8'; return this.__end(STATUS_TEXT[c] || String(c)); },
     end(b) { return this.__end(b == null ? '' : String(b)); },
     redirect(a, b) { const [code, loc] = typeof a === 'number' ? [a, b] : [302, a]; this.statusCode = code; resHeaders.location = loc; return this.__end(`Found. Redirecting to ${loc}`); },
     cookie(n, v) { resHeaders['set-cookie'] = `${n}=${v}; Path=/`; return this; },
@@ -242,6 +320,14 @@ export function makeReqRes({ method, url, headers = {}, body }, onFinish) {
     __end(text) {
       if (this.headersSent) throw new Error('Cannot set headers after they are sent to the client');
       this.headersSent = true;
+      if (this.__etagOk && (req.method === 'GET' || req.method === 'HEAD') && text !== '' && !resHeaders.etag) resHeaders.etag = weakEtag(text);
+      const inm = req.headers['if-none-match'];
+      const sc = this.statusCode;
+      if (this.__etagOk && inm && resHeaders.etag && ((sc >= 200 && sc < 300) || sc === 304) && !/no-cache/.test(req.headers['cache-control'] || '')
+        && (inm.trim() === '*' || inm.split(',').map((x) => x.trim().replace(/^W\//, '')).includes(resHeaders.etag.replace(/^W\//, '')))) {
+        this.statusCode = 304;
+        ['content-type', 'content-length', 'transfer-encoding'].forEach((h) => delete resHeaders[h]);
+      }
       if (this.statusCode === 204 || this.statusCode === 304) text = '';
       onFinish({ status: this.statusCode, headers: { ...resHeaders }, body: text });
       return this;

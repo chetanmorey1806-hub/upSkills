@@ -17,13 +17,19 @@ const GROUPS = [
     ['/tools/java-projects', Hammer, 'Final Project Studio', '8 Java final projects from console apps to Spring Boot microservices: milestones, DB design, APIs, starter code, viva Q&A and a downloadable project report.'],
     ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Self-introduction builder, speaking practice with filler-word and speed analysis, HR answers, STAR stories, group discussion and email writing.'],
   ]],
+  ['MERN stack career & placement', [
+    ['/tools/mern-projects', Hammer, 'MERN Final Projects', '4 MERN projects (Task Manager, Student Records with pagination, Auth & Roles, E-commerce Cart & Orders): write the Express API here and run 8 automated API tests each, then React, MongoDB and deployment milestones, viva questions, score and certificate.'],
+    ['/tools/mongo-lab', Database, 'MongoDB Shell Lab', 'mongosh in your browser: shop, college and blog databases, find/update/delete, aggregation with $lookup, indexes and explain(), table view and 32 auto-checked query challenges.'],
+    ['/tools/test-series?course=grp:mern', Trophy, 'MERN Interview Test Series', 'Timed MCQ tests and spoken/typed mock interviews for the whole MERN path: JavaScript, React, Node, Express, MongoDB, TypeScript and system design.'],
+  ]],
   ['Python career & placement', [
     ['/tools/test-series', Trophy, 'Interview Test Series (all courses)', 'Numbered tests for every course (Python, FastAPI, DSA, ML, Django …): timed MCQ tests plus mock interviews where you speak or type answers and get key-point feedback, a grand test, pass marks and attempt history.'],
     ['/tools/python-projects', Hammer, 'Python Final Projects', '6 guided Python projects (Student Management, Bank OOP, Library, Expense Tracker, Inventory on SQLite, Log Analyzer) plus your own idea: starter code, automated tests that run in the browser, milestones, score and certificate.'],
     ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Practise self-introduction, HR answers, STAR stories, group discussion and email writing. Pair it with the 15-day Soft Skills & HR Interview course.'],
   ]],
   ['Code editors & IDEs', [
-    ['/tools/playground', Code2, 'Web Code Editor (VS Code style)', 'HTML / CSS / JavaScript and React with live preview and console.'],
+    ['/tools/playground', Code2, 'Web Code Editor (VS Code style)', 'HTML / CSS / JavaScript, Bootstrap 5, Vue 3 and React with live preview and console.'],
+    ['/tools/api-lab', Server, 'API Lab (Node.js + Express)', 'Write Express code and test it with a Postman-style panel: methods, URL, headers, JSON body, status, response, history and server logs.'],
     ['/tools/python-ide', Terminal, 'Python IDE (PyCharm style)', 'Runs real Python 3.12 in your browser: input(), multiple files, numpy, pandas, scikit-learn.'],
     ['/tools/java-ide', Coffee, 'Java IDE (IntelliJ / Eclipse style)', 'Project tree, multiple classes, expected output, copy/download to your IDE.'],
     ['/tools/csharp-ide', Cpu, 'C# IDE (Visual Studio style)', 'Solution Explorer, multiple .cs files, expected output, .csproj, run in Visual Studio.'],
