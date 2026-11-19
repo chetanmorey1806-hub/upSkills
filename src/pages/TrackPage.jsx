@@ -54,7 +54,7 @@ export default function TrackPage() {
 
   return (
     <div>
-      <div className="track-banner"><CourseCover track={t} height={190} wide /></div>
+      <div className="track-banner"><span className="only-wide"><CourseCover track={t} height={190} wide /></span><span className="only-narrow"><CourseCover track={t} height={150} /></span></div>
       <RecordedVideos track={track} />
       <LessonMaterials track={track} />
       <div className="page-head" style={{ borderLeftColor: t.color }}>

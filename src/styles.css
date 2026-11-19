@@ -2343,3 +2343,29 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
 .cls-grade { display: grid; grid-template-columns: 140px 1fr auto; gap: .4rem; margin-top: .3rem; }
 .cls-grade .input { margin: 0; }
 @media (max-width: 600px) { .lb-pod { width: 31%; } .cls-grade { grid-template-columns: 1fr; } }
+
+/* ================= Mobile responsive pass ================= */
+.only-narrow { display: none; }
+.only-wide, .only-narrow { width: 100%; }
+@media (max-width: 640px) {
+  .only-wide { display: none; }
+  .only-narrow { display: block; }
+  /* tabs wrap instead of being cut off */
+  .tabs { flex-wrap: wrap; overflow-x: visible; gap: .1rem .2rem; position: static; }
+  .tab { padding: .5rem .6rem; font-size: .86rem; }
+  /* admin users table becomes stacked cards */
+  .admin-users thead { display: none; }
+  .admin-users, .admin-users tbody, .admin-users tr, .admin-users td { display: block; width: 100%; }
+  .admin-users tr { border: 1px solid var(--border); border-radius: 12px; padding: .5rem .75rem; margin-bottom: .6rem; background: var(--surface); }
+  .admin-users td { display: flex; justify-content: space-between; align-items: center; gap: .8rem; border: 0 !important; padding: .3rem 0 !important; text-align: right; word-break: break-word; }
+  .admin-users td::before { font-weight: 600; color: var(--muted); font-size: .8rem; text-align: left; flex-shrink: 0; }
+  .admin-users td:nth-child(1)::before { content: 'Name'; }
+  .admin-users td:nth-child(2)::before { content: 'Username'; }
+  .admin-users td:nth-child(3)::before { content: 'Email'; }
+  .admin-users td:nth-child(4)::before { content: 'Role'; }
+  .admin-users td:nth-child(5)::before { content: 'Access'; }
+  .admin-users td:nth-child(6)::before { content: 'Packages'; }
+  .admin-users td:nth-child(7)::before { content: 'Status'; }
+  .admin-users td:empty, .admin-users td:last-child:not(:has(*)) { display: none; }
+  .card.table-wrap:has(.admin-users) { padding: .6rem; }
+}

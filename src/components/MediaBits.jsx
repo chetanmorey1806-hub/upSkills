@@ -40,7 +40,7 @@ export function GeneratedCover({ track, height = 160, showTitle = true, wide = f
   const W = wide ? 1200 : 640;
   const glyphs = ['</>', '{ }', '( )', '[ ]', '=>', '#', 'Σ', 'fx', '∞', '01'];
   return (
-    <svg className="course-cover" viewBox={`0 0 ${W} 220`} preserveAspectRatio="xMidYMid slice" style={{ height }} role="img" aria-label={track?.name}>
+    <svg className="course-cover" viewBox={`0 0 ${W} 220`} preserveAspectRatio={showTitle ? "xMinYMid slice" : "xMidYMid slice"} style={{ height }} role="img" aria-label={track?.name}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={c} />
