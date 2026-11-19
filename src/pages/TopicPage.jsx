@@ -20,6 +20,8 @@ import Quiz from '../components/Quiz.jsx';
 import VideoLesson from '../components/VideoLesson.jsx';
 import DayTask from '../components/DayTask.jsx';
 import LessonStudyTools from '../components/LessonStudyTools.jsx';
+import TheoryView from '../components/LessonLearnTools.jsx';
+import { VIS_LOAD_KEY } from './CodeVisualizer.jsx';
 import { logEvent, addCardToRevision, useStudy, hashText } from '../study.js';
 
 const TABS = [
@@ -161,23 +163,7 @@ export default function TopicPage() {
 
       {tab === 'theory' && (
         <div>
-          <div className="card toc">
-            <b>Contents:</b>{' '}
-            {t.theory.map((s, i) => (
-              <a key={i} href={`#sec-${i}`} onClick={(e) => { e.preventDefault(); document.getElementById(`sec-${i}`)?.scrollIntoView({ behavior: 'smooth' }); }}>
-                {i + 1}. {s.heading}
-              </a>
-            ))}
-          </div>
-          {t.theory.map((s, i) => (
-            <section key={i} id={`sec-${i}`} className="card theory">
-              <h2>{i + 1}. {s.heading}</h2>
-              <RichText text={s.content} />
-              {s.syntax && <CodeBlock code={s.syntax} label="Syntax" />}
-              {s.points?.length > 0 && <ul className="points">{s.points.map((pt, j) => <li key={j}><Inline text={pt} /></li>)}</ul>}
-              {s.tip && <div className="tip">💡 <Inline text={s.tip} /></div>}
-            </section>
-          ))}
+          <TheoryView lesson={t} lessonKey={key} />
           {t.tools?.length > 0 && (
             <section className="card">
               <h3>AI tools used in this lesson</h3>
@@ -231,6 +217,11 @@ export default function TopicPage() {
               {ex.python?.files && (
                 <button className="btn small primary try-btn" onClick={() => openPy({ files: ex.python.files, stdin: ex.python.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
                   🐍 Run in Python IDE
+                </button>
+              )}
+              {ex.python?.files?.['main.py'] && Object.keys(ex.python.files).length === 1 && (
+                <button className="btn small try-btn" onClick={() => { try { sessionStorage.setItem(VIS_LOAD_KEY, JSON.stringify({ code: ex.python.files['main.py'], stdin: ex.python.stdin || '' })); } catch { /* ignore */ } navigate('/tools/code-visualizer'); }}>
+                  🔍 Visualize step by step
                 </button>
               )}
               {ex.sql?.query && (

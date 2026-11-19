@@ -402,7 +402,7 @@ export function AchievementsPage() {
   const rows = [
     ['Lessons completed', s.done, 10], ['Lesson quizzes taken', s.quizzes, 5], ['Perfect 5/5 quizzes', s.perfect, 10], ['Practice exercises solved', s.practice, 5],
     ['Test series attempts', s.tests, 5], ['Tests passed (60%+)', s.testsPassed, 50], ['Coding problems solved', s.coding, 15], ['Final projects submitted', s.projects, 100],
-    ['Focus sessions (per 25 min)', Math.floor(s.focusMin / 25), 5], ['Revision cards reviewed', s.reviews, 2], ['Cards mastered', s.mastered, 5], ['Daily challenges solved', s.challenges, 20], ['Lessons with notes', s.notes, 2],
+    ['Focus sessions (per 25 min)', Math.floor(s.focusMin / 25), 5], ['Revision cards reviewed', s.reviews, 2], ['Cards mastered', s.mastered, 5], ['Daily challenges solved', s.challenges, 20], ['Lessons with notes', s.notes, 2], ['Code puzzles solved', s.puzzles, 5], ['Quiz battles won', s.battlesWon, 10], ['Feynman explanations', s.feynman, 3], ['Video mock interviews', s.interviews, 5],
   ];
   const got = BADGES.filter((b) => b[4](s)).length;
   return (

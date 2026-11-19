@@ -100,7 +100,7 @@ const COURSE_SKILLS = {
   python: 'Python', sql: 'SQL', mysql: 'MySQL', django: 'Django', flask: 'Flask', drf: 'Django REST Framework', excel: 'Advanced Excel', powerbi: 'Power BI, DAX', ai: 'Generative AI, Prompt Engineering',
   dotnet: 'C#, ASP.NET Core', mongodb: 'MongoDB', mern: 'MERN Stack',
 };
-function autoData(user) {
+export function autoData(user) {
   const prog = readLS('xlpbi-progress-v1', {});
   const started = trackOrder.filter((k) => (tracks[k]?.topics || []).some((x) => (prog.done || {})[`${k}/${x.id}`]));
   const skills = [...new Set(started.map((k) => COURSE_SKILLS[k] || tracks[k].short).join(', ').split(/,\s*/))];

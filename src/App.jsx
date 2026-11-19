@@ -38,6 +38,11 @@ import AuthPage from './pages/AuthPage.jsx';
 import { WebProjectList, WebProjectWorkspace } from './pages/WebProjects.jsx';
 import { StudyHub, NotesPage, MistakesPage, RevisionPage, PlannerPage, AchievementsPage } from './pages/StudyPages.jsx';
 import { CertificatesPage, CertificateView, ResumeBuilder, DailyChallenge, AiCodeReview } from './pages/CareerTools.jsx';
+import CodeVisualizer from './pages/CodeVisualizer.jsx';
+import Visualizers from './pages/Visualizers.jsx';
+import { ExplainError, CodePuzzles, QuizBattle } from './pages/PracticeGames.jsx';
+import { AptitudeHome, AptitudeTopic, CompanyKits, VideoInterview } from './pages/PlacementTools.jsx';
+import { DiagnosticTest, PortfolioBuilder, WeeklyReport } from './pages/GrowthTools.jsx';
 import { RequireAuth } from './auth.js';
 import Admin from './pages/Admin.jsx';
 import PermissionGate from './components/PermissionGate.jsx';
@@ -105,6 +110,19 @@ function AppShell() {
         <Route path="/study/resume" element={<ResumeBuilder />} />
         <Route path="/study/challenge" element={<DailyChallenge />} />
         <Route path="/tools/ai-code-review" element={<AiCodeReview />} />
+        <Route path="/tools/code-visualizer" element={<CodeVisualizer />} />
+        <Route path="/tools/visualizers" element={<Visualizers />} />
+        <Route path="/tools/explain-error" element={<ExplainError />} />
+        <Route path="/tools/code-puzzles" element={<CodePuzzles />} />
+        <Route path="/tools/quiz-battle" element={<QuizBattle />} />
+        <Route path="/practice/aptitude" element={<AptitudeHome />} />
+        <Route path="/practice/aptitude/:id" element={<AptitudeTopic />} />
+        <Route path="/practice/companies" element={<CompanyKits />} />
+        <Route path="/practice/companies/:id" element={<CompanyKits />} />
+        <Route path="/practice/video-interview" element={<VideoInterview />} />
+        <Route path="/study/diagnostic" element={<DiagnosticTest />} />
+        <Route path="/study/portfolio" element={<PortfolioBuilder />} />
+        <Route path="/study/report" element={<WeeklyReport />} />
         <Route path="/tools/web-projects" element={<WebProjectList />} />
         <Route path="/tools/web-projects/:id" element={<WebProjectWorkspace />} />
         <Route path="/tools/test-series" element={<TestSeries />} />

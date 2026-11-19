@@ -7,7 +7,7 @@ import {
 import Logo from './Logo.jsx';
 import { useAuth, logout, firstName } from '../auth.js';
 import FocusPill from './FocusTimer.jsx';
-import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml } from 'lucide-react';
+import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
 import { tracks, trackGroups } from '../data/index.js';
 
@@ -38,9 +38,13 @@ function buildMenu() {
         { to: '/study/notes', label: 'My Notes', icon: NotebookPen },
         { to: '/study/planner', label: 'Planner & Focus Timer', icon: CalendarDays },
         { to: '/study/challenge', label: 'Daily Coding Challenge', icon: CodeXml },
+        { to: '/study/diagnostic', label: 'Diagnostic Test & Path', icon: Compass },
+        { to: '/tools/quiz-battle', label: 'Quiz Battle vs Bot', icon: Swords },
         { to: '/study/achievements', label: 'XP & Badges', icon: Medal },
+        { to: '/study/report', label: 'Weekly Report', icon: FileBarChart },
         { to: '/study/certificates', label: 'Certificates', icon: Award },
         { to: '/study/resume', label: 'Resume Builder', icon: FileUser },
+        { to: '/study/portfolio', label: 'Portfolio Website', icon: Globe2 },
         { to: '/tools/ai-code-review', label: 'AI Code Review', icon: Bot },
       ],
     },
@@ -82,6 +86,10 @@ function buildMenu() {
       key: 'labs', label: 'Practice Labs', icon: Wrench,
       items: [
         { to: '/tools', label: 'All Practice Tools', icon: Wrench },
+        { to: '/tools/code-visualizer', label: 'Code Visualizer', icon: ScanSearch },
+        { to: '/tools/visualizers', label: 'DSA & Concept Visualizer', icon: Clapperboard },
+        { to: '/tools/code-puzzles', label: 'Code Puzzles', icon: Puzzle },
+        { to: '/tools/explain-error', label: 'Explain my Error', icon: Stethoscope },
         { to: '/tools/playground', label: 'Web Playground', icon: Code2 },
         { to: '/tools/python-ide', label: 'Python IDE', icon: Terminal },
         { to: '/tools/java-ide', label: 'Java IDE', icon: Coffee },
@@ -97,6 +105,9 @@ function buildMenu() {
     {
       key: 'interview', label: 'Interview Prep', icon: GraduationCap,
       items: [
+        { to: '/practice/aptitude', label: 'Aptitude & Reasoning', icon: Calculator },
+        { to: '/practice/companies', label: 'Company-wise Kits', icon: Building2 },
+        { to: '/practice/video-interview', label: 'Video Mock Interview', icon: Video },
         { to: '/tools/java-interview', label: 'Interview Prep', icon: ClipboardCheck },
         { to: '/tools/soft-skills', label: 'Soft Skills', icon: MessageCircle },
         { to: '/tools/quiz', label: 'Quiz Arena', icon: ListChecks },

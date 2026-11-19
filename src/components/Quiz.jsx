@@ -26,7 +26,7 @@ export default function Quiz({ questions: rawQuestions, onFinish, title, origin 
   const submit = () => {
     setSubmitted(true);
     try { recordAnswers(questions, answers, origin); } catch { /* never block the quiz */ }
-    onFinish && onFinish(score, questions.length);
+    onFinish && onFinish(score, questions.length, questions.map((q, i) => answers[i] === q.answer));
   };
   const retry = () => {
     setAnswers({});
@@ -40,6 +40,7 @@ export default function Quiz({ questions: rawQuestions, onFinish, title, origin 
         <div key={i} className="quiz-q card">
           <div className="quiz-num">Q{i + 1}{q.source && <span className="muted"> · {q.source}</span>}</div>
           <div className="quiz-text"><Inline text={q.question} /></div>
+          {q.code && <pre className="quiz-code">{q.code}</pre>}
           <div className="quiz-opts">
             {q.options.map((o, j) => {
               let cls = 'opt';
