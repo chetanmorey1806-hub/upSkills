@@ -868,7 +868,7 @@ form.addEventListener('submit', (e) => {
   <small id="confirm-error" class="error"></small>
 
   <button type="submit">Register</button>
-  <p id="success" hidden>🎉 Registration successful!</p>
+  <p id="success" hidden>Registration successful!</p>
 </form>
 `,
       css: `body { background: #f8fafc; font-family: system-ui; }
@@ -1181,7 +1181,7 @@ function App() {
 
   return (
     <div className="app">
-      <h1>💰 Expense Tracker</h1>
+      <h1>Expense Tracker</h1>
       <ExpenseForm onAdd={(exp) => setExpenses([...expenses, exp])} />
       <div className="bar">
         <select id="filter" value={filter} onChange={(e) => setFilter(e.target.value)}>

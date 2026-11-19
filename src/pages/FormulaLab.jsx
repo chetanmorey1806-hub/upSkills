@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { computeSheet, display, evaluateFormula, isErr, numToCol, SUPPORTED } from '../engine/excel.js';
 
+import Ico from '../components/Ico.jsx';
 const COLS = 10;
 const ROWS = 20;
 
@@ -97,7 +98,7 @@ export default function FormulaLab() {
   return (
     <div>
       <div className="page-head">
-        <h1>🧮 Excel Formula Lab</h1>
+        <h1><Ico e="🧮" /> Excel Formula Lab</h1>
         <p className="muted">
           Click a cell, type a value or formula (starting with <code className="ic">=</code>) in the formula bar and press Enter.
           Sample employee data is in A1:F11 and a bonus lookup table in H1:I5. Your sheet is saved in this browser.
@@ -155,7 +156,7 @@ export default function FormulaLab() {
         </div>
 
         <div className="card challenge">
-          <h3>🎯 Challenges ({Object.keys(solved).length}/{CHALLENGES.length} solved)</h3>
+          <h3><Ico e="🎯" /> Challenges ({Object.keys(solved).length}/{CHALLENGES.length} solved)</h3>
           <div className="ch-dots">
             {CHALLENGES.map((_, i) => (
               <button key={i} className={`dot ${i === chIdx ? 'cur' : ''} ${solved[i] ? 'ok' : ''}`} onClick={() => goCh(i)}>{i + 1}</button>
@@ -168,7 +169,7 @@ export default function FormulaLab() {
             <button className="btn" onClick={() => setShowHint(!showHint)}>Hint</button>
             <button className="btn" onClick={() => setAnswer(ch.ref)}>Show answer</button>
           </div>
-          {showHint && <div className="tip">💡 {ch.hint}</div>}
+          {showHint && <div className="tip"><Ico e="💡" /> {ch.hint}</div>}
           {result && <div className={`explain ${result.ok ? 'ok' : 'bad'}`}>{result.msg}</div>}
           <div className="row-btns">
             <button className="btn small" disabled={chIdx === 0} onClick={() => goCh(chIdx - 1)}>← Prev</button>

@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } f
 import { Play, Pause, StepForward, StepBack, RotateCcw, Shuffle, Copy, Check } from 'lucide-react';
 import '../visualizers.css';
 
+import Ico from '../components/Ico.jsx';
 /* =====================================================================
    Shared helpers: reduced-motion hook, step player, controls, narration
    ===================================================================== */
@@ -886,7 +887,7 @@ function recFrames(kind, n) {
       if (kind === 'fib' && finished.has(nd.k)) repeat[nd.id] = true;
       msg = `Call ${fname}(${nd.k}) → pushed on the call stack (depth ${stack.length}). `;
       msg += isBase ? 'Base case reached!' : kind === 'fact' ? `Needs ${fname}(${nd.k - 1}) first.` : `Needs fib(${nd.k - 1}) + fib(${nd.k - 2}).`;
-      if (repeat[nd.id]) msg += ` ⚠ fib(${nd.k}) was already computed before – repeated work!`;
+      if (repeat[nd.id]) msg += ` fib(${nd.k}) was already computed before – repeated work!`;
     } else {
       ret = { ...ret, [nd.id]: nd.val };
       stack = stack.slice(0, -1);
@@ -1546,8 +1547,8 @@ function httpFrames(method, status) {
   }
   frames.push({ at: 2, dir: 'res', title: 'Response sent', msg: `The response travels back through the server: status line, headers, JSON body.`, detail: resText });
   let render;
-  if (status === 200) render = isGet ? 'Browser parses JSON and renders Asha\'s profile card. ✅' : 'Works, but a POST that creates something should normally return 201 Created.';
-  else if (status === 201) render = isGet ? '201 is unusual for GET (nothing was created) – the browser still treats it as success.' : 'Browser shows "Student added ✅" and can follow the Location header.';
+  if (status === 200) render = isGet ? 'Browser parses JSON and renders Asha\'s profile card. ' : 'Works, but a POST that creates something should normally return 201 Created.';
+  else if (status === 201) render = isGet ? '201 is unusual for GET (nothing was created) – the browser still treats it as success.' : 'Browser shows "Student added " and can follow the Location header.';
   else if (status === 400) render = 'Browser shows the error next to the form field so the user can fix the input (client\'s fault).';
   else if (status === 404) render = 'Browser shows a "Not found" message – the resource does not exist (client asked for something missing).';
   else render = 'Browser shows "Something went wrong, please try again" – a server-side bug, the client did nothing wrong.';
@@ -1577,7 +1578,7 @@ function HttpDemo() {
             <div className="vz-http-line" />
             {STATIONS.map((s, k) => (
               <div key={s.l} className={`vz-station${f.at === k ? ' on' : ''}${visited.has(k) ? ' seen' : ''}`} style={{ left: `${(k + 0.5) * 20}%` }}>
-                <div className="vz-st-icon">{s.icon}</div>
+                <div className="vz-st-icon"><Ico e={s.icon} /></div>
                 <div className="vz-st-label">{s.l}</div>
               </div>
             ))}
@@ -1632,13 +1633,13 @@ export default function Visualizers() {
   return (
     <div className="vz-page">
       <div className="page-head">
-        <h1>🎞️ DSA &amp; Concept Visualizer</h1>
+        <h1><Ico e="🎞" /> DSA &amp; Concept Visualizer</h1>
         <p className="muted">Watch algorithms, data structures and web concepts run step by step – play, pause, step and tweak the inputs.</p>
       </div>
       <div className="tabs" role="tablist" aria-label="Visualizer demos">
         {DEMOS.map((d) => (
           <button type="button" key={d.k} role="tab" aria-selected={tab === d.k} className={`tab${tab === d.k ? ' active' : ''}`} onClick={() => setTab(d.k)}>
-            {d.icon} {d.l}
+            <Ico e={d.icon} /> {d.l}
           </button>
         ))}
       </div>

@@ -16,10 +16,10 @@ function message() {
   const due = dueItems().length;
   const mistakes = Object.keys(studyRead('upskillr-study-mistakes', {})).length;
   const solved = !!studyRead('upskillr-study-daily', {})[dayKey()];
-  if (due) return { title: `🔁 ${due} card${due === 1 ? '' : 's'} to revise today`, body: 'A few minutes of revision now keeps your streak and memory strong.', url: './#/study/revision' };
-  if (!solved) return { title: '💻 Your daily coding challenge is waiting', body: 'Solve today\'s problem and earn 20 XP.', url: './#/study/challenge' };
-  if (mistakes) return { title: `⚠️ ${mistakes} mistakes to fix`, body: 'Practise them once more in your Mistake Notebook.', url: './#/study/mistakes' };
-  return { title: '📚 Time to study', body: 'Open today\'s plan and finish one lesson.', url: './#/today' };
+  if (due) return { title: `${due} card${due === 1 ? '' : 's'} to revise today`, body: 'A few minutes of revision now keeps your streak and memory strong.', url: './#/study/revision' };
+  if (!solved) return { title: 'Your daily coding challenge is waiting', body: 'Solve today\'s problem and earn 20 XP.', url: './#/study/challenge' };
+  if (mistakes) return { title: `${mistakes} mistakes to fix`, body: 'Practise them once more in your Mistake Notebook.', url: './#/study/mistakes' };
+  return { title: 'Time to study', body: 'Open today\'s plan and finish one lesson.', url: './#/today' };
 }
 
 export async function showStudyNotification(force = false) {
@@ -72,7 +72,7 @@ export function icsDailyReminder(time, minutes, appUrl) {
   const start = new Date(); start.setHours(h, m, 0, 0);
   const end = new Date(start.getTime() + minutes * 60000);
   return wrap(['BEGIN:VEVENT', `UID:upskillr-daily-${Date.now()}@upskillr`, `DTSTAMP:${stamp()}`, `DTSTART:${icsDate(start)}`, `DTEND:${icsDate(end)}`, 'RRULE:FREQ=DAILY',
-    'SUMMARY:📚 UpSkillr study time', `DESCRIPTION:${icsEsc(`Today's plan, revision and daily challenge.\n${appUrl}`)}`,
+    'SUMMARY:UpSkillr study time', `DESCRIPTION:${icsEsc(`Today's plan, revision and daily challenge.\n${appUrl}`)}`,
     'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Study time', 'TRIGGER:-PT5M', 'END:VALARM', 'END:VEVENT']);
 }
 export function icsTasks(byDay, time = '19:00') {
@@ -82,7 +82,7 @@ export function icsTasks(byDay, time = '19:00') {
     const [y, mo, d] = day.split('-').map(Number);
     const start = new Date(y, mo - 1, d, h, m + i * 30);
     const end = new Date(start.getTime() + 30 * 60000);
-    ev.push('BEGIN:VEVENT', `UID:upskillr-${day}-${t.id}@upskillr`, `DTSTAMP:${stamp()}`, `DTSTART:${icsDate(start)}`, `DTEND:${icsDate(end)}`, `SUMMARY:${icsEsc(`📘 ${t.text}`)}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Study task', 'TRIGGER:-PT10M', 'END:VALARM', 'END:VEVENT');
+    ev.push('BEGIN:VEVENT', `UID:upskillr-${day}-${t.id}@upskillr`, `DTSTAMP:${stamp()}`, `DTSTART:${icsDate(start)}`, `DTEND:${icsDate(end)}`, `SUMMARY:${icsEsc(`${t.text}`)}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Study task', 'TRIGGER:-PT10M', 'END:VALARM', 'END:VEVENT');
   }));
   return wrap(ev);
 }

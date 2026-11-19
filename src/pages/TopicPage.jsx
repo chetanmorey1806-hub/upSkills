@@ -20,19 +20,24 @@ import Quiz from '../components/Quiz.jsx';
 import VideoLesson from '../components/VideoLesson.jsx';
 import DayTask from '../components/DayTask.jsx';
 import { RecordedVideos } from '../components/MediaBits.jsx';
+import { LessonMaterials } from '../components/MaterialBits.jsx';
 import LessonStudyTools from '../components/LessonStudyTools.jsx';
 import TheoryView from '../components/LessonLearnTools.jsx';
 import { VIS_LOAD_KEY } from './CodeVisualizer.jsx';
 import { logEvent, addCardToRevision, useStudy, hashText } from '../study.js';
 
+import Ico from '../components/Ico.jsx';
+import { CirclePlay, BookText, FlaskConical as FlaskIc, MessageSquareText, Hammer as HammerIc, Trophy as TrophyIc, ClipboardCheck as TaskIc } from 'lucide-react';
+
+const TAB_ICONS = { video: CirclePlay, theory: BookText, examples: FlaskIc, interview: MessageSquareText, practice: HammerIc, quiz: TrophyIc, task: TaskIc };
 const TABS = [
-  ['video', '🎬 Video'],
-  ['theory', '📘 Theory'],
-  ['examples', '🧪 Examples'],
-  ['interview', '💬 Interview Q&A'],
-  ['practice', '🛠 Practice'],
-  ['quiz', '🏆 Quiz'],
-  ['task', '📝 Day Task'],
+  ['video', 'Video'],
+  ['theory', 'Theory'],
+  ['examples', 'Examples'],
+  ['interview', 'Interview Q&A'],
+  ['practice', 'Practice'],
+  ['quiz', 'Quiz'],
+  ['task', 'Day Task'],
 ];
 
 function Reveal({ label, children }) {
@@ -120,10 +125,10 @@ export default function TopicPage() {
         <p className="muted">{t.summary}</p>
         <div className="meta">
           <span className={`lvl lvl-${t.level}`}>{t.level}</span>
-          {tr.unit === 'Day' && t.day && <span>📅 Day {t.day}</span>}
-          {t.module && <span>📦 {t.module}</span>}
-          {t.duration && <span>⏱ {t.duration}</span>}
-          {p.quiz[key] != null && <span>🏆 Best quiz: {p.quiz[key]}/{t.quiz.length}</span>}
+          {tr.unit === 'Day' && t.day && <span><Ico e="📅" /> Day {t.day}</span>}
+          {t.module && <span><Ico e="📦" /> {t.module}</span>}
+          {t.duration && <span><Ico e="⏱" /> {t.duration}</span>}
+          {p.quiz[key] != null && <span><Ico e="🏆" /> Best quiz: {p.quiz[key]}/{t.quiz.length}</span>}
         </div>
         <button className={`btn ${p.done[key] ? 'success' : 'primary'}`} onClick={() => { if (!p.done[key]) logEvent('lesson', { key }); p.toggleDone(key); }}>
           {p.done[key] ? '✓ Completed (click to undo)' : 'Mark topic as completed'}
@@ -132,23 +137,24 @@ export default function TopicPage() {
 
       {t.objectives?.length > 0 && (
         <div className="card objectives">
-          <h4>🎯 After this topic you will be able to:</h4>
+          <h4><Ico e="🎯" /> After this topic you will be able to:</h4>
           <ul>{t.objectives.map((o, i) => <li key={i}><Inline text={o} /></li>)}</ul>
         </div>
       )}
 
       <div className="practice-cta">
-        <span>🧪 Practise this topic hands-on:</span>
+        <span><Ico e="🧪" /> Practise this topic hands-on:</span>
         <Link className="btn small" to={lab[0]}>Open {lab[1]} →</Link>
         <Link className="btn small" to={`/track/${track}/${t.id}?tab=quiz`} onClick={() => setTab('quiz')}>Take the quiz</Link>
       </div>
 
       <RecordedVideos track={track} lessonId={t.id} />
+      <LessonMaterials track={track} lessonId={t.id} />
 
       <div className="tabs">
         {TABS.map(([k, l]) => (
           <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
-            {l}
+            <Ico e={TAB_ICONS[k]} /> {l}
             {k !== 'video' && k !== 'task' && <span className="count">
               {k === 'theory' ? t.theory?.length : k === 'examples' ? t.examples?.length : k === 'interview' ? t.interview?.length : k === 'practice' ? t.practice?.length : t.quiz?.length}
             </span>}
@@ -192,7 +198,7 @@ export default function TopicPage() {
               <DataTable table={ex.table} excelStyle={isExcel} />
               {ex.steps?.length > 0 && (
                 <div className="steps-box">
-                  <b>🪜 Step-by-step solution</b>
+                  <b><Ico e="🪜" /> Step-by-step solution</b>
                   <ol>{ex.steps.map((st, j) => <li key={j}><Inline text={st} /></li>)}</ol>
                 </div>
               )}
@@ -204,42 +210,42 @@ export default function TopicPage() {
               )}
               {ex.csharp?.files && (
                 <button className="btn small primary try-btn" onClick={() => openCs({ files: ex.csharp.files, stdin: ex.csharp.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
-                  🟣 Open in C# IDE
+                  <Ico e="🟣" /> Open in C# IDE
                 </button>
               )}
               {ex.tsql && (
                 <button className="btn small primary try-btn" onClick={() => openSsms({ script: ex.tsql, expected: ex.result || '', title: ex.title })}>
-                  🗄️ Open in SSMS Lab
+                  <Ico e="🗄" /> Open in SSMS Lab
                 </button>
               )}
               {ex.mysql && (
                 <button className="btn small primary try-btn" onClick={() => openWb({ script: ex.mysql, expected: ex.result || '', title: ex.title })}>
-                  🐬 Open in Workbench Lab
+                  <Ico e="🐬" /> Open in Workbench Lab
                 </button>
               )}
               {ex.python?.files && (
                 <button className="btn small primary try-btn" onClick={() => openPy({ files: ex.python.files, stdin: ex.python.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
-                  🐍 Run in Python IDE
+                  <Ico e="🐍" /> Run in Python IDE
                 </button>
               )}
               {ex.python?.files?.['main.py'] && Object.keys(ex.python.files).length === 1 && (
                 <button className="btn small try-btn" onClick={() => { try { sessionStorage.setItem(VIS_LOAD_KEY, JSON.stringify({ code: ex.python.files['main.py'], stdin: ex.python.stdin || '' })); } catch { /* ignore */ } navigate('/tools/code-visualizer'); }}>
-                  🔍 Visualize step by step
+                  <Ico e="🔍" /> Visualize step by step
                 </button>
               )}
               {ex.sql?.query && (
                 <button className="btn small primary try-btn" onClick={() => openSql({ setup: ex.sql.setup || '', query: ex.sql.query, expected: ex.result || '', title: ex.title })}>
-                  🗄️ Run in SQL Lab
+                  <Ico e="🗄" /> Run in SQL Lab
                 </button>
               )}
               {ex.java?.files && (
                 <button className="btn small primary try-btn" onClick={() => openJava({ files: ex.java.files, stdin: ex.java.stdin || '', expected: ex.result || '', title: `${t.title}: ${ex.title}` })}>
-                  ☕ Open in Java IDE
+                  <Ico e="☕" /> Open in Java IDE
                 </button>
               )}
               {ex.mongo?.query && (
                 <button className="btn small primary try-btn" onClick={() => { try { sessionStorage.setItem(MONGO_LOAD_KEY, JSON.stringify({ query: ex.mongo.query, dataset: ex.mongo.dataset || 'shop', title: ex.title, expected: ex.result || '' })); } catch { /* ignore */ } navigate('/tools/mongo-lab'); }}>
-                  🍃 Run in MongoDB Lab
+                  <Ico e="🍃" /> Run in MongoDB Lab
                 </button>
               )}
               {ex.api?.code && (
@@ -289,7 +295,7 @@ export default function TopicPage() {
                       className={`star rev ${srs[`c-${hashText(qa.q)}`] ? 'on' : ''}`}
                       title="Add to Smart Revision (asked again after 1, 3, 7 and 30 days)"
                       onClick={(e) => { e.preventDefault(); addCardToRevision({ question: qa.q, answer: qa.a, source: `${tr.short} · ${t.title}`, link: `/track/${track}/${t.id}?tab=interview` }); }}
-                    >🔁</button>
+                    ><Ico e="🔁" /></button>
                   </summary>
                   <div className="qa-a"><RichText text={qa.a} /></div>
                 </details>
@@ -314,48 +320,48 @@ export default function TopicPage() {
                 </label>
               </div>
               <RichText text={ex.task} />
-              {ex.hint && <Reveal label="hint"><div className="tip">💡 <Inline text={ex.hint} /></div></Reveal>}
+              {ex.hint && <Reveal label="hint"><div className="tip"><Ico e="💡" /> <Inline text={ex.hint} /></div></Reveal>}
               {ex.solution && <Reveal label="solution"><SolutionText text={ex.solution} /></Reveal>}
               {ai && (
                 <button className="btn small" onClick={() => openAi({ user: String(ex.task), system: '', title: `Exercise ${i + 1}` })}>
-                  ✍ Practise in AI Prompt Lab
+                  <Ico e="✍" /> Practise in AI Prompt Lab
                 </button>
               )}
               {dn && !dnWeb && (
                 <button className="btn small" onClick={() => (dnSql
                   ? openSsms({ script: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n-- Tip: load StudentDB / EmployeeDB from Object Explorer first\n\n', expected: '', title: `Exercise ${i + 1}` })
                   : openCs({ files: { 'Program.cs': '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n\nConsole.WriteLine("Start here");\n' }, expected: '', title: `Exercise ${i + 1}` }))}>
-                  ✍ Solve in {dnSql ? 'SSMS Lab' : 'C# IDE'}
+                  <Ico e="✍" /> Solve in {dnSql ? 'SSMS Lab' : 'C# IDE'}
                 </button>
               )}
               {(dnWeb) && (
                 <button className="btn small" onClick={() => openInPlayground(navigate, /React/i.test(t.module || '') ? { jsx: '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + '\nconst { useState } = React;\n\nfunction App() {\n  return <div>Start here</div>;\n}\n' } : { html: '<!-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + ' -->\n' }, `Exercise ${i + 1}`)}>
-                  ✍ Solve in Code Playground
+                  <Ico e="✍" /> Solve in Code Playground
                 </button>
               )}
               {my && (
                 <button className="btn small" onClick={() => openWb({ script: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n-- Tip: load a sample DB from the Navigator first (college / ecommerce)\n\n', expected: '', title: `Exercise ${i + 1}` })}>
-                  ✍ Solve in Workbench Lab
+                  <Ico e="✍" /> Solve in Workbench Lab
                 </button>
               )}
               {py && track !== 'sql' && (
                 <button className="btn small" onClick={() => openPy({ files: { 'main.py': '# Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n\n' }, expected: '', title: `Exercise ${i + 1}` })}>
-                  ✍ Solve in Python IDE
+                  <Ico e="✍" /> Solve in Python IDE
                 </button>
               )}
               {track === 'sql' && (
                 <button className="btn small" onClick={() => openSql({ setup: (t.examples.find((e) => e.sql?.setup) || {}).sql?.setup || '', query: '-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\n', expected: '', title: `Exercise ${i + 1}` })}>
-                  ✍ Solve in SQL Lab
+                  <Ico e="✍" /> Solve in SQL Lab
                 </button>
               )}
               {java && (
                 <button className="btn small" onClick={() => openJava({ files: { 'Main.java': '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 150) + '\npublic class Main {\n    public static void main(String[] args) {\n        // write your code here\n    }\n}\n' }, expected: '', title: `Exercise ${i + 1}` })}>
-                  ✍ Solve in Java IDE
+                  <Ico e="✍" /> Solve in Java IDE
                 </button>
               )}
               {web && (
                 <button className="btn small" onClick={() => openInPlayground(navigate, track === 'react' ? { jsx: '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + '\nconst { useState } = React;\n\nfunction App() {\n  return <div>Start here</div>;\n}\n' } : track === 'js' ? { html: '', js: '// Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + '\n' } : track === 'css' ? { html: '<!-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + ' -->\n', css: '' } : { html: '<!-- Exercise: ' + String(ex.task).split('\n')[0].slice(0, 120) + ' -->\n' }, `Exercise ${i + 1}`)}>
-                  ✍ Solve in Code Playground
+                  <Ico e="✍" /> Solve in Code Playground
                 </button>
               )}
             </section>

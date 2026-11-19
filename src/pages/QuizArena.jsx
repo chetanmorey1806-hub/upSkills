@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { allTopics, trackOrder, tracks } from '../data/index.js';
 import Quiz from '../components/Quiz.jsx';
 
+import Ico from '../components/Ico.jsx';
 const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
 export default function QuizArena() {
@@ -36,7 +37,7 @@ export default function QuizArena() {
   return (
     <div>
       <div className="page-head">
-        <h1>🏆 Quiz Arena</h1>
+        <h1><Ico e="🏆" /> Quiz Arena</h1>
         <p className="muted">Random questions from all topics, like a real test. {pool.length} questions available with the current settings.</p>
         <div className="quiz-settings">
           <label>Track <select value={track} onChange={(e) => setTrack(e.target.value)}><option value="both">All courses</option>{trackOrder.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</select></label>
@@ -48,7 +49,7 @@ export default function QuizArena() {
       </div>
       {qs && timer > 0 && (
         <div className={`timer ${left < 60 ? 'low' : ''}`}>
-          {finished ? "⏰ Time's up! Submit to see your score." : `⏱ ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
+          {finished ? <><Ico e="⏰" /> Time's up! Submit to see your score.</> : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
         </div>
       )}
       {qs && <Quiz key={runId} questions={qs} onFinish={() => setFinished(true)} />}

@@ -9,20 +9,21 @@ import ProgressBar from '../components/ProgressBar.jsx';
 import { Inline } from '../components/RichText.jsx';
 import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
+import Ico from '../components/Ico.jsx';
 const sid = (id) => `mern-${id}`;
 const ICON = { PASS: '✅', FAIL: '❌', ERROR: '💥', TODO: '⏳' };
-const TABS = [['brief', '📋 Brief'], ['code', '💻 Backend code'], ['tests', '✅ API tests'], ['fullstack', '🧱 Full stack'], ['submit', '🏁 Submit']];
+const TABS = [['brief', 'Brief'], ['code', 'Backend code'], ['tests', 'API tests'], ['fullstack', 'Full stack'], ['submit', 'Submit']];
 
 function ProjectList() {
   return (
     <div>
       <div className="page-head">
-        <h1>🚀 MERN Final Projects</h1>
+        <h1><Ico e="🚀" /> MERN Final Projects</h1>
         <p className="muted">Build real MERN projects: write the Express API here and run automated API tests in your browser, then complete the React frontend, MongoDB and deployment milestones in VS Code. Get a score, viva questions and a certificate for your portfolio.</p>
       </div>
       <div className="steps proj-steps">
         {[['🧩', 'Backend in the browser', 'Starter Express code with TODOs. Run 8 automated API tests that send real requests.'], ['⚛️', 'React frontend', 'Build the UI with Vite + React, connect it with axios / TanStack Query.'], ['🍃', 'MongoDB', 'Replace the in-memory arrays with Mongoose models. Guides included.'], ['🌍', 'Deploy & present', 'Deploy, add GitHub + live links, answer viva questions and get your score.']].map(([ic, h, p]) => (
-          <div key={h} className="card step"><div className="track-icon">{ic}</div><h4>{h}</h4><p className="muted small">{p}</p></div>
+          <div key={h} className="card step"><div className="track-icon"><Ico e={ic} /></div><h4>{h}</h4><p className="muted small">{p}</p></div>
         ))}
       </div>
       <h2 className="section-title">Choose your project</h2>
@@ -32,10 +33,10 @@ function ProjectList() {
           const pr = projectProgress(p, st);
           return (
             <Link key={p.id} to={`/tools/mern-projects/${p.id}`} className="card track-card proj-card">
-              <div className="proj-card-top"><span className="track-icon">{p.icon}</span>{st.submission ? <span className="badge ok">✓ Submitted · {projectScore(p, st)}/100</span> : pr.testsTotal ? <span className="badge">In progress</span> : null}</div>
+              <div className="proj-card-top"><span className="track-icon"><Ico e={p.icon} /></span>{st.submission ? <span className="badge ok">✓ Submitted · {projectScore(p, st)}/100</span> : pr.testsTotal ? <span className="badge">In progress</span> : null}</div>
               <h3>{p.title}</h3>
               <p className="muted small">{p.summary}</p>
-              <div className="meta"><span className={`lvl lvl-${p.level}`}>{p.level}</span><span>⏱ {p.hours}</span><span>✅ {p.tests.length} API tests</span></div>
+              <div className="meta"><span className={`lvl lvl-${p.level}`}>{p.level}</span><span><Ico e="⏱" /> {p.hours}</span><span><Ico e="✅" /> {p.tests.length} API tests</span></div>
               <div className="chips">{p.skills.slice(0, 4).map((s) => <span key={s} className="tag">{s}</span>)}</div>
               <ProgressBar value={pr.testsTotal ? pr.passed / pr.testsTotal : 0} />
               <div className="muted small">{pr.testsTotal ? `${pr.passed}/${pr.testsTotal} tests passing · ${pr.tasksDone}/${pr.tasks} milestones` : 'Not started'}</div>
@@ -89,11 +90,11 @@ function Workspace({ project }) {
     <div className="project">
       <div className="crumbs"><Link to="/tools/mern-projects">MERN Projects</Link> › {project.title}</div>
       <div className="page-head">
-        <h1>{project.icon} {project.title}</h1>
+        <h1><Ico e={project.icon} /> {project.title}</h1>
         <p className="muted">{project.summary}</p>
         <div className="meta">
-          <span className={`lvl lvl-${project.level}`}>{project.level}</span><span>⏱ {project.hours}</span>
-          <span>✅ {pr.passed}/{pr.testsTotal || project.tests.length} API tests</span><span>🗂 {pr.tasksDone}/{pr.tasks} milestone tasks</span>
+          <span className={`lvl lvl-${project.level}`}>{project.level}</span><span><Ico e="⏱" /> {project.hours}</span>
+          <span><Ico e="✅" /> {pr.passed}/{pr.testsTotal || project.tests.length} API tests</span><span><Ico e="🗂" /> {pr.tasksDone}/{pr.tasks} milestone tasks</span>
           {st.submission && <span className="badge ok">✓ Submitted · {st.submission.score}/100</span>}
         </div>
       </div>
@@ -101,15 +102,15 @@ function Workspace({ project }) {
 
       {tab === 'brief' && (
         <div>
-          <div className="card story"><h3>📖 The story</h3><p>{project.story}</p></div>
+          <div className="card story"><h3><Ico e="📖" /> The story</h3><p>{project.story}</p></div>
           <div className="card">
-            <h3>🔌 API you will build</h3>
+            <h3><Ico e="🔌" /> API you will build</h3>
             <div className="table-wrap"><table className="data-table api-spec"><thead><tr><th>Method</th><th>Endpoint</th><th>Behaviour</th></tr></thead>
               <tbody>{project.api.map(([m, u, d]) => <tr key={m + u}><td><span className={`http-m m-${m}`}>{m}</span></td><td className="mono">{u}</td><td style={{ whiteSpace: 'normal' }}>{d}</td></tr>)}</tbody></table></div>
           </div>
-          <div className="card"><h3>🧠 Skills</h3><div className="chips">{project.skills.map((s) => <span key={s} className="tag">{s}</span>)}</div>
+          <div className="card"><h3><Ico e="🧠" /> Skills</h3><div className="chips">{project.skills.map((s) => <span key={s} className="tag">{s}</span>)}</div>
             <h4>Revise first</h4><p className="small"><Link to="/track/node">Node.js + Express</Link> · <Link to="/track/mongodb">MongoDB & Mongoose</Link> · <Link to="/track/mern">MERN Full Stack</Link> · <Link to="/track/react">React</Link></p></div>
-          <details className="card"><summary><b>💡 Hints</b></summary><ul>{project.hints.map((h, i) => <li key={i}><Inline text={h} /></li>)}</ul></details>
+          <details className="card"><summary><b><Ico e="💡" /> Hints</b></summary><ul>{project.hints.map((h, i) => <li key={i}><Inline text={h} /></li>)}</ul></details>
           <div className="center"><button className="btn primary" onClick={() => setTab('code')}>Start coding →</button></div>
         </div>
       )}
@@ -117,11 +118,11 @@ function Workspace({ project }) {
       {tab === 'code' && (
         <div className="jide proj-ide">
           <div className="jide-top">
-            <div className="jide-title"><span className="jide-logo node">🟩</span><b>server.js</b><span className="jide-sub">Express 5 · saved automatically</span></div>
+            <div className="jide-title"><span className="jide-logo node"><Ico e="🟩" /></span><b>server.js</b><span className="jide-sub">Express 5 · saved automatically</span></div>
             <div className="jide-actions">
-              <button className="btn small primary" onClick={runTests} disabled={running}>{running ? '⏳ Testing…' : '✅ Run API tests'}</button>
-              <button className="btn small" onClick={openLab}>🔌 Try requests in API Lab</button>
-              <button className="btn small" onClick={download}>⬇ server.js</button>
+              <button className="btn small primary" onClick={runTests} disabled={running}>{running ? <><Ico e="⏳" /> Testing…</> : <><Ico e="✅" /> Run API tests</>}</button>
+              <button className="btn small" onClick={openLab}><Ico e="🔌" /> Try requests in API Lab</button>
+              <button className="btn small" onClick={download}><Ico e="⬇" /> server.js</button>
               <button className="btn small" onClick={() => window.confirm('Reset to the starter code? Your code will be lost.') && setCode(project.starter)}>↺ Reset</button>
             </div>
           </div>
@@ -135,13 +136,13 @@ function Workspace({ project }) {
 
       {tab === 'tests' && (
         <div>
-          <div className="toolbar"><h3>Automated API tests</h3><button className="btn primary" onClick={runTests} disabled={running}>{running ? '⏳ Running…' : '▶ Run all tests'}</button></div>
+          <div className="toolbar"><h3>Automated API tests</h3><button className="btn primary" onClick={runTests} disabled={running}>{running ? <><Ico e="⏳" /> Running…</> : '▶ Run all tests'}</button></div>
           {results.length > 0 ? (
             <div className="card test-summary">
               <b>{pr.passed}/{pr.testsTotal} tests passing</b>
               <ProgressBar value={pr.passed / pr.testsTotal} color={pr.passed === pr.testsTotal ? 'var(--ok)' : undefined} />
               <span className="muted small">Last run {new Date(st.tests.at).toLocaleString()} · {st.runs || 0} runs</span>
-              {pr.passed === pr.testsTotal && <p className="result">🎉 Your API passes every test! Now build the frontend and database in the <b>Full stack</b> tab.</p>}
+              {pr.passed === pr.testsTotal && <p className="result"><Ico e="🎉" /> Your API passes every test! Now build the frontend and database in the <b>Full stack</b> tab.</p>}
             </div>
           ) : <p className="muted">Each test starts a fresh server from your code and sends real HTTP requests (status codes, JSON bodies, headers are checked).</p>}
           <div className="test-list">{results.map((r) => (
@@ -155,14 +156,14 @@ function Workspace({ project }) {
 
       {tab === 'fullstack' && (
         <div>
-          <div className="card"><h3>🗂 Milestones</h3><ProgressBar value={pr.tasks ? pr.tasksDone / pr.tasks : 0} />
+          <div className="card"><h3><Ico e="🗂" /> Milestones</h3><ProgressBar value={pr.tasks ? pr.tasksDone / pr.tasks : 0} />
             {project.milestones.map((m, mi) => (
               <div key={mi} className="milestone"><h4>Step {mi + 1}: {m.title}</h4>
                 <ul className="task-list">{m.tasks.map((t, ti) => <li key={ti}><label className="check"><input type="checkbox" checked={!!st.done?.[`${mi}-${ti}`]} onChange={() => toggle(`${mi}-${ti}`)} /> {t}</label></li>)}</ul></div>
             ))}
           </div>
-          <div className="card"><h3>🍃 MongoDB / Mongoose guide</h3><div className="code"><div className="code-head"><span>javascript</span></div><pre>{project.mongoose}</pre></div></div>
-          <div className="card"><h3>📁 Recommended folder structure</h3><pre className="tree-pre">{`my-${project.id}/
+          <div className="card"><h3><Ico e="🍃" /> MongoDB / Mongoose guide</h3><div className="code"><div className="code-head"><span>javascript</span></div><pre>{project.mongoose}</pre></div></div>
+          <div className="card"><h3><Ico e="📁" /> Recommended folder structure</h3><pre className="tree-pre">{`my-${project.id}/
 ├── client/                 # React (Vite)
 │   ├── src/api/client.js   # axios instance + interceptors
 │   ├── src/pages/ …        # one page per screen
@@ -180,25 +181,25 @@ function Workspace({ project }) {
       {tab === 'submit' && (
         <div className="proj-submit">
           <div className="grid2">
-            <div className="card"><h3>📊 Your score</h3><div className="score-ring" style={{ '--p': score }}><span>{score}</span><small>/100</small></div>
-              <ul className="score-parts"><li>✅ API tests: {pr.passed}/{pr.testsTotal || project.tests.length} (50 pts)</li><li>🗂 Milestones: {pr.tasksDone}/{pr.tasks} (20 pts)</li><li>📝 Self-review (30 pts)</li></ul></div>
-            <div className="card"><h3>📝 Self-review</h3>
+            <div className="card"><h3><Ico e="📊" /> Your score</h3><div className="score-ring" style={{ '--p': score }}><span>{score}</span><small>/100</small></div>
+              <ul className="score-parts"><li><Ico e="✅" /> API tests: {pr.passed}/{pr.testsTotal || project.tests.length} (50 pts)</li><li><Ico e="🗂" /> Milestones: {pr.tasksDone}/{pr.tasks} (20 pts)</li><li><Ico e="📝" /> Self-review (30 pts)</li></ul></div>
+            <div className="card"><h3><Ico e="📝" /> Self-review</h3>
               {project.rubric.slice(2).map(([c, pts], i) => (
                 <label key={c} className="rubric-row"><span>{c}</span>
                   <select value={st.rubric?.[i] ?? 0} onChange={(e) => { const v = Number(e.target.value); update((s) => ({ ...s, rubric: { ...(s.rubric || {}), [i]: v } })); }}>{Array.from({ length: pts + 1 }, (_, n) => <option key={n} value={n}>{n}/{pts}</option>)}</select>
                 </label>
               ))}</div>
           </div>
-          <div className="card"><h3>🎤 Viva questions (practise answering aloud)</h3><ol>{project.viva.map((q) => <li key={q}>{q}</li>)}</ol>
+          <div className="card"><h3><Ico e="🎤" /> Viva questions (practise answering aloud)</h3><ol>{project.viva.map((q) => <li key={q}>{q}</li>)}</ol>
             <p className="muted small">Practise more in the <Link to="/tools/test-series?course=grp:mern">MERN Test Series</Link> mock interviews.</p></div>
           <div className="card">
-            <h3>🔗 Links</h3>
+            <h3><Ico e="🔗" /> Links</h3>
             {[['github', 'GitHub repository URL'], ['live', 'Live demo URL'], ['name', 'Your name (for the certificate)']].map(([k, l]) => (
               <label key={k} className="field">{l}<input className="input" value={st[k] || ''} onChange={(e) => { const v = e.target.value; update((s) => ({ ...s, [k]: v })); }} /></label>
             ))}
             <div className="row-btns">
-              <button className="btn primary" onClick={() => update((s) => ({ ...s, submission: { score, at: Date.now(), passed: pr.passed, total: pr.testsTotal } }))}>{st.submission ? '↻ Re-submit with new score' : '🏁 Submit project'}</button>
-              <button className="btn" onClick={download}>⬇ Download server.js</button>
+              <button className="btn primary" onClick={() => update((s) => ({ ...s, submission: { score, at: Date.now(), passed: pr.passed, total: pr.testsTotal } }))}>{st.submission ? '↻ Re-submit with new score' : <><Ico e="🏁" /> Submit project</>}</button>
+              <button className="btn" onClick={download}><Ico e="⬇" /> Download server.js</button>
             </div>
           </div>
           {st.submission && (
@@ -209,9 +210,9 @@ function Workspace({ project }) {
               <p>with a final score of <b>{st.submission.score}/100</b> ({st.submission.passed}/{st.submission.total} automated API tests passing)</p>
               {(st.github || st.live) && <p className="small">{st.github}{st.github && st.live ? ' · ' : ''}{st.live}</p>}
               <div className="cert-foot"><span>{new Date(st.submission.at).toLocaleDateString()}</span><span>Developed by ER. Chetan D Morey</span></div>
-            </div><button className="btn small no-print" onClick={() => window.print()}>🖨 Print / Save as PDF</button></div>
+            </div><button className="btn small no-print" onClick={() => window.print()}><Ico e="🖨" /> Print / Save as PDF</button></div>
           )}
-          <div className="card"><h3>🔑 Reference solution (backend)</h3>
+          <div className="card"><h3><Ico e="🔑" /> Reference solution (backend)</h3>
             {!st.submission ? <p className="muted">Unlocks after you submit.</p> : !showSol ? <button className="btn" onClick={() => setShowSol(true)}>Show reference solution</button>
               : <div className="code"><div className="code-head"><span>server.js</span></div><pre>{project.solution}</pre></div>}
           </div>

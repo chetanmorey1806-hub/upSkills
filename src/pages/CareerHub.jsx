@@ -6,7 +6,10 @@ import { useAuth } from '../auth.js';
 import { COMPANIES } from './PlacementTools.jsx';
 import { downloadFile } from '../components/careerUtils.js';
 import { icsEvent, googleCalUrl } from '../reminders.js';
+import { supaMode } from '../supabase.js';
+import { publishExperience } from './Community.jsx';
 
+import Ico from '../components/Ico.jsx';
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const inr = (n) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 const lpa = (n) => `${(+n || 0).toFixed(2).replace(/\.00$/, '')} LPA`;
@@ -69,7 +72,7 @@ export function ApplicationTracker() {
       <div key={a.id} className="ca-card" style={{ '--c': STAGE_COLOR[a.stage] }}>
         <div className="ca-top"><b>{a.company}</b><span className="ca-acts"><button onClick={() => setEdit(a)} aria-label="Edit"><Pencil size={13} /></button><button onClick={() => del(a)} aria-label="Delete"><Trash2 size={13} /></button></span></div>
         <div className="muted small">{a.role || '—'}{a.type === 'Internship' ? ' · Internship' : ''}{a.ctc ? ` · ${a.ctc}` : ''}</div>
-        {a.nextDate && <div className={`ca-next ${a.nextDate < today ? 'past' : a.nextDate <= addDays(today, 2) ? 'soon' : ''}`}>📅 {a.nextRound || 'Next round'}: {new Date(`${a.nextDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}{a.nextTime ? ` ${a.nextTime}` : ''}</div>}
+        {a.nextDate && <div className={`ca-next ${a.nextDate < today ? 'past' : a.nextDate <= addDays(today, 2) ? 'soon' : ''}`}><Ico e="📅" /> {a.nextRound || 'Next round'}: {new Date(`${a.nextDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}{a.nextTime ? ` ${a.nextTime}` : ''}</div>}
         <div className="ca-move">
           <button disabled={a.stage === STAGES[0]} onClick={() => move(a, -1)} aria-label="Previous stage"><ChevronLeft size={14} /></button>
           {kit ? <Link to={`/practice/companies/${kit.id}`} className="small">Prepare</Link> : <Link to="/practice/video-interview" className="small">Practise</Link>}
@@ -81,7 +84,7 @@ export function ApplicationTracker() {
   return (
     <div>
       <div className="page-head">
-        <h1>💼 Application Tracker</h1>
+        <h1><Ico e="💼" /> Application Tracker</h1>
         <p className="muted">Keep every job and internship application in one place: stage, next round date, notes and preparation links. Saved in this browser.</p>
         <div className="row-btns">
           <button className="btn primary" onClick={() => setEdit({ ...EMPTY_APP, appliedOn: today })}><Plus size={15} /> Add application</button>
@@ -99,7 +102,7 @@ export function ApplicationTracker() {
       {edit && <AppForm value={edit} onSave={save} onCancel={() => setEdit(null)} />}
       {upcoming.length > 0 && (
         <div className="card">
-          <h3>📅 Upcoming rounds</h3>
+          <h3><Ico e="📅" /> Upcoming rounds</h3>
           {upcoming.slice(0, 6).map((a) => (
             <div key={a.id} className="ca-up">
               <span><b>{new Date(`${a.nextDate}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}{a.nextTime ? ` ${a.nextTime}` : ''}</b> — {a.company}: {a.nextRound || a.stage}</span>
@@ -192,7 +195,7 @@ export function OfferComparison() {
   return (
     <div>
       <div className="page-head">
-        <h1>⚖️ Offer Comparison</h1>
+        <h1><Ico e="⚖" /> Offer Comparison</h1>
         <p className="muted">Compare job offers side by side: estimated monthly in-hand salary, tax, PF, savings after expenses, bond and growth. Numbers are estimates (new tax regime, FY 2025-26 slabs, PF at 12% of basic, ~₹2,500 professional tax) — check your offer letter and current tax rules.</p>
         <button className="btn primary" onClick={add}><Plus size={15} /> Add an offer</button>
       </div>
@@ -247,7 +250,7 @@ export function InterviewJournal() {
   const shown = list.filter((e) => !q || `${e.company} ${e.role} ${e.rounds.map((r) => r.questions).join(' ')}`.toLowerCase().includes(q.toLowerCase()));
   const allQs = useMemo(() => list.flatMap((e) => e.rounds.flatMap((r) => r.questions.split('\n').map((x) => x.trim()).filter(Boolean).map((x) => ({ q: x, company: e.company, round: r.name })))), [list]);
   const save = () => { setList((l) => (edit.id ? l.map((x) => (x.id === edit.id ? edit : x)) : [{ ...edit, id: uid(), author: user?.name || 'Me', at: Date.now() }, ...l])); setEdit(null); };
-  const asText = (e) => `📝 ${e.company} – ${e.role} (${e.mode}, ${e.date || ''}) – ${e.result}\n\n${e.rounds.map((r, i) => `Round ${i + 1}: ${r.name} [${r.difficulty}]\n${r.questions.split('\n').filter((x) => x.trim()).map((x) => `• ${x.trim()}`).join('\n')}${r.notes ? `\nNote: ${r.notes}` : ''}`).join('\n\n')}${e.tips ? `\n\n💡 Tips: ${e.tips}` : ''}\n\n— shared via UpSkillr`;
+  const asText = (e) => `${e.company} – ${e.role} (${e.mode}, ${e.date || ''}) – ${e.result}\n\n${e.rounds.map((r, i) => `Round ${i + 1}: ${r.name} [${r.difficulty}]\n${r.questions.split('\n').filter((x) => x.trim()).map((x) => `• ${x.trim()}`).join('\n')}${r.notes ? `\nNote: ${r.notes}` : ''}`).join('\n\n')}${e.tips ? `\n\nTips: ${e.tips}` : ''}\n\n— shared via UpSkillr`;
   const copy = async (e) => { try { await navigator.clipboard.writeText(asText(e)); setCopied(e.id); setTimeout(() => setCopied(''), 1500); } catch { /* ignore */ } };
   const importFile = (f) => {
     const rd = new FileReader();
@@ -266,7 +269,7 @@ export function InterviewJournal() {
   return (
     <div>
       <div className="page-head">
-        <h1>📓 Interview Journal</h1>
+        <h1><Ico e="📓" /> Interview Journal</h1>
         <p className="muted">Write down every interview right after it happens: rounds, questions and tips. Share your experiences with juniors as a file or as text (WhatsApp / LinkedIn), and import files shared by seniors.</p>
         <div className="row-btns">
           <button className="btn primary" onClick={() => setEdit({ ...EMPTY_EXP, date: dayKey(), rounds: EMPTY_EXP.rounds.map((r) => ({ ...r })) })}><Plus size={15} /> Add experience</button>
@@ -274,7 +277,7 @@ export function InterviewJournal() {
           <button className="btn" onClick={() => file.current?.click()}><Upload size={15} /> Import from a senior</button>
           <input ref={file} type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
         </div>
-        <p className="muted small">A shared experience bank for all students needs the online server. Until then, share journal files in your class group.</p>
+        <p className="muted small">{supaMode ? <>Use “Publish to bank” to share an experience with every student in the <Link to="/community/experiences">Interview Experience Bank</Link>.</> : 'A shared experience bank for all students needs the online account. Until then, share journal files in your class group.'}</p>
       </div>
       {edit && (
         <div className="card jc-form">
@@ -307,10 +310,11 @@ export function InterviewJournal() {
           <div className="qa-a">
             <div className="muted small">{e.mode} · {e.date}</div>
             {e.rounds.map((r, i) => <div key={i} className="ij-round"><b>Round {i + 1}: {r.name}</b> <span className={`lvl lvl-${r.difficulty}`}>{r.difficulty}</span><ul>{r.questions.split('\n').filter((x) => x.trim()).map((x, k) => <li key={k}>{x}</li>)}</ul>{r.notes && <div className="muted small">{r.notes}</div>}</div>)}
-            {e.tips && <div className="tip">💡 {e.tips}</div>}
+            {e.tips && <div className="tip"><Ico e="💡" /> {e.tips}</div>}
             <div className="row-btns">
               <button className="btn small" onClick={() => copy(e)}><Copy size={14} /> {copied === e.id ? 'Copied ✓' : 'Copy as text'}</button>
               {!e.shared && <button className="btn small" onClick={() => setEdit(e)}><Pencil size={14} /> Edit</button>}
+              {supaMode && user?.server && !e.shared && <button className="btn small" disabled={!!e.published} onClick={async () => { try { await publishExperience(e); setList((l) => l.map((x) => (x.id === e.id ? { ...x, published: Date.now() } : x))); } catch (er) { window.alert(er.message); } }}>{e.published ? 'Published to bank' : 'Publish to bank'}</button>}
               <button className="link-btn danger" onClick={() => window.confirm('Delete this experience?') && setList((l) => l.filter((x) => x.id !== e.id))}><Trash2 size={14} /></button>
             </div>
           </div>
@@ -318,7 +322,7 @@ export function InterviewJournal() {
       ))}
       {allQs.length > 0 && (
         <div className="card">
-          <h3>🎯 All questions from your journal ({allQs.length})</h3>
+          <h3><Ico e="🎯" /> All questions from your journal ({allQs.length})</h3>
           <p className="muted small">Practise answering these out loud in the <Link to="/practice/video-interview">Video Mock Interview</Link>.</p>
           <ul className="small">{allQs.slice(0, 60).map((x, i) => <li key={i}>{x.q} <span className="muted">— {x.company}, {x.round}</span></li>)}</ul>
         </div>

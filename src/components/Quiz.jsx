@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Inline } from './RichText.jsx';
 import { recordAnswers } from '../study.js';
 
+import Ico from './Ico.jsx';
 // Deterministic option shuffle so the correct answer isn't always in the same position.
 // Same question => same order every time. Questions whose order matters are left as-is.
 function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -72,7 +73,7 @@ export default function Quiz({ questions: rawQuestions, onFinish, title, origin 
           <>
             <div className="score">
               Score: <b>{score}/{questions.length}</b> ({Math.round((score / questions.length) * 100)}%)
-              {score === questions.length ? ' 🎉 Perfect!' : score / questions.length >= 0.7 ? ' 👍 Good job' : ' 📖 Revise the theory and try again'}
+              {score === questions.length ? <> <Ico e="🎉" /> Perfect!</> : score / questions.length >= 0.7 ? <> <Ico e="👍" /> Good job</> : <> <Ico e="📖" /> Revise the theory and try again</>}
             </div>
             <button className="btn" onClick={retry}>Retry</button>
           </>

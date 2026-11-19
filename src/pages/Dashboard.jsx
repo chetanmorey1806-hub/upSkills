@@ -13,6 +13,7 @@ import ProgressBar from '../components/ProgressBar.jsx';
 import { StudyTodayCard } from './StudyPages.jsx';
 import { TrackIcon } from '../components/Icons.jsx';
 
+import Ico from '../components/Ico.jsx';
 const readJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const dayKey = (d) => d.toISOString().slice(0, 10);
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
@@ -192,7 +193,7 @@ export default function Dashboard() {
               <input className="input" autoFocus placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setEditing(false)} />
             </form>
           ) : (
-            <h1>{greet}{shownName ? `, ${shownName}` : ''} 👋 <button className="db-edit" onClick={() => setEditing(true)} aria-label="Edit name"><Pencil size={15} /></button></h1>
+            <h1>{greet}{shownName ? `, ${shownName}` : ''} <Ico e="👋" /> <button className="db-edit" onClick={() => setEditing(true)} aria-label="Edit name"><Pencil size={15} /></button></h1>
           )}
           <p>{s.doneLessons ? `You have completed ${s.doneLessons} lessons. Keep going — one lesson a day adds up fast.` : 'Welcome! Start your first lesson today and your progress will appear here.'}</p>
           <div className="db-hero-chips">

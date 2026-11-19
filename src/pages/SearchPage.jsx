@@ -3,6 +3,7 @@ import { allTopics, tracks } from '../data/index.js';
 import { Inline } from '../components/RichText.jsx';
 import { searchAll } from '../searchIndex.js';
 
+import Ico from '../components/Ico.jsx';
 function snippet(text, q) {
   const s = String(text);
   const i = s.toLowerCase().indexOf(q);
@@ -38,21 +39,21 @@ export default function SearchPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>🔎 Search: “{raw}”</h1>
+        <h1><Ico e="🔎" /> Search: “{raw}”</h1>
         <p className="muted">{quick.length + results.length} results · tip: press Ctrl K anywhere for instant search</p>
       </div>
       {quick.length > 0 && (
         <section>
           <h2 className="section-title">Pages, tools, aptitude, errors &amp; projects</h2>
           <div className="sr-quick">{quick.map((r, i) => (
-            <Link key={i} to={r.to} className="card sr-q"><span className="cp-ic">{r.icon}</span><span className="cp-txt"><b>{r.title}</b><span>{r.sub}</span></span><span className="cp-type">{r.type}</span></Link>
+            <Link key={i} to={r.to} className="card sr-q"><span className="cp-ic"><Ico e={r.icon} /></span><span className="cp-txt"><b>{r.title}</b><span>{r.sub}</span></span><span className="cp-type">{r.type}</span></Link>
           ))}</div>
           {results.length > 0 && <h2 className="section-title">Inside lessons</h2>}
         </section>
       )}
       {results.slice(0, 200).map((r, i) => (
         <Link key={i} to={r.to} className="card search-hit">
-          <div className="muted small">{tracks[r.t.track].icon} {r.t.title} · {r.where}</div>
+          <div className="muted small"><Ico e={tracks[r.t.track].icon} /> {r.t.title} · {r.where}</div>
           <h4><Inline text={r.title} /></h4>
           <p className="muted"><Inline text={r.text} /></p>
         </Link>

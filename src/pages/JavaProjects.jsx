@@ -8,6 +8,7 @@ import ProgressBar from '../components/ProgressBar.jsx';
 import { useLocalState, downloadFile, esc } from '../components/careerUtils.js';
 import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
 
+import Ico from '../components/Ico.jsx';
 const STORE = 'xlpbi-java-projects-v1';
 const taskCount = (p) => p.milestones.reduce((s, m) => s + m.tasks.length, 0);
 const doneCount = (p, st) => Object.keys(st?.tasks || {}).filter((k) => st.tasks[k]).length;
@@ -58,7 +59,7 @@ function ProjectDetail({ p, st, setSt }) {
       <Link to="/tools/java-projects" className="btn">← All projects</Link>
       <div className="page-head" style={{ marginTop: '1rem' }}>
         <h1>{p.title}</h1>
-        <div className="meta"><span className={`lvl lvl-${p.level}`}>{p.level}</span><span>⏱ {p.duration}</span><span>🎓 Caps: {p.track}</span></div>
+        <div className="meta"><span className={`lvl lvl-${p.level}`}>{p.level}</span><span><Ico e="⏱" /> {p.duration}</span><span><Ico e="🎓" /> Caps: {p.track}</span></div>
         <p className="muted">{p.summary}</p>
         <ProgressBar value={total ? done / total : 0} />
         <div className="muted small">{done} of {total} tasks done</div>
@@ -169,7 +170,7 @@ export default function JavaProjects() {
   return (
     <div>
       <div className="page-head">
-        <h1>🏗️ Java Final Project Studio</h1>
+        <h1><Ico e="🏗" /> Java Final Project Studio</h1>
         <p className="muted">Choose a final project, build it milestone by milestone, start from runnable starter code, prepare the viva and download your project report. Projects go from a Core Java console app to Spring Boot microservices.</p>
       </div>
       {!javaProjects.length && <p className="muted">Projects are being added.</p>}
@@ -179,7 +180,7 @@ export default function JavaProjects() {
           const d = doneCount(x, store[x.id]);
           return (
             <Link key={x.id} to={`/tools/java-projects/${x.id}`} className="card tool-card">
-              <div className="meta"><span className={`lvl lvl-${x.level}`}>{x.level}</span><span>⏱ {x.duration}</span></div>
+              <div className="meta"><span className={`lvl lvl-${x.level}`}>{x.level}</span><span><Ico e="⏱" /> {x.duration}</span></div>
               <h3>{x.title}</h3>
               <p className="muted small">{x.summary}</p>
               <div className="chips">{x.stack.slice(0, 5).map((s) => <span key={s} className="jc-kw">{s}</span>)}</div>

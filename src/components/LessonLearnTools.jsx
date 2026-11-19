@@ -8,6 +8,7 @@ import { streamClaude, describeError } from '../ai/claudeClient.js';
 import { keywordsOf, coverage, useDictation } from './careerUtils.js';
 import { recordAnswers, logEvent } from '../study.js';
 
+import Ico from './Ico.jsx';
 const LANGS = { en: { label: 'English', voice: ['en-IN', 'en-GB', 'en-US', 'en'] }, mr: { label: 'मराठी', name: 'Marathi', voice: ['mr-IN', 'mr', 'hi-IN'] }, hi: { label: 'हिंदी', name: 'Hindi', voice: ['hi-IN', 'hi'] } };
 const pref = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const setPref = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
@@ -68,7 +69,7 @@ function Feynman({ lesson, sections, onClose }) {
   const system = 'You are a kind teacher using the Feynman technique. The student explains a concept in their own words. Reply with: **Score: X/10**, **What you got right**, **Missing or wrong** (be specific), **A simpler way to explain it** (with an everyday analogy, 3-4 sentences). Keep it under 200 words. Reply in the same language the student used.';
   const askAi = async () => {
     setBusy(true); setAi('');
-    try { await streamClaude({ apiKey, model, effort, system, messages: [{ role: 'user', content: `Lesson: ${lesson.title}\nConcept: ${sec.heading}\nReference notes: ${plain(sec.content).slice(0, 2500)}\n\nMy explanation:\n${text}` }], onText: (d) => setAi((x) => x + d) }); } catch (e) { setAi(`⚠ ${describeError(e)}`); } finally { setBusy(false); }
+    try { await streamClaude({ apiKey, model, effort, system, messages: [{ role: 'user', content: `Lesson: ${lesson.title}\nConcept: ${sec.heading}\nReference notes: ${plain(sec.content).slice(0, 2500)}\n\nMy explanation:\n${text}` }], onText: (d) => setAi((x) => x + d) }); } catch (e) { setAi(`${describeError(e)}`); } finally { setBusy(false); }
   };
   return (
     <div className="card ll-feynman">
@@ -76,7 +77,7 @@ function Feynman({ lesson, sections, onClose }) {
       <p className="muted small">If you can explain it simply, you understand it. Pick a concept, close your notes, and explain it as if teaching a friend (type or speak).</p>
       <label className="small">Concept <select value={si} onChange={(e) => { setSi(Number(e.target.value)); setRes(null); setAi(''); }}>{sections.map((s, i) => <option key={i} value={i}>{i + 1}. {s.heading}</option>)}</select></label>
       <textarea className="input" rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder={`Explain "${sec.heading}" in your own words…`} />
-      {dict.interim && <div className="muted small">🎙 {dict.interim}</div>}
+      {dict.interim && <div className="muted small"><Ico e="🎙" /> {dict.interim}</div>}
       <div className="row-btns">
         {dict.supported && <button className="btn" onClick={dict.listening ? dict.stop : dict.start}>{dict.listening ? <><MicOff size={15} /> Stop</> : <><Mic size={15} /> Speak</>}</button>}
         <button className="btn primary" disabled={!text.trim()} onClick={check}>Check my explanation</button>
@@ -223,7 +224,7 @@ export default function TheoryView({ lesson, lessonKey }) {
               <RichText text={s.content} />
               {s.syntax && <CodeBlock code={s.syntax} label="Syntax" />}
               {s.points?.length > 0 && <ul className="points">{s.points.map((pt, j) => <li key={j}><Inline text={pt} /></li>)}</ul>}
-              {s.tip && <div className="tip">💡 <Inline text={s.tip} /></div>}
+              {s.tip && <div className="tip"><Ico e="💡" /> <Inline text={s.tip} /></div>}
               {gate && cpMap[i] != null && <Checkpoint key={`${lessonKey}-${i}`} q={lesson.quiz[cpMap[i]]} done={!!passed[i]} onDone={() => setPassed((p) => ({ ...p, [i]: true }))} />}
             </section>
           </div>

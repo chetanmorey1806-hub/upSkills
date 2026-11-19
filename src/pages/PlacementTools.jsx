@@ -11,6 +11,7 @@ import { useStudy, logEvent } from '../study.js';
 import { useDictation, analyzeSpeech, fmtTime } from '../components/careerUtils.js';
 import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
 
+import Ico from '../components/Ico.jsx';
 const pickExport = (mods, name) => { for (const m of Object.values(mods)) if (m[name]) return m[name]; return []; };
 const PUZZLES = pickExport(import.meta.glob('../data/codePuzzles.js', { eager: true }), 'PUZZLES');
 const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
@@ -34,7 +35,7 @@ function TimedQuiz({ title, questions, minutes, onExit, origin, onDone }) {
   return (
     <div>
       <div className="row-btns"><button className="btn" onClick={onExit}>← Back</button>
-        <span className={`timer ${left < 60 && !done ? 'low' : ''}`}>{done ? `✔ ${done.score}/${done.total}` : left > 0 ? `⏱ ${fmtTime(left)}` : "⏰ Time's up — submit now"}</span></div>
+        <span className={`timer ${left < 60 && !done ? 'low' : ''}`}>{done ? `✔ ${done.score}/${done.total}` : left > 0 ? `${fmtTime(left)}` : <><Ico e="⏰" /> Time's up — submit now</>}</span></div>
       <h2>{title}</h2>
       <p className="muted">{questions.length} questions · {minutes} minutes · no negative marking.</p>
       <Quiz questions={questions} origin={origin} onFinish={(score, total) => { setDone({ score, total }); onDone?.(score, total); }} />
@@ -55,7 +56,7 @@ export function AptitudeHome() {
   return (
     <div>
       <div className="page-head">
-        <h1>🧮 Aptitude &amp; Reasoning</h1>
+        <h1><Ico e="🧮" /> Aptitude &amp; Reasoning</h1>
         <p className="muted">The first round of most campus and off-campus drives. Learn the concepts and short-cuts, practise topic-wise, then take timed sectional and full mock tests. {APTITUDE.reduce((s, t) => s + t.questions.length, 0)} questions in {APTITUDE.length} topics.</p>
         <div className="row-btns">
           <button className="btn primary" disabled={!APTITUDE.length} onClick={() => mock(null)}><Timer size={15} /> Full mock test (30 Q · 40 min)</button>
@@ -75,10 +76,10 @@ export function AptitudeHome() {
                 const r = res[t.id];
                 return (
                   <Link key={t.id} to={`/practice/aptitude/${t.id}`} className="card apt-card">
-                    <div className="apt-ic">{t.icon}</div>
+                    <div className="apt-ic"><Ico e={t.icon} /></div>
                     <h3>{t.title}</h3>
                     <p className="muted small">{t.summary}</p>
-                    <div className="meta"><span>📘 {t.concepts.length} concepts</span><span>⚡ {t.shortcuts.length} short-cuts</span><span>📝 {t.questions.length} Q</span></div>
+                    <div className="meta"><span><Ico e="📘" /> {t.concepts.length} concepts</span><span><Ico e="⚡" /> {t.shortcuts.length} short-cuts</span><span><Ico e="📝" /> {t.questions.length} Q</span></div>
                     {r && <><ProgressBar value={r.best / 100} color={r.best >= 70 ? 'var(--ok)' : undefined} /><div className="muted small">Best {r.best}%</div></>}
                   </Link>
                 );
@@ -106,15 +107,15 @@ export function AptitudeTopic() {
   return (
     <div>
       <div className="crumbs"><Link to="/practice/aptitude">Aptitude &amp; Reasoning</Link> › {t.section}</div>
-      <div className="page-head"><h1>{t.icon} {t.title}</h1><p className="muted">{t.summary}</p></div>
+      <div className="page-head"><h1><Ico e={t.icon} /> {t.title}</h1><p className="muted">{t.summary}</p></div>
       <div className="tabs">
-        {[['learn', '📘 Concepts & short-cuts'], ['examples', '🧪 Solved examples'], ['practice', `📝 Practice (${t.questions.length})`], ['timed', '⏱ Timed test']].map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>)}
+        {[['learn', 'Concepts & short-cuts'], ['examples', 'Solved examples'], ['practice', `Practice (${t.questions.length})`], ['timed', 'Timed test']].map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>)}
       </div>
       {tab === 'learn' && (
         <div>
           {t.concepts.map((c, i) => <section key={i} className="card theory"><h2>{i + 1}. {c.heading}</h2><RichText text={c.content} /></section>)}
-          <div className="card"><h3>📐 Formulas &amp; rules</h3><ul className="apt-formulas">{t.formulas.map((f, i) => <li key={i}><code>{f}</code></li>)}</ul></div>
-          <div className="card"><h3>⚡ Short-cuts</h3>{t.shortcuts.map((s, i) => <div key={i} className="tip"><b><Inline text={s.trick} /></b><div className="small"><Inline text={s.example} /></div></div>)}</div>
+          <div className="card"><h3><Ico e="📐" /> Formulas &amp; rules</h3><ul className="apt-formulas">{t.formulas.map((f, i) => <li key={i}><code>{f}</code></li>)}</ul></div>
+          <div className="card"><h3><Ico e="⚡" /> Short-cuts</h3>{t.shortcuts.map((s, i) => <div key={i} className="tip"><b><Inline text={s.trick} /></b><div className="small"><Inline text={s.example} /></div></div>)}</div>
         </div>
       )}
       {tab === 'examples' && t.examples.map((e, i) => (
@@ -193,7 +194,7 @@ export function CompanyKits() {
     return (
       <div>
         <div className="page-head">
-          <h1>🏢 Company-wise Prep Kits</h1>
+          <h1><Ico e="🏢" /> Company-wise Prep Kits</h1>
           <p className="muted">Practise in the pattern used by popular IT recruiters: sections, question counts and time limits, plus interview rounds and tips. Patterns are approximate (from public information) and change often — always check the official notification.</p>
         </div>
         <div className="grid3">
@@ -202,7 +203,7 @@ export function CompanyKits() {
               <div className="ck-logo">{x.name.slice(0, 2).toUpperCase()}</div>
               <h3>{x.name}</h3>
               <p className="muted small">{x.about}</p>
-              <div className="meta"><span>🧩 {x.sections.length} sections</span><span>⏱ {x.sections.reduce((s, q) => s + q[3], 0)} min</span>{hist[x.id] && <span className="badge ok">Best {hist[x.id].best}%</span>}</div>
+              <div className="meta"><span><Ico e="🧩" /> {x.sections.length} sections</span><span><Ico e="⏱" /> {x.sections.reduce((s, q) => s + q[3], 0)} min</span>{hist[x.id] && <span className="badge ok">Best {hist[x.id].best}%</span>}</div>
             </Link>
           ))}
         </div>
@@ -245,17 +246,17 @@ export function CompanyKits() {
   return (
     <div>
       <div className="crumbs"><Link to="/practice/companies">Company kits</Link> › {c.name}</div>
-      <div className="page-head"><h1>🏢 {c.name}</h1><p className="muted">{c.about}</p>
+      <div className="page-head"><h1><Ico e="🏢" /> {c.name}</h1><p className="muted">{c.about}</p>
         <button className="btn primary" onClick={start}><Play size={15} /> Start full mock test</button>
       </div>
       <div className="grid2">
-        <div className="card"><h3>📋 Test pattern (approximate)</h3>
+        <div className="card"><h3><Ico e="📋" /> Test pattern (approximate)</h3>
           <div className="table-wrap"><table className="data-table"><thead><tr><th>Section</th><th>Questions</th><th>Time</th></tr></thead><tbody>{c.sections.map(([n, , q, m]) => <tr key={n}><td>{n}</td><td>{q}</td><td>{m} min</td></tr>)}</tbody></table></div>
           <p className="muted small">Each section has its own timer. Check the official notification for the latest pattern.</p>
         </div>
-        <div className="card"><h3>🗂 Selection rounds</h3><ol>{c.rounds.map((r) => <li key={r}>{r}</li>)}</ol><h3>💡 Tips</h3><ul>{c.tips.map((t) => <li key={t}>{t}</li>)}</ul></div>
+        <div className="card"><h3><Ico e="🗂" /> Selection rounds</h3><ol>{c.rounds.map((r) => <li key={r}>{r}</li>)}</ol><h3><Ico e="💡" /> Tips</h3><ul>{c.tips.map((t) => <li key={t}>{t}</li>)}</ul></div>
       </div>
-      <div className="card"><h3>🎤 HR questions to prepare</h3><ul>{shuffle(hrQuestions).slice(0, 8).map((q) => <li key={q.q}>{q.q}</li>)}</ul><Link className="btn small" to="/practice/video-interview">Practise on video</Link></div>
+      <div className="card"><h3><Ico e="🎤" /> HR questions to prepare</h3><ul>{shuffle(hrQuestions).slice(0, 8).map((q) => <li key={q.q}>{q.q}</li>)}</ul><Link className="btn small" to="/practice/video-interview">Practise on video</Link></div>
       {hist[c.id] && <div className="card"><h3>Your last attempt: {hist[c.id].last}% (best {hist[c.id].best}%)</h3></div>}
     </div>
   );
@@ -265,7 +266,7 @@ function CodeTimed({ name, minutes, items, onDone }) {
   const left = useCountdown(minutes * 60, true);
   return (
     <div>
-      <span className={`timer ${left < 300 ? 'low' : ''}`}>{left > 0 ? `⏱ ${fmtTime(left)}` : "⏰ Time's up — submit now"}</span>
+      <span className={`timer ${left < 300 ? 'low' : ''}`}>{left > 0 ? `${fmtTime(left)}` : <><Ico e="⏰" /> Time's up — submit now</>}</span>
       <h2>{name}</h2>
       <CodeSection items={items} onDone={onDone} />
     </div>
@@ -331,7 +332,7 @@ export function VideoInterview() {
   return (
     <div>
       <div className="page-head">
-        <h1>🎥 Video Mock Interview</h1>
+        <h1><Ico e="🎥" /> Video Mock Interview</h1>
         <p className="muted">Answer real interview questions on camera, then watch yourself like an interviewer would. The video stays only in this browser tab — nothing is uploaded. Download it if you want to keep it.</p>
       </div>
       <div className="vi-grid">

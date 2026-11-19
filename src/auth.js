@@ -4,6 +4,9 @@
 // is NOT real security (anyone with dev tools can bypass it). A real deployment needs a backend.
 import { useEffect, useState, createElement } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { serverMode, api } from './serverApi.js';
+import { supabase, supaMode } from './supabase.js';
+import { stopSync } from './cloudSync.js';
 
 const USERS = 'upskillr-auth-users';
 const SESSION = 'upskillr-auth-session';
@@ -63,7 +66,31 @@ const readJSON = (raw, d) => { try { return raw ? JSON.parse(raw) : d; } catch {
 const norm = (u) => String(u || '').trim().toLowerCase();
 
 function storedUsers() { return readJSON(ls.get(USERS), []); }
+// Supabase: everyone who registered (loaded on demand for the admin pages)
+let supaUsers = null;
+let supaUsersLoading = false;
+export async function loadSupabaseUsers() {
+  if (!supaMode) return [];
+  supaUsersLoading = true;
+  const { data } = await supabase.from('profiles').select('id, username, name, role, active, created_at').order('created_at', { ascending: false }).limit(2000);
+  supaUsers = (data || []).map((p) => ({ id: p.id, username: p.username, name: p.name, email: '', role: p.role, active: p.active, createdAt: p.created_at, server: true }));
+  supaUsersLoading = false;
+  window.dispatchEvent(new Event(EVT));
+  return supaUsers;
+}
+export async function setSupabaseRole(username, role) {
+  const u = (supaUsers || []).find((x) => x.username === username);
+  if (!u) return false;
+  const { error } = await supabase.from('profiles').update({ role }).eq('id', u.id);
+  if (error) { window.alert(error.message); return false; }
+  await loadSupabaseUsers();
+  return true;
+}
 export function allUsers() {
+  if (supaMode && getSession()?.server) {
+    if (!supaUsers && !supaUsersLoading) loadSupabaseUsers();
+    return supaUsers || [];
+  }
   const list = storedUsers().filter((u) => norm(u.username) !== DEFAULT_USER.username);
   return [DEFAULT_USER, ...list];
 }
@@ -94,6 +121,8 @@ export function getSession() {
   try { raw = sessionStorage.getItem(SESSION); } catch { /* ignore */ }
   const s = readJSON(raw || ls.get(SESSION), null);
   if (!s?.username) return null;
+  // with the server, the signed-in account (and its token) is kept in the session itself
+  if (serverMode) return s.token && s.user ? { ...s.user, since: s.at, server: true } : null;
   const u = findUser(s.username);
   return u ? { username: u.username, name: u.name, email: u.email, role: u.role || 'student', since: s.at } : null;
 }
@@ -111,7 +140,16 @@ export function useAuth() {
 }
 
 // ---------- actions ----------
-export function register({ name, username, email, password }) {
+// With the server (VITE_API_URL set) these return Promises; AuthPage awaits both kinds.
+export function register(f) {
+  if (serverMode) {
+    return api('/api/auth/register', { method: 'POST', json: { name: f.name, username: f.username, email: f.email, password: f.password } })
+      .then((d) => ({ ok: true, username: d.username, confirm: !!d.confirm }))
+      .catch((e) => ({ ok: false, field: e.field || 'form', error: e.message }));
+  }
+  return registerLocal(f);
+}
+function registerLocal({ name, username, email, password }) {
   const n = String(name || '').trim();
   const u = String(username || '').trim();
   if (n.length < 2) return { ok: false, field: 'name', error: 'Please enter your full name.' };
@@ -126,22 +164,41 @@ export function register({ name, username, email, password }) {
   return { ok: true, username: u };
 }
 
-export function login(username, password, remember = true) {
-  const u = findUser(username);
-  if (!u || hashPw(u.salt, String(password || '')) !== u.hash) return { ok: false, error: 'Wrong username or password.' };
+function startSession(username, extra, remember) {
   // swap progress so each user keeps their own
   const owner = ls.get(OWNER);
-  if (owner && norm(owner) !== norm(u.username)) { stash(owner); restore(u.username); } else if (!owner) restore(u.username);
-  ls.set(OWNER, u.username);
-  const s = JSON.stringify({ username: u.username, at: new Date().toISOString() });
+  if (owner && norm(owner) !== norm(username)) { stash(owner); restore(username); } else if (!owner) restore(username);
+  ls.set(OWNER, username);
+  const s = JSON.stringify({ username, at: new Date().toISOString(), ...extra });
   try { sessionStorage.setItem(SESSION, s); } catch { /* ignore */ }
   if (remember) ls.set(SESSION, s); else ls.del(SESSION);
   notify();
   window.dispatchEvent(new Event('xlpbi-progress'));
+}
+
+export function login(username, password, remember = true) {
+  if (serverMode) {
+    return api('/api/auth/login', { method: 'POST', json: { username, password } })
+      .then((d) => { startSession(d.user.username, { token: d.token, user: d.user }, remember); return { ok: true, user: d.user }; })
+      .catch((e) => ({ ok: false, error: e.message }));
+  }
+  const u = findUser(username);
+  if (!u || hashPw(u.salt, String(password || '')) !== u.hash) return { ok: false, error: 'Wrong username or password.' };
+  startSession(u.username, {}, remember);
   return { ok: true, user: u };
 }
 
+// "Forgot password?": Supabase e-mails a link that brings the student back here to set a new password.
+export async function sendPasswordReset(email) {
+  if (!supaMode) return { ok: false, error: 'Password reset needs the online account.' };
+  const e = String(email || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return { ok: false, error: 'Enter the email you registered with.' };
+  const { error } = await supabase.auth.resetPasswordForEmail(e, { redirectTo: `${window.location.origin}${window.location.pathname}` });
+  return error ? { ok: false, error: /rate/i.test(error.message) ? 'Too many emails right now. Try again in a few minutes.' : error.message } : { ok: true };
+}
+
 export function logout() {
+  if (supaMode) { stopSync(); supabase.auth.signOut().catch(() => {}); }
   const s = getSession();
   if (s) { stash(s.username); ls.del(OWNER); }
   try { sessionStorage.removeItem(SESSION); } catch { /* ignore */ }
@@ -149,6 +206,47 @@ export function logout() {
   notify();
   window.dispatchEvent(new Event('xlpbi-progress'));
 }
+
+// Supabase: keep the stored session in step with Supabase (sign-out elsewhere, role changed by the admin, disabled account)
+function updateStoredUser(patch) {
+  const write = (store) => {
+    try {
+      const raw = store.getItem(SESSION); if (!raw) return;
+      const s = JSON.parse(raw); s.user = { ...s.user, ...patch }; s.username = s.user.username; store.setItem(SESSION, JSON.stringify(s));
+    } catch { /* ignore */ }
+  };
+  write(sessionStorage); write(localStorage);
+  notify();
+}
+export async function refreshSupabaseUser() {
+  if (!supaMode || !getSession()?.server) return;
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) { logout(); return; }
+  const { data: p } = await supabase.from('profiles').select('id, username, name, role, active').eq('id', data.session.user.id).single();
+  if (!p || !p.active) { logout(); return; }
+  updateStoredUser({ id: p.id, username: p.username, name: p.name, role: p.role, email: data.session.user.email || '' });
+}
+if (supaMode && typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      setTimeout(async () => {
+        const pw = window.prompt('Choose a new password (at least 6 characters):');
+        if (!pw || pw.length < 6) { window.alert('Password not changed. Open the reset link again to try once more.'); return; }
+        const { error } = await supabase.auth.updateUser({ password: pw });
+        await supabase.auth.signOut();
+        window.alert(error ? `Could not change the password: ${error.message}` : 'Password changed. Sign in with your new password.');
+        window.location.hash = '#/login';
+      }, 300);
+      return;
+    }
+    if (event === 'SIGNED_OUT' && getSession()?.server) logout();
+    if (event === 'TOKEN_REFRESHED' && session) updateStoredUser({});
+  });
+  setTimeout(() => { refreshSupabaseUser().catch(() => {}); }, 0);
+}
+
+// the server rejected the token (expired / account disabled) -> sign out
+if (typeof window !== 'undefined') window.addEventListener('upskillr-auth-expired', () => { if (getSession()?.server) logout(); });
 
 // Route guard: shows the page only when signed in, otherwise goes to the login page.
 export function RequireAuth({ children }) {

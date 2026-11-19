@@ -12,6 +12,7 @@ import { useStudy, logEvent, recordAnswers, hashText } from '../study.js';
 import { APTITUDE } from '../data/aptitude.js';
 import { runPython } from '../components/pyodideRunner.js';
 
+import Ico from '../components/Ico.jsx';
 // Runs a student's arranged program to accept other valid orders (e.g. two independent lines swapped).
 function runJs(code) {
   return new Promise((resolve) => {
@@ -65,14 +66,14 @@ function ErrorCard({ e, lang }) {
       <h2>{e.title}</h2>
       <div className="ee-mean"><b>{lang === 'mr' ? 'याचा अर्थ:' : 'What it means:'}</b> {e.meaning[lang] || e.meaning.en}</div>
       <div className="grid2">
-        <div><h4>🔎 Common causes</h4><ul>{e.causes.map((c, i) => <li key={i}><Inline text={c} /></li>)}</ul></div>
-        <div><h4>🛠 How to fix</h4><ol>{e.fixes.map((c, i) => <li key={i}><Inline text={c} /></li>)}</ol></div>
+        <div><h4><Ico e="🔎" /> Common causes</h4><ul>{e.causes.map((c, i) => <li key={i}><Inline text={c} /></li>)}</ul></div>
+        <div><h4><Ico e="🛠" /> How to fix</h4><ol>{e.fixes.map((c, i) => <li key={i}><Inline text={c} /></li>)}</ol></div>
       </div>
       <div className="grid2">
-        <CodeBlock code={e.example.bad} label="❌ Causes the error" />
-        <CodeBlock code={e.example.good} label="✅ Fixed" />
+        <CodeBlock code={e.example.bad} label="Causes the error" />
+        <CodeBlock code={e.example.good} label="Fixed" />
       </div>
-      <div className="tip">💡 <Inline text={e.tip} /></div>
+      <div className="tip"><Ico e="💡" /> <Inline text={e.tip} /></div>
     </div>
   );
 }
@@ -102,18 +103,18 @@ export function ExplainError() {
   const askAi = async () => {
     ctrl.current?.abort(); ctrl.current = new AbortController();
     setBusy(true); setAi('');
-    try { const { message } = await streamClaude({ apiKey, model, effort, system, messages: [{ role: 'user', content: user }], onText: (d) => setAi((x) => x + d), signal: ctrl.current.signal }); const n = stopNote(message); if (n) setAi((x) => `${x}\n\n_${n}_`); } catch (e) { setAi(`⚠ ${describeError(e)}`); } finally { setBusy(false); }
+    try { const { message } = await streamClaude({ apiKey, model, effort, system, messages: [{ role: 'user', content: user }], onText: (d) => setAi((x) => x + d), signal: ctrl.current.signal }); const n = stopNote(message); if (n) setAi((x) => `${x}\n\n_${n}_`); } catch (e) { setAi(`${describeError(e)}`); } finally { setBusy(false); }
   };
   return (
     <div>
       <div className="page-head">
-        <h1>🩺 Explain my Error</h1>
+        <h1><Ico e="🩺" /> Explain my Error</h1>
         <p className="muted">Paste any error message from Java, Python, JavaScript, React, Node, SQL, C#, Git or npm. You get the meaning, the usual causes and the fix — works offline for {ERRORS.length} common errors, and Claude can explain anything else.</p>
       </div>
       <div className="card jc-form">
         <div className="db-card-head"><h3>Paste the error</h3><div className="chips"><button className={`chip ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>English</button><button className={`chip ${lang === 'mr' ? 'active' : ''}`} onClick={() => setLang('mr')}>मराठी</button></div></div>
         <textarea className="input mono" rows={5} value={err} onChange={(e) => setErr(e.target.value)} placeholder={'e.g. Exception in thread "main" java.lang.NullPointerException: Cannot invoke "String.length()" because "name" is null\n    at Main.main(Main.java:5)'} />
-        {hints.length > 0 && <p className="small">📍 Look at: {hints.map((h) => <code key={h} className="ic">{h}</code>)} — that is where the error happened.</p>}
+        {hints.length > 0 && <p className="small"><Ico e="📍" /> Look at: {hints.map((h) => <code key={h} className="ic">{h}</code>)} — that is where the error happened.</p>}
       </div>
       {err.trim() && matches.length === 0 && <div className="card info">This error is not in the offline list yet. Ask Claude below (add your code for a precise answer).</div>}
       {matches.map((e) => <ErrorCard key={e.id} e={e} lang={lang} />)}
@@ -144,7 +145,7 @@ export function ExplainError() {
 
 /* ============================== Code Puzzles ============================== */
 const LANG_LABEL = { python: 'Python', javascript: 'JavaScript', java: 'Java', sql: 'SQL' };
-const TYPE_LABEL = { parsons: '🧩 Arrange the lines', output: '🔮 Predict the output', bug: '🐞 Find the bug' };
+const TYPE_LABEL = { parsons: 'Arrange the lines', output: 'Predict the output', bug: 'Find the bug' };
 
 function Parsons({ p, onResult }) {
   const start = useMemo(() => {
@@ -253,7 +254,7 @@ export function CodePuzzles() {
   return (
     <div>
       <div className="page-head">
-        <h1>🧩 Code Puzzles</h1>
+        <h1><Ico e="🧩" /> Code Puzzles</h1>
         <p className="muted">Three quick games that build real coding skill: arrange jumbled lines, predict the output, and spot the bug. {solved}/{PUZZLES.length} solved · 5 XP each.</p>
         <ProgressBar value={PUZZLES.length ? solved / PUZZLES.length : 0} />
       </div>
@@ -347,7 +348,7 @@ export function QuizBattle() {
     return (
       <div>
         <div className="page-head">
-          <h1>⚔️ Quiz Battle vs Bot</h1>
+          <h1><Ico e="⚔" /> Quiz Battle vs Bot</h1>
           <p className="muted">{ROUNDS} questions, {Q_TIME} seconds each. Answer correctly and fast: 10 points + bonus for every second left. Beat the bot to win XP!</p>
         </div>
         <div className="card qb-setup">
@@ -364,7 +365,7 @@ export function QuizBattle() {
     const won = game.me > game.bot; const tie = game.me === game.bot;
     return (
       <div className="card center qb-end">
-        <div className="qb-trophy">{won ? '🏆' : tie ? '🤝' : '🤖'}</div>
+        <div className="qb-trophy">{won ? <><Ico e="🏆" /></> : tie ? <><Ico e="🤝" /></> : <><Ico e="🤖" /></>}</div>
         <h2>{won ? 'You win!' : tie ? "It's a tie!" : `${BOTS[lvl].name} wins this time`}</h2>
         <p className="qb-final"><b>{game.me}</b> vs <b>{game.bot}</b></p>
         <p className="muted">Wrong answers were added to your Mistake Notebook.</p>
@@ -376,9 +377,9 @@ export function QuizBattle() {
   return (
     <div className="qb">
       <div className="qb-score">
-        <div className="qb-p you"><span className="qb-ava">🧑‍🎓</span><b>{game.me}</b><span>You{game.myPick != null && !reveal ? ' ✓' : ''}</span></div>
+        <div className="qb-p you"><span className="qb-ava"><Ico e="🧑‍🎓" /></span><b>{game.me}</b><span>You{game.myPick != null && !reveal ? ' ✓' : ''}</span></div>
         <div className="qb-mid"><span>Q {game.i + 1}/{game.qs.length}</span><div className={`qb-timer ${left < 5 ? 'low' : ''}`}><Timer size={14} /> {Math.ceil(left)}s</div></div>
-        <div className="qb-p bot"><span className="qb-ava">🤖</span><b>{game.bot}</b><span>{BOTS[lvl].name}{game.botPick != null && !reveal ? ' ✓' : ''}</span></div>
+        <div className="qb-p bot"><span className="qb-ava"><Ico e="🤖" /></span><b>{game.bot}</b><span>{BOTS[lvl].name}{game.botPick != null && !reveal ? ' ✓' : ''}</span></div>
       </div>
       <div className="ft-bar"><i style={{ width: `${(left / Q_TIME) * 100}%` }} /></div>
       <div className="card">
@@ -389,11 +390,11 @@ export function QuizBattle() {
           if (game.myPick === k) cls += ' picked';
           if (reveal && k === q.answer) cls += ' correct';
           if (reveal && game.myPick === k && k !== q.answer) cls += ' wrong';
-          return <button key={k} className={cls} disabled={game.myPick != null || reveal} onClick={() => answer(k)}><span className="opt-letter">{String.fromCharCode(65 + k)}</span><Inline text={o} />{reveal && game.botPick === k && <span className="qb-botpick">🤖</span>}</button>;
+          return <button key={k} className={cls} disabled={game.myPick != null || reveal} onClick={() => answer(k)}><span className="opt-letter">{String.fromCharCode(65 + k)}</span><Inline text={o} />{reveal && game.botPick === k && <span className="qb-botpick"><Ico e="🤖" /></span>}</button>;
         })}</div>
         {reveal && (
           <>
-            <div className={`explain ${game.myPick === q.answer ? 'ok' : 'bad'}`}>{game.myPick === q.answer ? <><CheckCircle2 size={15} /> Correct! </> : game.myPick == null ? "⏰ Time's up. " : <><XCircle size={15} /> Wrong. </>}{q.explanation && <Inline text={q.explanation} />}</div>
+            <div className={`explain ${game.myPick === q.answer ? 'ok' : 'bad'}`}>{game.myPick === q.answer ? <><CheckCircle2 size={15} /> Correct! </> : game.myPick == null ? <><Ico e="⏰" /> Time's up. </> : <><XCircle size={15} /> Wrong. </>}{q.explanation && <Inline text={q.explanation} />}</div>
             <button className="btn primary" onClick={next}>{game.i + 1 >= game.qs.length ? <><Trophy size={15} /> See result</> : 'Next question →'}</button>
           </>
         )}

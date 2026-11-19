@@ -14,17 +14,42 @@ import { codingProblems, javaProjects } from '../data/javaCareer.js';
 const WORDS = ['Java Full Stack', 'Python', 'Power BI', 'Artificial Intelligence', '.NET', 'React', 'Excel', 'MySQL'];
 const TECH = ['Java', 'Spring Boot', 'Hibernate', 'React', 'JavaScript', 'Python', 'Django', 'MySQL', 'Docker', 'Kubernetes', 'Kafka', 'Power BI', 'Excel', 'DAX', 'C#', 'ASP.NET Core', 'HTML5', 'CSS3', 'Git', 'AWS', 'Claude AI', 'Redis', 'MongoDB', 'JUnit'];
 
-const CODE = [
-  ['k', 'public class '], ['t', 'Student'], ['p', ' {'], ['n'],
-  ['p', '  '], ['k', 'private '], ['t', 'String'], ['p', ' name;'], ['n'],
-  ['p', '  '], ['k', 'private int'], ['p', ' marks;'], ['n'], ['n'],
-  ['p', '  '], ['k', 'public '], ['t', 'String'], ['f', ' grade'], ['p', '() {'], ['n'],
-  ['p', '    '], ['k', 'return'], ['p', ' marks >= '], ['v', '75'], ['p', ' ? '], ['s', '"Distinction"'], ['n'],
-  ['p', '         : marks >= '], ['v', '35'], ['p', ' ? '], ['s', '"Pass"'], ['p', ' : '], ['s', '"Fail"'], ['p', ';'], ['n'],
-  ['p', '  }'], ['n'],
-  ['p', '}'],
+const SNIPPETS = [
+  ['student.py', [
+    ['k', 'class '], ['t', 'Student'], ['p', ':'], ['n'],
+    ['p', '    '], ['k', 'def '], ['f', '__init__'], ['p', '(self, name, marks):'], ['n'],
+    ['p', '        self.name, self.marks = name, marks'], ['n'], ['n'],
+    ['p', '    '], ['k', 'def '], ['f', 'grade'], ['p', '(self):'], ['n'],
+    ['p', '        '], ['k', 'if'], ['p', ' self.marks >= '], ['v', '75'], ['p', ': '], ['k', 'return '], ['s', '"Distinction"'], ['n'],
+    ['p', '        '], ['k', 'return '], ['s', '"Pass"'], ['k', ' if'], ['p', ' self.marks >= '], ['v', '35'], ['k', ' else '], ['s', '"Fail"'], ['n'],
+  ]],
+  ['Student.java', [
+    ['k', 'public class '], ['t', 'Student'], ['p', ' {'], ['n'],
+    ['p', '  '], ['k', 'private '], ['t', 'String'], ['p', ' name;'], ['n'],
+    ['p', '  '], ['k', 'private int'], ['p', ' marks;'], ['n'], ['n'],
+    ['p', '  '], ['k', 'public '], ['t', 'String'], ['f', ' grade'], ['p', '() {'], ['n'],
+    ['p', '    '], ['k', 'return'], ['p', ' marks >= '], ['v', '75'], ['p', ' ? '], ['s', '"Distinction"'], ['n'],
+    ['p', '         : marks >= '], ['v', '35'], ['p', ' ? '], ['s', '"Pass"'], ['p', ' : '], ['s', '"Fail"'], ['p', ';'], ['n'],
+    ['p', '  }'], ['n'],
+    ['p', '}'],
+  ]],
+  ['top_students.sql', [
+    ['k', 'SELECT '], ['p', 'name, marks,'], ['n'],
+    ['p', '  '], ['k', 'CASE WHEN '], ['p', 'marks >= '], ['v', '75'], ['k', ' THEN '], ['s', "'Distinction'"], ['n'],
+    ['p', '       '], ['k', 'WHEN '], ['p', 'marks >= '], ['v', '35'], ['k', ' THEN '], ['s', "'Pass'"], ['n'],
+    ['p', '       '], ['k', 'ELSE '], ['s', "'Fail'"], ['k', ' END '], ['k', 'AS '], ['p', 'grade'], ['n'],
+    ['k', 'FROM '], ['t', 'students'], ['n'],
+    ['k', 'ORDER BY '], ['p', 'marks '], ['k', 'DESC'], ['p', ';'],
+  ]],
+  ['Grade.jsx', [
+    ['k', 'export default function '], ['f', 'Grade'], ['p', '({ marks }) {'], ['n'],
+    ['p', '  '], ['k', 'const '], ['p', 'grade = marks >= '], ['v', '75'], ['p', ' ? '], ['s', "'Distinction'"], ['n'],
+    ['p', '    : marks >= '], ['v', '35'], ['p', ' ? '], ['s', "'Pass'"], ['p', ' : '], ['s', "'Fail'"], ['p', ';'], ['n'],
+    ['p', '  '], ['k', 'return '], ['p', '<'], ['t', 'span'], ['p', '>{grade}</'], ['t', 'span'], ['p', '>;'], ['n'],
+    ['p', '}'],
+  ]],
 ];
-const CODE_LEN = CODE.reduce((s, [, t]) => s + (t ? t.length : 1), 0);
+const codeLen = (code) => code.reduce((s, [, t]) => s + (t ? t.length : 1), 0);
 
 // fade/slide sections in as they scroll into view
 function useReveal() {
@@ -47,7 +72,7 @@ function Counter({ to, suffix = '+' }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    let raf;
+    let raf, fallback;
     const run = () => {
       const t0 = performance.now();
       const step = (t) => {
@@ -56,11 +81,12 @@ function Counter({ to, suffix = '+' }) {
         if (k < 1) raf = requestAnimationFrame(step);
       };
       raf = requestAnimationFrame(step);
+      fallback = setTimeout(() => setV(to), 1700);
     };
     if (typeof IntersectionObserver === 'undefined') { setV(to); return undefined; }
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { run(); io.disconnect(); } });
     io.observe(el);
-    return () => { io.disconnect(); cancelAnimationFrame(raf); };
+    return () => { io.disconnect(); cancelAnimationFrame(raf); clearTimeout(fallback); };
   }, [to]);
   return <b ref={ref}>{v.toLocaleString('en-IN')}{suffix}</b>;
 }
@@ -71,15 +97,16 @@ function RotatingWord() {
   return <span className="ld-rot" aria-live="polite"><span key={i} className="ld-rot-word">{WORDS[i]}</span></span>;
 }
 
-function TypingCode() {
-  const [n, setN] = useState(0);
+function TypingCode({ onFile }) {
+  const [st, setSt] = useState({ i: 0, n: 0 });
   useEffect(() => {
-    const id = setInterval(() => setN((x) => (x >= CODE_LEN + 40 ? 0 : x + 1)), 45);
+    const id = setInterval(() => setSt(({ i, n }) => (n >= codeLen(SNIPPETS[i][1]) + 40 ? { i: (i + 1) % SNIPPETS.length, n: 0 } : { i, n: n + 1 })), 45);
     return () => clearInterval(id);
   }, []);
-  let left = n;
+  useEffect(() => { onFile?.(SNIPPETS[st.i][0]); }, [st.i, onFile]);
+  let left = st.n;
   const out = [];
-  CODE.forEach(([c, t], i) => {
+  SNIPPETS[st.i][1].forEach(([c, t], i) => {
     if (left <= 0) return;
     if (c === 'n') { out.push(<br key={i} />); left -= 1; return; }
     out.push(<span key={i} className={`ld-c-${c}`}>{t.slice(0, left)}</span>);
@@ -111,6 +138,7 @@ export default function Landing() {
   const user = useAuth();
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [file, setFile] = useState(SNIPPETS[0][0]);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 10);
     on();
@@ -177,8 +205,8 @@ export default function Landing() {
           </div>
           <div className="ld-hero-art" aria-hidden="true">
             <div className="ld-window">
-              <div className="ld-win-bar"><i /><i /><i /><span>Student.java</span></div>
-              <pre><TypingCode /></pre>
+              <div className="ld-win-bar"><i /><i /><i /><span>{file}</span></div>
+              <pre><TypingCode onFile={setFile} /></pre>
             </div>
             <div className="ld-float f1"><Trophy size={16} /> Quiz score <b>5/5</b></div>
             <div className="ld-float f2"><Flame size={16} /> <b>7-day</b> streak</div>

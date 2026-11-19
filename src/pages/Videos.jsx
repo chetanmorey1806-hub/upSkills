@@ -7,6 +7,7 @@ import { drawFrame, W, H } from '../video/draw.js';
 import { resolveColor } from '../components/VideoLesson.jsx';
 import { useProgress } from '../progress.js';
 
+import Ico from '../components/Ico.jsx';
 const TW = 320;
 const TH = 180;
 
@@ -69,7 +70,7 @@ export default function Videos() {
       <div className="vcourses">
         {group.tracks.filter((k) => tracks[k]).map((k) => (
           <button key={k} className={`vcourse ${k === trackKey ? 'active' : ''}`} style={{ '--c': tracks[k].color }} onClick={() => setParams({ group: group.key, course: k })}>
-            <span>{tracks[k].icon}</span> {tracks[k].short || tracks[k].name}
+            <span><Ico e={tracks[k].icon} /></span> {tracks[k].short || tracks[k].name}
             <small>{tracks[k].topics.length}</small>
           </button>
         ))}

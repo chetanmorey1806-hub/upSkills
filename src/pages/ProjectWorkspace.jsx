@@ -10,7 +10,8 @@ import ProgressBar from '../components/ProgressBar.jsx';
 import { Inline } from '../components/RichText.jsx';
 import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
-const TABS = [['brief', '📋 Brief'], ['code', '💻 Code'], ['tests', '✅ Tests'], ['submit', '🏁 Submit']];
+import Ico from '../components/Ico.jsx';
+const TABS = [['brief', 'Brief'], ['code', 'Code'], ['tests', 'Tests'], ['submit', 'Submit']];
 const ICON = { PASS: '✅', FAIL: '❌', ERROR: '💥', TODO: '⏳' };
 
 function downloadFile(name, text, type = 'text/x-python') {
@@ -113,13 +114,13 @@ export default function ProjectWorkspace() {
     <div className="project">
       <div className="crumbs"><Link to="/tools/python-projects">Final Projects</Link> › {project.title}</div>
       <div className="page-head">
-        <h1>{project.icon} {project.title}</h1>
+        <h1><Ico e={project.icon} /> {project.title}</h1>
         <p className="muted">{project.summary}</p>
         <div className="meta">
           <span className={`lvl lvl-${project.level}`}>{project.level}</span>
-          <span>⏱ {project.hours}</span>
-          {project.tests && <span>✅ {pr.passed}/{pr.testsTotal || '?'} tests passing</span>}
-          <span>🗂 {pr.tasksDone}/{pr.tasks} milestone tasks</span>
+          <span><Ico e="⏱" /> {project.hours}</span>
+          {project.tests && <span><Ico e="✅" /> {pr.passed}/{pr.testsTotal || '?'} tests passing</span>}
+          <span><Ico e="🗂" /> {pr.tasksDone}/{pr.tasks} milestone tasks</span>
           {st.submission && <span className="badge ok">✓ Submitted · {st.submission.score}/100</span>}
         </div>
       </div>
@@ -144,11 +145,11 @@ export default function ProjectWorkspace() {
             </div>
           ) : (
             <>
-              <div className="card story"><h3>📖 The story</h3><p>{project.story}</p></div>
+              <div className="card story"><h3><Ico e="📖" /> The story</h3><p>{project.story}</p></div>
               <div className="grid2">
-                <div className="card"><h3>🎯 Requirements</h3><ul>{project.requirements.map((r, i) => <li key={i}>{r}</li>)}</ul></div>
+                <div className="card"><h3><Ico e="🎯" /> Requirements</h3><ul>{project.requirements.map((r, i) => <li key={i}>{r}</li>)}</ul></div>
                 <div className="card">
-                  <h3>🧠 Skills you will use</h3>
+                  <h3><Ico e="🧠" /> Skills you will use</h3>
                   <div className="chips">{project.skills.map((s) => <span key={s} className="tag">{s}</span>)}</div>
                   {related.length > 0 && (<><h4>Revise first</h4><ul>{related.map((r) => <li key={r.tid}><Link to={`/track/${r.tk}/${r.tid}`}>{tracks[r.tk]?.short}: {r.title}</Link></li>)}</ul></>)}
                 </div>
@@ -157,7 +158,7 @@ export default function ProjectWorkspace() {
           )}
 
           <div className="card">
-            <h3>🗂 Milestones</h3>
+            <h3><Ico e="🗂" /> Milestones</h3>
             <ProgressBar value={pr.tasks ? pr.tasksDone / pr.tasks : 0} />
             {custom ? (
               tasks.filter((t) => t.text.trim()).length ? (
@@ -179,8 +180,8 @@ export default function ProjectWorkspace() {
 
           {!custom && (
             <div className="grid2">
-              <details className="card"><summary><b>💡 Hints</b></summary><ul>{project.hints.map((h, i) => <li key={i}><Inline text={h} /></li>)}</ul></details>
-              <div className="card"><h3>🚀 Go further (bonus)</h3><ul>{project.extensions.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+              <details className="card"><summary><b><Ico e="💡" /> Hints</b></summary><ul>{project.hints.map((h, i) => <li key={i}><Inline text={h} /></li>)}</ul></details>
+              <div className="card"><h3><Ico e="🚀" /> Go further (bonus)</h3><ul>{project.extensions.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
             </div>
           )}
           <div className="center"><button className="btn primary" onClick={() => setTab('code')}>Start coding →</button></div>
@@ -191,21 +192,21 @@ export default function ProjectWorkspace() {
         <div className="jide pyide proj-ide">
           <div className="jide-top">
             <div className="jide-title">
-              <span className="jide-logo py">🐍</span>
+              <span className="jide-logo py"><Ico e="🐍" /></span>
               <b>{custom ? (st.custom?.title || 'My project') : project.title}</b>
               <span className="jide-sub">{status === 'loading' ? 'loading Python…' : status === 'error' ? 'Python failed to load (needs internet once)' : 'saved automatically'}</span>
             </div>
             <div className="jide-actions">
               <button className="btn small primary" onClick={run} disabled={status !== 'ready'}>▶ Run main.py</button>
-              {project.tests && <button className="btn small primary" onClick={runTests} disabled={status !== 'ready'}>✅ Run tests</button>}
+              {project.tests && <button className="btn small primary" onClick={runTests} disabled={status !== 'ready'}><Ico e="✅" /> Run tests</button>}
               <button className="btn small" onClick={stop} disabled={status !== 'running'}>■ Stop</button>
               <button className="btn small" onClick={addFile}>＋ File</button>
-              <button className="btn small" onClick={downloadAll}>⬇ Download</button>
+              <button className="btn small" onClick={downloadAll}><Ico e="⬇" /> Download</button>
               <button className="btn small" onClick={resetCode}>↺ Reset</button>
             </div>
           </div>
           <div className="pg-tabs">
-            {names.map((n) => <button key={n} className={`pg-tab ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}>🐍 {n}</button>)}
+            {names.map((n) => <button key={n} className={`pg-tab ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}><Ico e="🐍" /> {n}</button>)}
           </div>
           <div className="proj-editor">
             {fallback ? (
@@ -237,14 +238,14 @@ export default function ProjectWorkspace() {
         <div>
           <div className="toolbar">
             <h3>Automated tests</h3>
-            <button className="btn primary" onClick={runTests} disabled={status !== 'ready'}>{testing ? '⏳ Running…' : '▶ Run all tests'}</button>
+            <button className="btn primary" onClick={runTests} disabled={status !== 'ready'}>{testing ? <><Ico e="⏳" /> Running…</> : '▶ Run all tests'}</button>
           </div>
           {results.length > 0 && (
             <div className="card test-summary">
               <b>{pr.passed}/{pr.testsTotal} tests passing</b>
               <ProgressBar value={pr.passed / pr.testsTotal} color={pr.passed === pr.testsTotal ? 'var(--ok)' : undefined} />
               <span className="muted small">Last run {new Date(st.tests.at).toLocaleString()} · {st.runs || 0} runs so far</span>
-              {pr.passed === pr.testsTotal && <p className="result">🎉 All tests pass! Tick your milestones and go to <b>Submit</b>.</p>}
+              {pr.passed === pr.testsTotal && <p className="result"><Ico e="🎉" /> All tests pass! Tick your milestones and go to <b>Submit</b>.</p>}
             </div>
           )}
           {st.tests?.err && <div className="card"><b>Your code could not be loaded:</b><pre className="err-pre">{st.tests.err}</pre></div>}
@@ -268,16 +269,16 @@ export default function ProjectWorkspace() {
         <div className="proj-submit">
           <div className="grid2">
             <div className="card">
-              <h3>📊 Your score</h3>
+              <h3><Ico e="📊" /> Your score</h3>
               <div className="score-ring" style={{ '--p': score }}><span>{score}</span><small>/100</small></div>
               <ul className="score-parts">
-                {project.tests && <li>✅ Tests: {pr.passed}/{pr.testsTotal || 0} passing (50 pts)</li>}
-                <li>🗂 Milestones: {pr.tasksDone}/{pr.tasks} ({project.tests ? 20 : 60} pts)</li>
-                <li>📝 Self-review below ({project.tests ? 30 : 40} pts)</li>
+                {project.tests && <li><Ico e="✅" /> Tests: {pr.passed}/{pr.testsTotal || 0} passing (50 pts)</li>}
+                <li><Ico e="🗂" /> Milestones: {pr.tasksDone}/{pr.tasks} ({project.tests ? 20 : 60} pts)</li>
+                <li><Ico e="📝" /> Self-review below ({project.tests ? 30 : 40} pts)</li>
               </ul>
             </div>
             <div className="card">
-              <h3>📝 Self-review</h3>
+              <h3><Ico e="📝" /> Self-review</h3>
               <p className="muted small">Be honest: this is how an interviewer will judge your code.</p>
               {project.rubric.slice(2).map(([c, pts], i) => (
                 <label key={c} className="rubric-row">
@@ -290,7 +291,7 @@ export default function ProjectWorkspace() {
             </div>
           </div>
           <div className="card">
-            <h3>💬 Reflection (great for interviews)</h3>
+            <h3><Ico e="💬" /> Reflection (great for interviews)</h3>
             {[['learned', 'What did you learn while building this?'], ['challenge', 'What was the hardest problem and how did you solve it?'], ['next', 'What would you improve with more time?']].map(([k, q]) => (
               <label key={k} className="field">{q}
                 <textarea className="input" rows={3} value={st.reflection?.[k] || ''} onChange={(e) => { const v = e.target.value; update((s) => ({ ...s, reflection: { ...(s.reflection || {}), [k]: v } })); }} />
@@ -299,9 +300,9 @@ export default function ProjectWorkspace() {
             <label className="field">Your name (for the certificate)<input className="input" value={st.name || ''} onChange={(e) => { const v = e.target.value; update((s) => ({ ...s, name: v })); }} /></label>
             <div className="row-btns">
               <button className="btn primary" onClick={() => update((s) => ({ ...s, submission: { score, at: Date.now(), passed: pr.passed, total: pr.testsTotal } }))}>
-                {st.submission ? '↻ Re-submit with new score' : '🏁 Submit project'}
+                {st.submission ? '↻ Re-submit with new score' : <><Ico e="🏁" /> Submit project</>}
               </button>
-              <button className="btn" onClick={downloadAll}>⬇ Download code</button>
+              <button className="btn" onClick={downloadAll}><Ico e="⬇" /> Download code</button>
             </div>
           </div>
 
@@ -317,13 +318,13 @@ export default function ProjectWorkspace() {
                 <p>with a final score of <b>{st.submission.score}/100</b>{project.tests ? ` (${st.submission.passed}/${st.submission.total} automated tests passing)` : ''}</p>
                 <div className="cert-foot"><span>{new Date(st.submission.at).toLocaleDateString()}</span><span>Developed by ER. Chetan D Morey</span></div>
               </div>
-              <button className="btn small no-print" onClick={() => window.print()}>🖨 Print / Save as PDF</button>
+              <button className="btn small no-print" onClick={() => window.print()}><Ico e="🖨" /> Print / Save as PDF</button>
             </div>
           )}
 
           {project.solution && (
             <div className="card">
-              <h3>🔑 Reference solution</h3>
+              <h3><Ico e="🔑" /> Reference solution</h3>
               {!st.submission ? <p className="muted">Unlocks after you submit. Try to solve it yourself first: that is what makes you interview-ready.</p>
                 : !showSolution ? <button className="btn" onClick={() => setShowSolution(true)}>Show reference solution</button>
                   : Object.entries(project.solution).map(([n, code]) => (

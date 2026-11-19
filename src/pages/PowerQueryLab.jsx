@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { SOURCES, OPS, LOOKUP, APPEND_ROWS, runSteps, buildM, stepName, isErrV } from '../engine/pq.js';
 import CodeBlock from '../components/CodeBlock.jsx';
 
+import Ico from '../components/Ico.jsx';
 const CHALLENGES = [
   { source: 'SalesRaw', task: 'Promote the first row to headers, then remove the blank row and the duplicate order.', hint: 'Use First Row as Headers → Remove Blank Rows → Remove Duplicates.',
     check: (t) => t.cols.includes('Order ID') && t.rows.length === 7 && new Set(t.rows.map((r) => r['Order ID'])).size === 7 },
@@ -78,13 +79,13 @@ export default function PowerQueryLab() {
   return (
     <div>
       <div className="page-head">
-        <h1>🧹 Power Query Lab</h1>
+        <h1><Ico e="🧹" /> Power Query Lab</h1>
         <p className="muted">
           Clean a messy file the way you would in the Power Query Editor. Every step appears in <b>Applied Steps</b> and
           generates real <b>M code</b> (open the Advanced Editor). Click a step to see the data at that point; delete steps to undo.
         </p>
         <div className="chips">
-          {Object.entries(SOURCES).map(([k, s]) => <button key={k} className={`chip ${source === k ? 'active' : ''}`} onClick={() => reset(k)}>📄 {s.file}</button>)}
+          {Object.entries(SOURCES).map(([k, s]) => <button key={k} className={`chip ${source === k ? 'active' : ''}`} onClick={() => reset(k)}><Ico e="📄" /> {s.file}</button>)}
         </div>
         <p className="muted small">{SOURCES[source].note}</p>
       </div>
@@ -119,7 +120,7 @@ export default function PowerQueryLab() {
               <button className="btn primary" disabled={missing || !!run.error} onClick={add}>Apply step</button>
             </div>
             <div className="muted small">Ribbon path in Power BI Desktop: <b>{OPS[op].menu}</b></div>
-            {run.error && <div className="explain bad">⚠ Step “{stepName(steps[run.errorAt], run.errorAt, steps)}” failed: {run.error} Delete or fix that step.</div>}
+            {run.error && <div className="explain bad"><Ico e="⚠" /> Step “{stepName(steps[run.errorAt], run.errorAt, steps)}” failed: {run.error} Delete or fix that step.</div>}
           </div>
 
           {showM && <CodeBlock code={m} label="Advanced Editor (M code)" />}
@@ -146,14 +147,14 @@ export default function PowerQueryLab() {
         </div>
 
         <div className="card challenge">
-          <h3>🎯 Challenges ({Object.keys(solved).length}/{CHALLENGES.length})</h3>
+          <h3><Ico e="🎯" /> Challenges ({Object.keys(solved).length}/{CHALLENGES.length})</h3>
           <div className="ch-dots">
             {CHALLENGES.map((_, i) => <button key={i} className={`dot ${i === ch ? 'cur' : ''} ${solved[i] ? 'ok' : ''}`} onClick={() => { setCh(i); setHint(false); }}>{i + 1}</button>)}
           </div>
           <p><b>#{ch + 1}.</b> {challenge.task}</p>
           <p className="muted small">File: {SOURCES[challenge.source].file}{challenge.source !== source && <> (<button className="link-btn" onClick={() => reset(challenge.source)}>switch to it</button>)</>}</p>
           <button className="btn small" onClick={() => setHint(!hint)}>Hint</button>
-          {hint && <div className="tip">💡 {challenge.hint}</div>}
+          {hint && <div className="tip"><Ico e="💡" /> {challenge.hint}</div>}
           <div className={`explain ${passed ? 'ok' : 'bad'}`}>{passed ? '✓ Solved! Your query produces the required result.' : 'Not solved yet. The check runs automatically after each step.'}</div>
           <p className="muted small">Tip: many challenges build on each other. Keep your steps and continue with the next challenge.</p>
         </div>

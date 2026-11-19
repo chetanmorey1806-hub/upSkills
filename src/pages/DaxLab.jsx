@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { makeEngine, validate, filtersFor, SUPPORTED_DAX } from '../engine/dax.js';
 import { MODEL } from '../engine/daxModel.js';
 
+import Ico from '../components/Ico.jsx';
 const DEFAULT_MEASURES = {
   'Total Sales': 'SUM(Sales[SalesAmount])',
   'Total Cost': 'SUM(Sales[Cost])',
@@ -130,7 +131,7 @@ export default function DaxLab() {
       }
       if (!ok) break;
     }
-    setChRes({ ok, t: ok ? 'Correct! Your measure returns the right result in every filter context. 🎉' : detail });
+    setChRes({ ok, t: ok ? 'Correct! Your measure returns the right result in every filter context. ' : detail });
   };
   const goCh = (i) => { setChIdx(i); setChExpr(''); setChRes(null); setShowHint(false); };
 
@@ -139,7 +140,7 @@ export default function DaxLab() {
   return (
     <div>
       <div className="page-head">
-        <h1>⚡ DAX Lab</h1>
+        <h1><Ico e="⚡" /> DAX Lab</h1>
         <p className="muted">
           Write DAX measures against a sample star schema (Sales fact → Product &amp; Customer dimensions)
           and see them evaluated in a matrix visual. Change the rows and slicers to watch the <b>filter context</b> change.
@@ -156,10 +157,10 @@ export default function DaxLab() {
         <div className="mtable"><b>Date (date table)</b><span>{Object.keys(MODEL.tables.Date[0]).join(' · ')}</span></div>
       </div>
       <div className="card info">
-        <b>📥 Practise in real Power BI Desktop too:</b> download the same tables as CSV, load them with <i>Get data &gt; Text/CSV</i>,
+        <b><Ico e="📥" /> Practise in real Power BI Desktop too:</b> download the same tables as CSV, load them with <i>Get data &gt; Text/CSV</i>,
         create the relationships shown above (Model view), mark <code className="ic">Date</code> as a date table, and paste your measures.
         <div className="row-btns">
-          {Object.keys(MODEL.tables).map((t) => <button key={t} className="btn small" onClick={() => downloadCSV(t, MODEL.tables[t])}>⬇ {t}.csv</button>)}
+          {Object.keys(MODEL.tables).map((t) => <button key={t} className="btn small" onClick={() => downloadCSV(t, MODEL.tables[t])}><Ico e="⬇" /> {t}.csv</button>)}
         </div>
       </div>
 
@@ -207,12 +208,12 @@ export default function DaxLab() {
                   {groupVals.map((gv) => (
                     <tr key={gv}>
                       <td>{gv}</td>
-                      {cols.map((c) => { const r = evalCell(engine, c, gv); return <td key={c} className={r.err ? 'err' : 'num'} title={r.err || ''}>{r.err ? '⚠ error' : fmt(r.v)}</td>; })}
+                      {cols.map((c) => { const r = evalCell(engine, c, gv); return <td key={c} className={r.err ? 'err' : 'num'} title={r.err || ''}>{r.err ? <><Ico e="⚠" /> error</> : fmt(r.v)}</td>; })}
                     </tr>
                   ))}
                   <tr className="total">
                     <td>Total</td>
-                    {cols.map((c) => { const r = evalCell(engine, c); return <td key={c} className={r.err ? 'err' : 'num'} title={r.err || ''}>{r.err ? '⚠ error' : fmt(r.v)}</td>; })}
+                    {cols.map((c) => { const r = evalCell(engine, c); return <td key={c} className={r.err ? 'err' : 'num'} title={r.err || ''}>{r.err ? <><Ico e="⚠" /> error</> : fmt(r.v)}</td>; })}
                   </tr>
                 </tbody>
               </table>
@@ -223,7 +224,7 @@ export default function DaxLab() {
         </div>
 
         <div className="card challenge">
-          <h3>🎯 DAX challenges</h3>
+          <h3><Ico e="🎯" /> DAX challenges</h3>
           <div className="ch-dots">
             {CHALLENGES.map((_, i) => <button key={i} className={`dot ${i === chIdx ? 'cur' : ''}`} onClick={() => goCh(i)}>{i + 1}</button>)}
           </div>
@@ -234,7 +235,7 @@ export default function DaxLab() {
             <button className="btn" onClick={() => setShowHint(!showHint)}>Hint</button>
             <button className="btn" onClick={() => setChExpr(ch.ref)}>Show answer</button>
           </div>
-          {showHint && <div className="tip">💡 {ch.hint}</div>}
+          {showHint && <div className="tip"><Ico e="💡" /> {ch.hint}</div>}
           {chRes && <div className={`explain ${chRes.ok ? 'ok' : 'bad'}`}>{chRes.t}</div>}
           <p className="muted small">Your measure is tested in many filter contexts (each Category, City, Year and the grand total). It must match everywhere.</p>
           <details className="fn-list">

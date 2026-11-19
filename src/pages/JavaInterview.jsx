@@ -12,6 +12,7 @@ import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
 import ApiKeyBox, { useApiKey } from '../ai/ApiKeyBox.jsx';
 import { streamClaude, describeError, stopNote } from '../ai/claudeClient.js';
 
+import Ico from '../components/Ico.jsx';
 const RESULTS_KEY = 'xlpbi-java-results-v1';
 const emptyResults = { tests: [], interviews: [], coding: {} };
 
@@ -60,7 +61,7 @@ function TestSeries({ results, setResults }) {
       <div>
         <div className="row-btns">
           <button className="btn" onClick={() => setActive(null)}>← All tests</button>
-          <span className={`timer ${left < 60 && !done ? 'low' : ''}`}>{done ? '✔ Submitted' : left <= 0 ? "⏰ Time's up! Submit now." : `⏱ ${fmtTime(left)}`}</span>
+          <span className={`timer ${left < 60 && !done ? 'low' : ''}`}>{done ? '✔ Submitted' : left <= 0 ? <><Ico e="⏰" /> Time's up! Submit now.</> : `${fmtTime(left)}`}</span>
         </div>
         <h2>{active.title}</h2>
         <p className="muted">{active.questions.length} questions · {active.minutes} minutes · 1 mark each · no negative marking. Answer all questions, then submit to see explanations.</p>
@@ -90,7 +91,7 @@ function TestSeries({ results, setResults }) {
               return (
                 <div key={t.id} className="card jc-test">
                   <h4>{t.title}</h4>
-                  <div className="meta"><span>📝 {t.questions.length} Q</span><span>⏱ {t.minutes} min</span>{attempts(t.id) > 0 && <span>🔁 {attempts(t.id)} attempt(s)</span>}</div>
+                  <div className="meta"><span><Ico e="📝" /> {t.questions.length} Q</span><span><Ico e="⏱" /> {t.minutes} min</span>{attempts(t.id) > 0 && <span><Ico e="🔁" /> {attempts(t.id)} attempt(s)</span>}</div>
                   {b >= 0 && <div className={`jc-best ${b >= 70 ? 'ok' : 'bad'}`}>Best: {b}%</div>}
                   <button className="btn primary small" onClick={() => { setActive(t); setDone(false); setRunId((x) => x + 1); window.scrollTo(0, 0); }}><Play size={14} /> {b >= 0 ? 'Retake' : 'Start test'}</button>
                 </div>
@@ -180,7 +181,7 @@ function MockInterview({ setResults }) {
       const note = stopNote(message);
       if (note) setAiText((x) => `${x}\n\n_${note}_`);
     } catch (e) {
-      setAiText(`⚠ ${describeError(e)}`);
+      setAiText(`${describeError(e)}`);
     } finally { setAiBusy(false); }
   };
 
@@ -188,7 +189,7 @@ function MockInterview({ setResults }) {
     return (
       <div>
         <div className="card info">
-          <b>How it works:</b> a question appears with a timer. Answer it as you would in a real interview: type, or press <b>🎤 Speak</b> to answer out loud (Chrome/Edge convert your speech to text). Then compare with the model answer, see which key points you covered, rate yourself, and optionally get feedback from Claude using your own API key.
+          <b>How it works:</b> a question appears with a timer. Answer it as you would in a real interview: type, or press <b><Ico e="🎤" /> Speak</b> to answer out loud (Chrome/Edge convert your speech to text). Then compare with the model answer, see which key points you covered, rate yourself, and optionally get feedback from Claude using your own API key.
         </div>
         <div className="quiz-settings">
           <label>Round <select value={round} onChange={(e) => setRound(e.target.value)}><option value="tech">Technical</option><option value="hr">HR</option><option value="mixed">Mixed (Technical + HR)</option></select></label>
@@ -239,7 +240,7 @@ function MockInterview({ setResults }) {
       {answering ? (
         <div className="card">
           <textarea className="input jc-answer" rows={7} value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your answer here, or press Speak and answer out loud…" />
-          {dict.interim && <div className="muted small">🎙 {dict.interim}</div>}
+          {dict.interim && <div className="muted small"><Ico e="🎙" /> {dict.interim}</div>}
           <div className="row-btns">
             {dict.supported ? (
               <button className={`btn ${dict.listening ? 'danger-btn' : ''}`} onClick={dict.listening ? dict.stop : dict.start}>{dict.listening ? <><MicOff size={15} /> Stop speaking</> : <><Mic size={15} /> Speak</>}</button>
@@ -310,7 +311,7 @@ function CodingRound({ results, setResults }) {
             <div><b>Sample output</b><pre className="jc-io">{x.output || '—'}</pre></div>
           </div>
         </div>
-        {(x.hints || []).slice(0, hints).map((h, i) => <div key={i} className="tip">💡 Hint {i + 1}: <Inline text={h} /></div>)}
+        {(x.hints || []).slice(0, hints).map((h, i) => <div key={i} className="tip"><Ico e="💡" /> Hint {i + 1}: <Inline text={h} /></div>)}
         <div className="row-btns">
           <button className="btn primary" onClick={() => open({ 'Main.java': x.starter }, x.expected, x.title, x.stdin)}><Code2 size={15} /> Solve in Java IDE</button>
           {hints < (x.hints || []).length && <button className="btn" onClick={() => setHints(hints + 1)}>Show hint {hints + 1}</button>}
@@ -389,7 +390,7 @@ export default function JavaInterview() {
   return (
     <div>
       <div className="page-head">
-        <h1>☕ Java Interview Preparation</h1>
+        <h1><Ico e="☕" /> Java Interview Preparation</h1>
         <p className="muted">Timed test series, mock technical & HR interviews, a coding round and your score history, all from the Java Full Stack courses. Also see the <Link to="/tools/java-projects">Final Project Studio</Link> and the <Link to="/tools/soft-skills">Soft Skills Lab</Link>.</p>
       </div>
       <div className="tabs">

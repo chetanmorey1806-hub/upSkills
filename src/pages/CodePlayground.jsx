@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 import { buildWebDoc, buildReactDoc, PLAYGROUND_LOAD_KEY, LIBS } from '../components/playgroundRuntime.js';
 
+import Ico from '../components/Ico.jsx';
 const TEMPLATES = {
   web: {
     'Starter page': {
-      html: '<h1>Hello, World! 👋</h1>\n<p>Edit the files on the left and see the result here.</p>\n<button id="btn">Click me</button>',
+      html: '<h1>Hello, World! </h1>\n<p>Edit the files on the left and see the result here.</p>\n<button id="btn">Click me</button>',
       css: 'body {\n  font-family: system-ui, sans-serif;\n  padding: 24px;\n}\n\nh1 {\n  color: #4f46e5;\n}\n\nbutton {\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: none;\n  background: #4f46e5;\n  color: white;\n  cursor: pointer;\n}',
       js: "const btn = document.getElementById('btn');\nlet count = 0;\n\nbtn.addEventListener('click', () => {\n  count++;\n  btn.textContent = `Clicked ${count} times`;\n  console.log('Button clicked', count);\n});",
     },
@@ -178,7 +179,7 @@ export default function CodePlayground() {
             <button className={mode === 'react' ? 'on' : ''} onClick={() => switchMode('react')}>React (JSX)</button>
           </div>
           <select value="" onChange={(e) => loadTemplate(e.target.value)}>
-            <option value="">📂 Load template…</option>
+            <option value="">Load template…</option>
             {Object.keys(TEMPLATES[mode]).map((t) => <option key={t}>{t}</option>)}
           </select>
           {mode === 'web' && Object.entries(LIBS).map(([k, l]) => (
@@ -188,9 +189,9 @@ export default function CodePlayground() {
           ))}
           <label className="check"><input type="checkbox" checked={autoRun} onChange={(e) => setAutoRun(e.target.checked)} /> Auto run</label>
           <button className="btn small primary" onClick={run} title="Ctrl + Enter">▶ Run</button>
-          <button className="btn small" onClick={() => setLayout(layout === 'side' ? 'bottom' : 'side')} title="Toggle layout">{layout === 'side' ? '⬓' : '◫'} Layout</button>
+          <button className="btn small" onClick={() => setLayout(layout === 'side' ? 'bottom' : 'side')} title="Toggle layout">{layout === 'side' ? <></> : '◫'} Layout</button>
           <button className="btn small" onClick={openNewTab}>↗ New tab</button>
-          <button className="btn small" onClick={download}>⬇ Download</button>
+          <button className="btn small" onClick={download}><Ico e="⬇" /> Download</button>
         </div>
       </div>
 
@@ -200,7 +201,7 @@ export default function CodePlayground() {
           <div className="pg-folder">▾ {mode === 'react' ? 'react-app' : 'my-website'}</div>
           {fileDefs.map(([k, name]) => (
             <button key={k} className={`pg-file ${active === k ? 'on' : ''}`} onClick={() => setActive(k)}>
-              <span>{ICON[k]}</span> {name}
+              <span><Ico e={ICON[k]} /></span> {name}
             </button>
           ))}
           <div className="pg-help">
@@ -211,7 +212,7 @@ export default function CodePlayground() {
         <section className="pg-editor">
           <div className="pg-tabs">
             {fileDefs.map(([k, name]) => (
-              <button key={k} className={`pg-tab ${active === k ? 'on' : ''}`} onClick={() => setActive(k)}>{ICON[k]} {name}</button>
+              <button key={k} className={`pg-tab ${active === k ? 'on' : ''}`} onClick={() => setActive(k)}><Ico e={ICON[k]} /> {name}</button>
             ))}
           </div>
           <div className="pg-monaco">
@@ -234,7 +235,7 @@ export default function CodePlayground() {
         </section>
 
         <section className="pg-output">
-          <div className="pg-preview-head"><span>🌐 Preview</span><span className="pg-sub">{mode === 'react' ? 'React 18 + Babel (needs internet)' : 'Live'}</span></div>
+          <div className="pg-preview-head"><span><Ico e="🌐" /> Preview</span><span className="pg-sub">{mode === 'react' ? 'React 18 + Babel (needs internet)' : 'Live'}</span></div>
           <iframe
             key={runId}
             ref={iframeRef}
@@ -251,7 +252,7 @@ export default function CodePlayground() {
             </div>
             <div className="pg-console-body">
               {logs.length === 0 && <div className="pg-muted">console.log() output and errors appear here</div>}
-              {logs.map((l, i) => <pre key={i} className={`pg-log ${l.level}`}>{l.level === 'error' ? '✖ ' : l.level === 'warn' ? '⚠ ' : '› '}{l.text}</pre>)}
+              {logs.map((l, i) => <pre key={i} className={`pg-log ${l.level}`}>{l.level === 'error' ? '✖ ' : l.level === 'warn' ? <><Ico e="⚠" /> </> : '› '}{l.text}</pre>)}
             </div>
           </div>
         </section>

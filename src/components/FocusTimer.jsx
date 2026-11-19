@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Play, Pause, Square, Coffee, Timer } from 'lucide-react';
 import { useStudy, startFocus, pauseFocus, resumeFocus, stopFocus } from '../study.js';
 
+import Ico from './Ico.jsx';
 const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 
 function beep() {
@@ -37,7 +38,7 @@ export function useFocusSession() {
     lastFinished = f.start;
     stopFocus(true);
     beep();
-    if (f.mode === 'focus') { notify('Focus session complete 🎉', 'Great work! Take a 5-minute break.'); startFocus(5, 'break'); } else notify('Break over', 'Ready for the next focus session?');
+    if (f.mode === 'focus') { notify('Focus session complete ', 'Great work! Take a 5-minute break.'); startFocus(5, 'break'); } else notify('Break over', 'Ready for the next focus session?');
   }, [now, f]);
   const left = f ? (f.paused ? f.end - f.paused : f.end - now) : 0;
   return { f, left };
@@ -62,7 +63,7 @@ export function FocusControls({ label = '' }) {
   const total = f.minutes * 60000;
   return (
     <div className={`ft-box ${f.mode}`}>
-      <div className="ft-mode">{f.mode === 'focus' ? '🎯 Focus' : '☕ Break'}{f.paused ? ' · paused' : ''}</div>
+      <div className="ft-mode">{f.mode === 'focus' ? <><Ico e="🎯" /> Focus</> : <><Ico e="☕" /> Break</>}{f.paused ? ' · paused' : ''}</div>
       <div className="ft-time">{fmt(left)}</div>
       <div className="ft-bar"><i style={{ width: `${Math.min(100, (1 - left / total) * 100)}%` }} /></div>
       <div className="row-btns center">

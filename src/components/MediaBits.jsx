@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useProfile } from '../profile.js';
 import { useAuth } from '../auth.js';
 import { useMedia, useResolvedSrc, courseScope, lessonScope } from '../media.js';
+import { TrackIcon } from './Icons.jsx';
 
 /* ------------------------------ avatar ------------------------------ */
 export function Avatar({ size = 32, className = '', name }) {
@@ -35,7 +36,6 @@ export function GeneratedCover({ track, height = 160, showTitle = true, wide = f
   const c = solid(track?.color);
   const h = hash(track?.key || 'x');
   const topics = useMemo(() => [...new Set((track?.topics || []).map((t) => (t.module || '').replace(/^Module \d+:\s*/, '')).filter(Boolean))].slice(0, wide ? 4 : 3), [track, wide]);
-  const icon = track?.icon || '📘';
   const id = `g${h}${wide ? 'w' : ''}`;
   const W = wide ? 1200 : 640;
   const glyphs = ['</>', '{ }', '( )', '[ ]', '=>', '#', 'Σ', 'fx', '∞', '01'];
@@ -59,12 +59,16 @@ export function GeneratedCover({ track, height = 160, showTitle = true, wide = f
       <circle cx={W - 30} cy="200" r="70" fill="#fff" opacity=".06" />
       {showTitle ? (
         <>
-          <text x={wide ? 60 : 40} y="96" fontSize={wide ? 70 : 60}>{icon}</text>
-          <text x={wide ? 160 : 40} y={wide ? 92 : 146} fill="#fff" fontSize={wide ? 40 : 30} fontWeight="800" fontFamily="Inter, system-ui, sans-serif">{(track?.name || '').slice(0, wide ? 48 : 34)}</text>
-          <text x={wide ? 160 : 40} y={wide ? 134 : 180} fill="#fff" opacity=".88" fontSize={wide ? 20 : 16} fontFamily="Inter, system-ui, sans-serif">{topics.join('  ·  ').slice(0, wide ? 110 : 70)}</text>
+          <rect x={wide ? 60 : 40} y={wide ? 52 : 34} width={wide ? 76 : 60} height={wide ? 76 : 60} rx="18" fill="#fff" fillOpacity=".16" stroke="#fff" strokeOpacity=".35" />
+          <g transform={`translate(${wide ? 76 : 53} ${wide ? 68 : 47})`}><TrackIcon track={track?.key} size={wide ? 44 : 34} color="#fff" /></g>
+          <text x={wide ? 160 : 40} y={wide ? 92 : 136} fill="#fff" fontSize={wide ? 40 : 30} fontWeight="800" fontFamily="Inter, system-ui, sans-serif">{(track?.name || '').slice(0, wide ? 48 : 34)}</text>
+          <text x={wide ? 160 : 40} y={wide ? 134 : 172} fill="#fff" opacity=".88" fontSize={wide ? 20 : 16} fontFamily="Inter, system-ui, sans-serif">{topics.join('  ·  ').slice(0, wide ? 110 : 70)}</text>
         </>
       ) : (
-        <text x={W / 2} y="140" fontSize="84" textAnchor="middle">{icon}</text>
+        <>
+          <rect x={W / 2 - 52} y="58" width="104" height="104" rx="28" fill="#fff" fillOpacity=".16" stroke="#fff" strokeOpacity=".4" />
+          <g transform={`translate(${W / 2 - 30} 80)`}><TrackIcon track={track?.key} size={60} color="#fff" /></g>
+        </>
       )}
     </svg>
   );

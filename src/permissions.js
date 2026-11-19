@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { tracks, trackGroups, trackOrder } from './data/index.js';
 import { useAuth } from './auth.js';
 import { DEFAULT_PACKAGES } from './data/packages.js';
+import { supabase, supaMode } from './supabase.js';
 
 const KEY = 'upskillr-auth-perms';
 const EVT = 'upskillr-perms';
@@ -65,11 +66,27 @@ export function readPerms() {
   m.media = { videos: { ...(bm.videos || {}), ...(lm.videos || {}) }, covers: { ...(bm.covers || {}), ...(lm.covers || {}) } };
   return m;
 }
+let saveTimer = null;
 export function writePerms(next) {
   try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* ignore */ }
   window.dispatchEvent(new Event(EVT));
+  // Supabase: the admin's settings are saved online and reach every student at once
+  if (supaMode) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      const value = readPerms();
+      const { error } = await supabase.from('app_config').upsert({ id: 'perms', value, updated_at: new Date().toISOString() });
+      if (!error) { published = value; window.dispatchEvent(new Event('upskillr-perms-saved')); }
+    }, 800);
+  }
 }
 export async function loadPublishedConfig() {
+  if (supaMode) {
+    try {
+      const { data } = await supabase.from('app_config').select('value').eq('id', 'perms').maybeSingle();
+      if (data?.value) { published = data.value; window.dispatchEvent(new Event(EVT)); return; }
+    } catch { /* fall back to the file */ }
+  }
   try {
     const r = await fetch(`${import.meta.env.BASE_URL || './'}upskillr-config.json`, { cache: 'no-store' });
     if (r.ok) { published = await r.json(); window.dispatchEvent(new Event(EVT)); }

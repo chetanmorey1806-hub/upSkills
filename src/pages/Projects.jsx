@@ -3,6 +3,7 @@ import { projects } from '../data/projects.js';
 import { readProject, projectProgress, projectScore } from '../projectStore.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 
+import Ico from '../components/Ico.jsx';
 export const CUSTOM_PROJECT = {
   id: 'custom',
   icon: '💡',
@@ -29,14 +30,14 @@ export default function Projects() {
   return (
     <div>
       <div className="page-head">
-        <h1>🏁 Python Final Projects</h1>
+        <h1><Ico e="🏁" /> Python Final Projects</h1>
         <p className="muted">Build a complete Python project inside UpSkillr: real starter code, automated tests that run in your browser, milestones, hints and a final score you can show in interviews.</p>
       </div>
 
       <div className="steps proj-steps">
         {steps.map(([ic, h, p]) => (
           <div key={h} className="card step">
-            <div className="track-icon">{ic}</div>
+            <div className="track-icon"><Ico e={ic} /></div>
             <h4>{h}</h4>
             <p className="muted small">{p}</p>
           </div>
@@ -53,7 +54,7 @@ export default function Projects() {
           return (
             <Link key={p.id} to={`/tools/python-projects/${p.id}`} className="card track-card proj-card">
               <div className="proj-card-top">
-                <span className="track-icon">{p.icon}</span>
+                <span className="track-icon"><Ico e={p.icon} /></span>
                 {pr.submitted ? <span className="badge ok">✓ Submitted · {projectScore(p, st)}/100</span>
                   : started ? <span className="badge">In progress</span> : null}
               </div>
@@ -61,8 +62,8 @@ export default function Projects() {
               <p className="muted small">{p.summary}</p>
               <div className="meta">
                 <span className={`lvl lvl-${p.level}`}>{p.level}</span>
-                <span>⏱ {p.hours}</span>
-                {p.tests && <span>✅ automated tests</span>}
+                <span><Ico e="⏱" /> {p.hours}</span>
+                {p.tests && <span><Ico e="✅" /> automated tests</span>}
               </div>
               <div className="chips">{p.skills.slice(0, 4).map((s) => <span key={s} className="tag">{s}</span>)}</div>
               <ProgressBar value={pct} />

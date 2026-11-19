@@ -5,6 +5,7 @@ import { softSkillModules, hrQuestions, gdTopics, emailTasks, starQuestions, fil
 import RichText, { Inline } from '../components/RichText.jsx';
 import { useLocalState, useDictation, useStopwatch, useCountdown, analyzeSpeech, fmtTime, keywordsOf, coverage } from '../components/careerUtils.js';
 
+import Ico from '../components/Ico.jsx';
 const STORE = 'xlpbi-softskills-v1';
 
 function useSoftStore() {
@@ -35,7 +36,7 @@ function SpeakBox({ onDone, keywords, minHint = '60–90 seconds' }) {
     <div className="card">
       <div className="row-btns">
         {!run ? <button className="btn primary" onClick={start}><Mic size={15} /> Start speaking</button> : <button className="btn danger-btn" onClick={stop}><Square size={15} /> Stop & analyse</button>}
-        <span className={`timer ${run ? '' : 'jc-idle'}`}>⏱ {fmtTime(secs)}</span>
+        <span className={`timer ${run ? '' : 'jc-idle'}`}><Ico e="⏱" /> {fmtTime(secs)}</span>
         <span className="muted small">Target: {minHint}</span>
       </div>
       {!dict.supported && <p className="muted small">Live speech-to-text works in Chrome or Edge. In other browsers, speak while the timer runs and type what you said (or paste it) below, then press Stop.</p>}
@@ -77,13 +78,13 @@ function Learn({ st, setSt }) {
       <div className="ss-mods">
         {softSkillModules.map((x) => (
           <button key={x.id} className={`ss-mod ${open === x.id ? 'active' : ''}`} onClick={() => setOpen(x.id)}>
-            <span>{x.icon}</span> <span>{x.title}</span> {st.done[x.id] && <span className="jc-solved">✓</span>}
+            <span><Ico e={x.icon} /></span> <span>{x.title}</span> {st.done[x.id] && <span className="jc-solved">✓</span>}
           </button>
         ))}
       </div>
       {m && (
         <div>
-          <h2>{m.icon} {m.title}</h2>
+          <h2><Ico e={m.icon} /> {m.title}</h2>
           <p className="muted">{m.summary}</p>
           {m.lessons.map((l, i) => (
             <div key={i} className="card">
@@ -101,7 +102,7 @@ function Learn({ st, setSt }) {
           {m.exercises?.length > 0 && <h3 className="section-title">Practice exercises</h3>}
           {(m.exercises || []).map((e, i) => (
             <details key={i} className="card qa"><summary><span className="qa-q"><Inline text={e.task} /></span></summary>
-              <div className="qa-a">{e.hint && <div className="tip">💡 {e.hint}</div>}<b>Sample answer</b><RichText text={e.sample} /></div>
+              <div className="qa-a">{e.hint && <div className="tip"><Ico e="💡" /> {e.hint}</div>}<b>Sample answer</b><RichText text={e.sample} /></div>
             </details>
           ))}
           <button className={`btn ${st.done[m.id] ? 'success' : 'primary'}`} onClick={() => setSt((s) => ({ ...s, done: { ...s.done, [m.id]: !s.done?.[m.id] } }))}>{st.done[m.id] ? '✓ Completed' : 'Mark module as completed'}</button>
@@ -227,7 +228,7 @@ function StarBuilder({ log }) {
           {Object.keys(L).map((k) => <label key={k}>{L[k]}<textarea className="input" rows={3} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></label>)}
         </div>
         <div>
-          <div className="card"><h4>Checklist</h4>{checks.map(([t, ok]) => <div key={t} className={ok ? 'jc-ok' : 'muted'}>{ok ? '✅' : '⬜'} {t}</div>)}
+          <div className="card"><h4>Checklist</h4>{checks.map(([t, ok]) => <div key={t} className={ok ? 'jc-ok' : 'muted'}>{ok ? <><Ico e="✅" /></> : <><Ico e="⬜" /></>} {t}</div>)}
             <div className="row-btns"><button className="btn small" disabled={!all} onClick={() => { copyText(all); log('STAR answer', q.q, checks.filter((c) => c[1]).length); }}><Copy size={14} /> Copy full answer</button><button className="btn small" onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'} sample</button></div>
           </div>
           {show && <div className="card">{Object.keys(L).map((k) => <p key={k}><b>{L[k]}:</b> {q.sample[k]}</p>)}</div>}
@@ -254,7 +255,7 @@ function GroupDiscussion({ log }) {
       </div>
       <div className="card jc-question"><div className="fc-label">GD topic · {t.type}</div><h2>{t.topic}</h2></div>
       {phase === 'idle' && <div className="card"><p>Real GDs give you about 1 minute to think, then you speak for 1–2 minutes at a time. Start the prep timer, write 3–4 points, then speak.</p><button className="btn primary" onClick={() => { setPhase('prep'); setRk((k) => k + 1); }}><Play size={15} /> Start 1-minute preparation</button></div>}
-      {phase === 'prep' && <div className="card"><span className="timer">🧠 Prep: {fmtTime(left)}</span><textarea className="input" rows={5} placeholder="Your points: opening line, 2–3 arguments with examples, conclusion…" value={notes} onChange={(e) => setNotes(e.target.value)} /><button className="btn" onClick={() => setPhase('speak')}>I'm ready → speak</button></div>}
+      {phase === 'prep' && <div className="card"><span className="timer"><Ico e="🧠" /> Prep: {fmtTime(left)}</span><textarea className="input" rows={5} placeholder="Your points: opening line, 2–3 arguments with examples, conclusion…" value={notes} onChange={(e) => setNotes(e.target.value)} /><button className="btn" onClick={() => setPhase('speak')}>I'm ready → speak</button></div>}
       {phase === 'speak' && (
         <>
           {notes && <div className="card small"><b>Your notes:</b> <span className="jc-pre">{notes}</span></div>}
@@ -304,7 +305,7 @@ function EmailWriting({ log }) {
         </div>
         <div>
           <div className="card"><h4>Checklist ({score}/{max})</h4>
-            {auto.map(([l, ok]) => <div key={l} className={ok ? 'jc-ok' : 'muted'}>{ok ? '✅' : '⬜'} {l}</div>)}
+            {auto.map(([l, ok]) => <div key={l} className={ok ? 'jc-ok' : 'muted'}>{ok ? <><Ico e="✅" /></> : <><Ico e="⬜" /></>} {l}</div>)}
             {(t.mustInclude || []).map((m, j) => <label key={j} className="check" style={{ display: 'flex' }}><input type="checkbox" checked={!!ticks[j]} onChange={() => setTicks({ ...ticks, [j]: !ticks[j] })} /> Includes: {m}</label>)}
             <div className="row-btns"><button className="btn small primary" disabled={!body} onClick={() => log('Email', t.title, Math.round((score / max) * 100))}>Save attempt</button><button className="btn small" onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'} sample email</button></div>
           </div>
@@ -328,7 +329,7 @@ function DailyLog({ st, setSt }) {
   return (
     <div>
       <div className="stats">
-        <div><b>{streak}🔥</b><span>Day streak</span></div>
+        <div><b>{streak}<Ico e="🔥" /></b><span>Day streak</span></div>
         <div><b>{days.length}</b><span>Practice days</span></div>
         <div><b>{(st.log || []).length}</b><span>Activities</span></div>
         <div><b>{modsDone}/{softSkillModules.length}</b><span>Modules completed</span></div>
@@ -352,7 +353,7 @@ export default function SoftSkills() {
   return (
     <div>
       <div className="page-head">
-        <h1>🗣️ Soft Skills Lab</h1>
+        <h1><Ico e="🗣" /> Soft Skills Lab</h1>
         <p className="muted">Communication, self-introduction, HR answers, STAR stories, group discussion and email writing, with speaking practice that measures your speed and filler words. Practise a little every day.</p>
       </div>
       <div className="tabs">{TABS.map(([k, I, l]) => <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}><I size={15} /> {l}</button>)}</div>

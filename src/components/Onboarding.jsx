@@ -5,6 +5,7 @@ import { tracks, trackGroups } from '../data/index.js';
 import { useAuth, firstName } from '../auth.js';
 import { useStudy, DEFAULT_GOALS } from '../study.js';
 
+import Ico from './Ico.jsx';
 export const startTour = () => window.dispatchEvent(new Event('start-tour'));
 export const openOnboarding = () => window.dispatchEvent(new Event('open-onboarding'));
 
@@ -13,15 +14,15 @@ const YEARS = ['1st / 2nd year', '3rd year', 'Final year', 'Graduate – looking
 const TIMES = [[30, '30 min'], [60, '1 hour'], [90, '1.5 hours'], [120, '2+ hours']];
 
 const TOUR = [
-  ['Today', '☀️ Today', 'Your plan for the day: the next lesson, revision, a coding challenge and a test. Start here every day.'],
-  ['Courses', '📚 Courses', 'All day-wise courses. Each lesson has theory, examples, interview Q&A, practice and a quiz.'],
-  ['Study', '🧠 Study', 'Smart revision, mistake notebook, notes, planner with focus timer, diagnostic test, XP and certificates.'],
-  ['Test Series', '🏆 Test Series', 'Practice sets, module-wise and lesson-wise tests plus mock interviews for every course.'],
-  ['Practice Labs', '🧪 Practice Labs', 'Code in the browser: Python, Java, web, SQL… plus the code visualizer, DSA animations, puzzles and error explainer.'],
-  ['Interview Prep', '🎤 Interview Prep', 'Aptitude & reasoning, company-wise mock tests, video mock interviews and soft skills.'],
-  ['Projects', '🏗️ Projects', 'Guided final projects with automated checks and certificates for your portfolio.'],
-  ['Career', '💼 Career', 'Track job applications, compare offers and keep your interview journal.'],
-  ['__search', '🔎 Search everything', 'Press Ctrl K (or tap here) to jump to any lesson, tool, aptitude topic or error.'],
+  ['Today', 'Today', 'Your plan for the day: the next lesson, revision, a coding challenge and a test. Start here every day.'],
+  ['Courses', 'Courses', 'All day-wise courses. Each lesson has theory, examples, interview Q&A, practice and a quiz.'],
+  ['Study', 'Study', 'Smart revision, mistake notebook, notes, planner with focus timer, diagnostic test, XP and certificates.'],
+  ['Test Series', 'Test Series', 'Practice sets, module-wise and lesson-wise tests plus mock interviews for every course.'],
+  ['Practice Labs', 'Practice Labs', 'Code in the browser: Python, Java, web, SQL… plus the code visualizer, DSA animations, puzzles and error explainer.'],
+  ['Interview Prep', 'Interview Prep', 'Aptitude & reasoning, company-wise mock tests, video mock interviews and soft skills.'],
+  ['Projects', 'Projects', 'Guided final projects with automated checks and certificates for your portfolio.'],
+  ['Career', 'Career', 'Track job applications, compare offers and keep your interview journal.'],
+  ['__search', 'Search everything', 'Press Ctrl K (or tap here) to jump to any lesson, tool, aptitude topic or error.'],
 ];
 
 function findTarget(key) {
@@ -60,7 +61,7 @@ function Tour({ onEnd }) {
           <button className="link-btn" onClick={onEnd}>Skip tour</button>
           <span style={{ flex: 1 }} />
           {i > 0 && <button className="btn small" onClick={() => setI(i - 1)}><ArrowLeft size={14} /></button>}
-          {i < TOUR.length - 1 ? <button className="btn small primary" onClick={() => setI(i + 1)}>Next <ArrowRight size={14} /></button> : <button className="btn small primary" onClick={onEnd}>Finish 🎉</button>}
+          {i < TOUR.length - 1 ? <button className="btn small primary" onClick={() => setI(i + 1)}>Next <ArrowRight size={14} /></button> : <button className="btn small primary" onClick={onEnd}>Finish <Ico e="🎉" /></button>}
         </div>
       </div>
     </div>
@@ -102,7 +103,7 @@ export default function Onboarding() {
   const skip = () => { setProfile({ ...f, skipped: true, at: Date.now() }); setOpen(false); };
   const first = firstName(user);
   const steps = [
-    <div key="goal"><h2>Hi {first}! 👋 What is your main goal?</h2><p className="muted">We will build your personal plan in 30 seconds.</p>
+    <div key="goal"><h2>Hi {first}! <Ico e="👋" /> What is your main goal?</h2><p className="muted">We will build your personal plan in 30 seconds.</p>
       <div className="ob-opts">{GOALS.map(([k, ic, t, d]) => <button key={k} className={`ob-opt ${f.goal === k ? 'on' : ''}`} onClick={() => setF({ ...f, goal: k })}><span>{ic}</span><b>{t}</b><small>{d}</small></button>)}</div></div>,
     <div key="path"><h2>Which path do you want to learn?</h2><p className="muted">You can open every course anytime — this decides your main plan.</p>
       <div className="ob-opts">{groups.map((g) => <button key={g.key} className={`ob-opt ${f.group === g.key ? 'on' : ''}`} onClick={() => setF({ ...f, group: g.key })}><b>{g.name}</b><small>{g.tracks.filter((k) => tracks[k]?.topics?.length).map((k) => tracks[k].short).join(' · ')}</small></button>)}</div></div>,
@@ -117,7 +118,7 @@ export default function Onboarding() {
         <div><b>{Math.round(f.minutes * 0.6 / 5) * 5} min focus</b><span>+ 10 revision cards daily</span></div>
       </div>
       <ol className="ob-order">{courses.map((k) => <li key={k}>{tracks[k].name}</li>)}</ol>
-      {(f.goal === 'placement' || f.year.startsWith('Final') || f.year.startsWith('Graduate')) && <div className="tip">🎯 Placement focus: add 20 minutes of Aptitude daily and one company mock test every week. Your Today page will remind you.</div>}
+      {(f.goal === 'placement' || f.year.startsWith('Final') || f.year.startsWith('Graduate')) && <div className="tip"><Ico e="🎯" /> Placement focus: add 20 minutes of Aptitude daily and one company mock test every week. Your Today page will remind you.</div>}
       <p className="muted small">Daily goals are set in your planner — change them anytime.</p>
     </div>,
   ];

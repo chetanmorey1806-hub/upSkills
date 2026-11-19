@@ -8,6 +8,7 @@ import { analyzeAnswer } from '../engine/answerCheck.js';
 import { useSpeech, speak, stopSpeaking } from '../components/useSpeech.js';
 import { TrackIcon } from '../components/Icons.jsx';
 
+import Ico from '../components/Ico.jsx';
 const STORE = 'upskillr-tests-v1';
 const PER_TEST = 5; // lessons per numbered test
 const PASS = 60;
@@ -136,13 +137,13 @@ function McqRun({ test, onExit }) {
   return (
     <div>
       <div className="run-head card">
-        <div><b>📝 {test.label}: MCQ test</b><div className="muted small">{qs.length} questions · {minutes} minutes · pass mark {PASS}%</div></div>
+        <div><b><Ico e="📝" /> {test.label}: MCQ test</b><div className="muted small">{qs.length} questions · {minutes} minutes · pass mark {PASS}%</div></div>
         <button className="btn small" onClick={onExit}>← Back to tests</button>
       </div>
-      {!done && <div className={`timer ${left < 60 ? 'low' : ''}`}>{left > 0 ? `⏱ ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : "⏰ Time's up! Submit now to see your score."}</div>}
+      {!done && <div className={`timer ${left < 60 ? 'low' : ''}`}>{left > 0 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : <><Ico e="⏰" /> Time's up! Submit now to see your score.</>}</div>}
       {done && (
         <div className={`card result-card ${done.pct >= PASS ? 'pass' : 'fail'}`}>
-          <h2>{done.pct >= PASS ? '🎉 Passed!' : '📚 Keep practising'}</h2>
+          <h2>{done.pct >= PASS ? <><Ico e="🎉" /> Passed!</> : <><Ico e="📚" /> Keep practising</>}</h2>
           <p>You scored <b>{done.score}/{done.total} ({done.pct}%)</b>. Review the explanations below, then retake the test or try the mock interview.</p>
         </div>
       )}
@@ -152,7 +153,7 @@ function McqRun({ test, onExit }) {
 }
 
 /* --------------------------- Mock interview --------------------------- */
-const RATE = [[2, '💪 Nailed it'], [1, '🙂 Partly'], [0, '😕 Missed']];
+const RATE = [[2, 'Nailed it'], [1, 'Partly'], [0, 'Missed']];
 
 function MockRun({ test, onExit }) {
   const [qs] = useState(() => (test.iv ? pickMock(test.iv, Math.min(12, test.iv.length)) : pickMock(qaOf(test.topics), test.grand ? 10 : 8)));
@@ -194,7 +195,7 @@ function MockRun({ test, onExit }) {
     return (
       <div>
         <div className={`card result-card ${pct >= PASS ? 'pass' : 'fail'}`}>
-          <h2>{pct >= PASS ? '🎉 Interview ready for this part!' : '📚 More practice needed'}</h2>
+          <h2>{pct >= PASS ? <><Ico e="🎉" /> Interview ready for this part!</> : <><Ico e="📚" /> More practice needed</>}</h2>
           <div className="mock-stats">
             <div><b>{pct}%</b><span>Self-rated score</span></div>
             <div><b>{avgCov}%</b><span>Key points covered</span></div>
@@ -203,7 +204,7 @@ function MockRun({ test, onExit }) {
           <div className="row-btns"><button className="btn primary" onClick={onExit}>← Back to tests</button></div>
         </div>
         {weak.length > 0 && (
-          <div className="card"><h3>📌 Revise these lessons</h3><ul>{weak.map((t) => <li key={t.id}><Link to={`/track/${t.track}/${t.id}?tab=interview`}>{tracks[t.track]?.short}: {t.title}</Link></li>)}</ul></div>
+          <div className="card"><h3><Ico e="📌" /> Revise these lessons</h3><ul>{weak.map((t) => <li key={t.id}><Link to={`/track/${t.track}/${t.id}?tab=interview`}>{tracks[t.track]?.short}: {t.title}</Link></li>)}</ul></div>
         )}
         {log.map((x, n) => (
           <details key={n} className="card qa">
@@ -218,30 +219,30 @@ function MockRun({ test, onExit }) {
   return (
     <div>
       <div className="run-head card">
-        <div><b>🎤 {test.label}: Mock interview</b><div className="muted small">Question {i + 1} of {qs.length} · answer aloud or type, then compare with the model answer</div></div>
+        <div><b><Ico e="🎤" /> {test.label}: Mock interview</b><div className="muted small">Question {i + 1} of {qs.length} · answer aloud or type, then compare with the model answer</div></div>
         <button className="btn small" onClick={onExit}>← Exit</button>
       </div>
       <ProgressBar value={i / qs.length} />
       <div className="card interviewer">
         <div className="iv-top">
-          <span className="iv-avatar">🧑‍💼</span>
+          <span className="iv-avatar"><Ico e="🧑‍💼" /></span>
           <div className="muted small">{tracks[q.topic.track]?.short} · {q.topic.title} <span className={`lvl lvl-${q.level}`}>{q.level}</span></div>
-          <span className={`iv-timer ${secs > 120 ? 'over' : ''}`}>⏱ {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')}</span>
+          <span className={`iv-timer ${secs > 120 ? 'over' : ''}`}><Ico e="⏱" /> {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')}</span>
         </div>
         <h2 className="iv-q">{q.q}</h2>
         <div className="row-btns">
-          <button className="btn small" onClick={() => speak(q.q)}>🔊 Read question</button>
+          <button className="btn small" onClick={() => speak(q.q)}><Ico e="🔊" /> Read question</button>
           <label className="check small"><input type="checkbox" checked={autoRead} onChange={(e) => setAutoRead(e.target.checked)} /> Read questions aloud</label>
         </div>
       </div>
 
       {!revealed ? (
         <div className="card">
-          <textarea className="input answer-box" rows={6} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Type your answer here, or press 🎙 and speak it like in a real interview…" />
-          {speech.interim && <div className="muted small">🎙 {speech.interim}</div>}
+          <textarea className="input answer-box" rows={6} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Type your answer here, or press and speak it like in a real interview…" />
+          {speech.interim && <div className="muted small"><Ico e="🎙" /> {speech.interim}</div>}
           {speech.error && <div className="test-msg">{speech.error}</div>}
           <div className="row-btns">
-            <button className={`btn ${speech.listening ? 'rec' : ''}`} onClick={speech.toggle}>{speech.listening ? '⏹ Stop speaking' : '🎙 Speak answer'}</button>
+            <button className={`btn ${speech.listening ? 'rec' : ''}`} onClick={speech.toggle}>{speech.listening ? <><Ico e="⏹" /> Stop speaking</> : <><Ico e="🎙" /> Speak answer</>}</button>
             <button className="btn primary" onClick={reveal}>Check my answer →</button>
             <button className="btn" onClick={() => { setAnswer(''); reveal(); }}>I don't know</button>
           </div>
@@ -256,7 +257,7 @@ function MockRun({ test, onExit }) {
               {analysis.missed.length > 0 && <div className="kw-row"><span className="muted small">Missing:</span>{analysis.missed.map((k) => <span key={k} className="tag miss">{k}</span>)}</div>}
             </div>
           )}
-          <div className="card model-answer"><h4>✅ Model answer</h4><RichText text={q.a} /></div>
+          <div className="card model-answer"><h4><Ico e="✅" /> Model answer</h4><RichText text={q.a} /></div>
           <div className="card rate-box">
             <b>How did you do? Be honest:</b>
             <div className="row-btns">{RATE.map(([p, l]) => <button key={p} className="btn" onClick={() => rate(p)}>{l}</button>)}</div>
@@ -275,13 +276,13 @@ function QaSheet({ test, onExit, onMock }) {
   return (
     <div>
       <div className="run-head card">
-        <div><b>📖 {test.label}: Interview Q&amp;A sheet</b><div className="muted small">{test.iv.length} questions from all {test.topics.length} lessons · try to answer each one aloud before you open the model answer</div></div>
+        <div><b><Ico e="📖" /> {test.label}: Interview Q&amp;A sheet</b><div className="muted small">{test.iv.length} questions from all {test.topics.length} lessons · try to answer each one aloud before you open the model answer</div></div>
         <button className="btn small" onClick={onExit}>← Back to sets</button>
       </div>
       <div className="row-btns">
         {['All', 'Easy', 'Medium', 'Hard'].map((l) => <button key={l} className={`btn small ${lvl === l ? 'primary' : ''}`} onClick={() => setLvl(l)}>{l} ({l === 'All' ? test.iv.length : test.iv.filter((q) => q.level === l).length})</button>)}
         <button className="btn small" onClick={() => setOpen((o) => !o)}>{open ? 'Collapse all' : 'Expand all'}</button>
-        <button className="btn small primary" onClick={onMock}>🎤 Start mock interview</button>
+        <button className="btn small primary" onClick={onMock}><Ico e="🎤" /> Start mock interview</button>
       </div>
       {list.map((q, n) => (
         <details key={`${lvl}-${open}-${n}`} className="card qa" open={open}>
@@ -318,9 +319,9 @@ function SetCards({ course, res, start }) {
               </div>
               <div className="muted small test-topics">{t.mcq.length} MCQs ({t.mcq.length} min) · {t.iv.length} interview Qs: {lv('Easy')} easy, {lv('Medium')} medium, {lv('Hard')} hard</div>
               <div className="test-modes">
-                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!t.mcq.length}>📝 MCQ paper</button>
-                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!t.iv.length}>🎤 Mock interview</button>
-                <button className="btn small" onClick={() => start(t, 'sheet')} disabled={!t.iv.length}>📖 Q&amp;A sheet</button>
+                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!t.mcq.length}><Ico e="📝" /> MCQ paper</button>
+                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!t.iv.length}><Ico e="🎤" /> Mock interview</button>
+                <button className="btn small" onClick={() => start(t, 'sheet')} disabled={!t.iv.length}><Ico e="📖" /> Q&amp;A sheet</button>
               </div>
               <div className="test-scores small">
                 <span>MCQ: {r.mcq ? <b className={r.mcq.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mcq.best}%</b> : '–'}</span>
@@ -350,7 +351,7 @@ function CourseGrid({ res, history }) {
   return (
     <div>
       <div className="page-head">
-        <h1>🎯 Test Series – all courses</h1>
+        <h1><Ico e="🎯" /> Test Series – all courses</h1>
         <p className="muted">Every course has its own separate test series: <b>5 full-syllabus practice sets</b>, <b>module-wise tests</b>, <b>lesson-wise tests</b> and a <b>grand test</b>. Each test has a timed MCQ paper and a mock interview (speak or type). Pick a course to start.</p>
       </div>
       <div className="ts-stats">
@@ -364,7 +365,7 @@ function CourseGrid({ res, history }) {
         <section key={g.key}>
           <div className="set-group-head">
             <h2 className="section-title">{g.name}</h2>
-            {g.list.length > 1 && !q && <Link className="btn small" to={`/tools/test-series/grp:${g.key}`}>🏆 Full-path tests ({g.name})</Link>}
+            {g.list.length > 1 && !q && <Link className="btn small" to={`/tools/test-series/grp:${g.key}`}><Ico e="🏆" /> Full-path tests ({g.name})</Link>}
           </div>
           <div className="grid3">
             {g.list.map((k) => {
@@ -394,7 +395,7 @@ function CourseGrid({ res, history }) {
   );
 }
 
-function History({ history, title = '🕘 Recent attempts' }) {
+function History({ history, title = 'Recent attempts' }) {
   if (!history.length) return null;
   return (
     <div className="card">
@@ -403,7 +404,7 @@ function History({ history, title = '🕘 Recent attempts' }) {
         <table className="data-table">
           <thead><tr><th>Test</th><th>Type</th><th>Score</th><th>Date</th></tr></thead>
           <tbody>{history.map((h, i) => (
-            <tr key={i}><td>{h.label}</td><td>{h.mode === 'mcq' ? '📝 MCQ' : '🎤 Interview'}</td><td className={h.pct >= PASS ? 'ok-t' : 'bad-t'}>{h.pct}% <span className="muted">({h.detail})</span></td><td>{new Date(h.at).toLocaleString()}</td></tr>
+            <tr key={i}><td>{h.label}</td><td>{h.mode === 'mcq' ? <><Ico e="📝" /> MCQ</> : <><Ico e="🎤" /> Interview</>}</td><td className={h.pct >= PASS ? 'ok-t' : 'bad-t'}>{h.pct}% <span className="muted">({h.detail})</span></td><td>{new Date(h.at).toLocaleString()}</td></tr>
           ))}</tbody>
         </table>
       </div>
@@ -429,9 +430,9 @@ function ModuleCards({ course, res, start }) {
               </div>
               <div className="muted small test-topics">{t.topics.map((x) => x.title).join(' • ')}</div>
               <div className="test-modes">
-                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!t.mcq.length}>📝 MCQ · {t.mcq.length} Q</button>
-                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!t.iv.length}>🎤 Mock interview</button>
-                <button className="btn small" onClick={() => start(t, 'sheet')} disabled={!t.iv.length}>📖 Q&amp;A sheet</button>
+                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!t.mcq.length}><Ico e="📝" /> MCQ · {t.mcq.length} Q</button>
+                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!t.iv.length}><Ico e="🎤" /> Mock interview</button>
+                <button className="btn small" onClick={() => start(t, 'sheet')} disabled={!t.iv.length}><Ico e="📖" /> Q&amp;A sheet</button>
               </div>
               <div className="test-scores small">
                 <span>MCQ: {r.mcq ? <b className={r.mcq.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mcq.best}%</b> : '–'}</span>
@@ -494,9 +495,9 @@ export default function TestSeries() {
       </div>
 
       <div className="tabs">
-        <button className={`tab ${view === 'sets' ? 'active' : ''}`} onClick={() => setView('sets')}>📚 {SETS} Practice Sets</button>
-        <button className={`tab ${view === 'modules' ? 'active' : ''}`} onClick={() => setView('modules')}>🧱 Module-wise tests</button>
-        <button className={`tab ${view === 'lessons' ? 'active' : ''}`} onClick={() => setView('lessons')}>🧩 Lesson-wise tests + Grand</button>
+        <button className={`tab ${view === 'sets' ? 'active' : ''}`} onClick={() => setView('sets')}><Ico e="📚" /> {SETS} Practice Sets</button>
+        <button className={`tab ${view === 'modules' ? 'active' : ''}`} onClick={() => setView('modules')}><Ico e="🧱" /> Module-wise tests</button>
+        <button className={`tab ${view === 'lessons' ? 'active' : ''}`} onClick={() => setView('lessons')}><Ico e="🧩" /> Lesson-wise tests + Grand</button>
       </div>
 
       {view === 'sets' && (
@@ -519,7 +520,7 @@ export default function TestSeries() {
         <div className="card"><b>{qaOf(topics).length}</b><span>Interview questions</span></div>
       </div>
       <ProgressBar value={tests.length ? passed.length / tests.length : 0} />
-      <p className="muted small">Each lesson test covers {PER_TEST} consecutive lessons. The 🏆 Grand Test (last card) mixes 40 questions from the whole course.</p>
+      <p className="muted small">Each lesson test covers {PER_TEST} consecutive lessons. The <Ico e="🏆" /> Grand Test (last card) mixes 40 questions from the whole course.</p>
 
       {tests.length === 0 && <p className="muted">No questions in this course yet.</p>}
       <div className="grid3">
@@ -530,7 +531,7 @@ export default function TestSeries() {
           return (
             <div key={t.id} className={`card test-card ${t.grand ? 'grand' : ''} ${best >= PASS ? 'passed' : ''}`}>
               <div className="test-card-top">
-                <span className="test-no">{t.grand ? '🏆' : t.n}</span>
+                <span className="test-no">{t.grand ? <><Ico e="🏆" /></> : t.n}</span>
                 <div>
                   <h3>{t.title}</h3>
                   <div className="muted small">{t.grand ? `Whole course · ${t.topics.length} lessons` : t.sub}</div>
@@ -538,8 +539,8 @@ export default function TestSeries() {
               </div>
               {!t.grand && <div className="muted small test-topics">{t.topics.map((x) => x.title).join(' • ')}</div>}
               <div className="test-modes">
-                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!nM}>📝 MCQ · {nM} Q</button>
-                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!qaOf(t.topics).length}>🎤 Mock interview</button>
+                <button className="btn small primary" onClick={() => start(t, 'mcq')} disabled={!nM}><Ico e="📝" /> MCQ · {nM} Q</button>
+                <button className="btn small" onClick={() => start(t, 'mock')} disabled={!qaOf(t.topics).length}><Ico e="🎤" /> Mock interview</button>
               </div>
               <div className="test-scores small">
                 <span>MCQ: {r.mcq ? <b className={r.mcq.best >= PASS ? 'ok-t' : 'bad-t'}>{r.mcq.best}%</b> : '–'}</span>
@@ -552,7 +553,7 @@ export default function TestSeries() {
       </div>
       </>)}
 
-      <History history={history} title={`🕘 Recent attempts · ${label}`} />
+      <History history={history} title={`Recent attempts · ${label}`} />
     </div>
   );
 }

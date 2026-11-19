@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 import { Server, Play, Send, RotateCcw, History, Terminal, FileCode2, Trash2 } from 'lucide-react';
 
+import Ico from '../components/Ico.jsx';
 export const API_LOAD_KEY = 'xlpbi-api-load';
 const STORE = 'xlpbi-api-lab-v1';
 
 const TEMPLATES = {
   'Hello Express': {
-    code: `const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.send('Hello from Express! 👋');\n});\n\napp.get('/hello/:name', (req, res) => {\n  res.json({ message: \`Hello, \${req.params.name}!\`, time: 'now' });\n});\n\napp.listen(3000, () => console.log('Server running on http://localhost:3000'));\n`,
+    code: `const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.send('Hello from Express! ');\n});\n\napp.get('/hello/:name', (req, res) => {\n  res.json({ message: \`Hello, \${req.params.name}!\`, time: 'now' });\n});\n\napp.listen(3000, () => console.log('Server running on http://localhost:3000'));\n`,
     requests: [{ method: 'GET', url: '/' }, { method: 'GET', url: '/hello/Asha' }],
   },
   'REST API: Students CRUD': {
@@ -118,7 +119,7 @@ export default function ApiLab() {
         <div className="api-title"><Server size={18} /> <b>API Lab</b><span className="muted small">Node.js + Express in your browser · {title}</span></div>
         <div className="row-btns">
           <select value="" onChange={(e) => loadTemplate(e.target.value)}>
-            <option value="">📂 Load example…</option>
+            <option value="">Load example…</option>
             {Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
           </select>
           <button className="btn small primary" onClick={start}><Play size={14} /> {running && !dirty ? 'Restart server' : 'Run server'}</button>
@@ -138,7 +139,7 @@ export default function ApiLab() {
             <div className="api-console-head"><Terminal size={14} /> Terminal <button className="link-btn" onClick={() => setLogs([])}><Trash2 size={12} /> clear</button></div>
             <div className="api-console-body">
               {logs.length === 0 && <div className="pg-muted">Server logs (console.log) appear here.</div>}
-              {logs.map((l, i) => <pre key={i} className={`pg-log ${l.level}`}>{l.level === 'sys' ? '' : l.level === 'error' ? '✖ ' : l.level === 'warn' ? '⚠ ' : '› '}{l.text}</pre>)}
+              {logs.map((l, i) => <pre key={i} className={`pg-log ${l.level}`}>{l.level === 'sys' ? '' : l.level === 'error' ? '✖ ' : l.level === 'warn' ? <><Ico e="⚠" /> </> : '› '}{l.text}</pre>)}
             </div>
           </div>
         </section>
@@ -173,7 +174,7 @@ export default function ApiLab() {
               </>
             )}
           </div>
-          {expected && <details className="api-expected"><summary>📋 Expected results from the lesson</summary><pre>{expected}</pre></details>}
+          {expected && <details className="api-expected"><summary><Ico e="📋" /> Expected results from the lesson</summary><pre>{expected}</pre></details>}
           {history.length > 0 && (
             <div className="api-history"><div className="muted small"><History size={12} /> History</div>
               {history.map((h, i) => <button key={i} className="api-hrow" onClick={() => send(h.req)}><b className={`m-${h.method}`}>{h.method}</b> {h.url} <span className={`api-code sm ${statusClass(h.status)}`}>{h.status}</span> <span className="muted small">{h.ms} ms</span></button>)}

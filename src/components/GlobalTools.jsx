@@ -4,6 +4,7 @@ import { Search, Sun, Moon, Monitor, Type, CornerDownLeft } from 'lucide-react';
 import { searchAll } from '../searchIndex.js';
 import { usePrefs, THEMES, SIZES } from '../uiPrefs.js';
 
+import Ico from './Ico.jsx';
 export const openPalette = () => window.dispatchEvent(new Event('open-palette'));
 
 /* Ctrl/⌘+K search across the whole app */
@@ -45,7 +46,7 @@ export function CommandPalette() {
           {q && !results.length && <div className="cp-hint">No quick match. Press Enter to search inside all lessons.</div>}
           {results.map((r, i) => (
             <button key={`${r.type}-${r.to}-${i}`} className={`cp-item ${i === sel ? 'on' : ''}`} onMouseEnter={() => setSel(i)} onClick={() => go(r)}>
-              <span className="cp-ic">{r.icon}</span>
+              <span className="cp-ic"><Ico e={r.icon} /></span>
               <span className="cp-txt"><b>{r.title}</b><span>{r.sub}</span></span>
               <span className="cp-type">{r.type}</span>
               {i === sel && <CornerDownLeft size={14} className="cp-enter" />}

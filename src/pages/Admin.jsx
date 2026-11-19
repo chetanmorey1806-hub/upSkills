@@ -1,12 +1,17 @@
 import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { allUsers } from '../auth.js';
+import { allUsers, setSupabaseRole } from '../auth.js';
+import { supaMode } from '../supabase.js';
 import { tracks, trackOrder } from '../data/index.js';
 import { DEFAULT_PACKAGES } from '../data/packages.js';
 import AdminMedia from './AdminMedia.jsx';
+import AdminUploads from './AdminUploads.jsx';
 import { usePerms, writePerms, readPerms, permissionGroups, getPackages, packageTracks } from '../permissions.js';
 
-const TABS = [['users', '👥 Users'], ['roles', '🔐 Student permissions'], ['student', '👤 Per-student access'], ['packages', '📦 Packages'], ['media', '🎬 Videos & images'], ['settings', '⚙️ Publish & settings']];
+import Ico from '../components/Ico.jsx';
+import { Users as UsersIc, ShieldCheck, UserCog, Package as PackageIc, Upload as UploadIc, Images, Send } from 'lucide-react';
+const TAB_ICONS = { users: UsersIc, roles: ShieldCheck, student: UserCog, packages: PackageIc, uploads: UploadIc, media: Images, settings: Send };
+const TABS = [['users', 'Users'], ['roles', 'Student permissions'], ['student', 'Per-student access'], ['packages', 'Packages'], ['uploads', 'Upload videos, photos & PDFs'], ['media', 'Videos & images'], ['settings', 'Publish & settings']];
 const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 // Matrix like bk-steels: groups → modules (rows) × actions (columns). rules: { key: { action: false } }
@@ -25,8 +30,8 @@ function PermMatrix({ rules = {}, onChange }) {
   return (
     <div className="pm">
       <div className="row-btns">
-        <button className="btn small" onClick={() => set(allCells, true)}>✅ Allow everything</button>
-        <button className="btn small" onClick={() => set(allCells, false)}>⛔ Block everything</button>
+        <button className="btn small" onClick={() => set(allCells, true)}><Ico e="✅" /> Allow everything</button>
+        <button className="btn small" onClick={() => set(allCells, false)}><Ico e="⛔" /> Block everything</button>
         <span className="muted small">{count(allCells)}/{allCells.length} permissions allowed</span>
       </div>
       {groups.map((g) => {
@@ -65,6 +70,7 @@ function PermMatrix({ rules = {}, onChange }) {
 }
 
 function setAuthRole(username, role) {
+  if (supaMode) { setSupabaseRole(username, role); return true; }
   try {
     const list = JSON.parse(localStorage.getItem('upskillr-auth-users')) || [];
     const u = list.find((x) => x.username === username);
@@ -104,10 +110,10 @@ export default function Admin() {
   return (
     <div className="admin">
       <div className="page-head">
-        <h1>🛡️ Admin Panel</h1>
+        <h1><Ico e="🛡" /> Admin Panel</h1>
         <p className="muted">Decide what students can see: courses, Day Tasks, test series, labs, projects and pages. Assign packages, manage accounts and publish the settings.</p>
       </div>
-      <div className="tabs">{TABS.map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setParams({ tab: k }, { replace: true })}>{l}</button>)}</div>
+      <div className="tabs">{TABS.map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setParams({ tab: k }, { replace: true })}><Ico e={TAB_ICONS[k]} /> {l}</button>)}</div>
 
       {tab === 'users' && (
         <div>
@@ -166,13 +172,13 @@ export default function Admin() {
               <div className="card">
                 <h3>{selUser.name} <span className="muted small">@{selUser.username}</span></h3>
                 <label className="check"><input type="checkbox" checked={!su.disabled} onChange={(e) => setUser(selUser.username, { disabled: !e.target.checked })} /> Account active</label>
-                <h4>📦 Packages</h4>
+                <h4><Ico e="📦" /> Packages</h4>
                 <div className="chips">{packages.map((p) => {
                   const has = (su.packages || []).includes(p.id);
-                  return <button key={p.id} className={`chip ${has ? 'active' : ''}`} onClick={() => setUser(selUser.username, { packages: has ? (su.packages || []).filter((x) => x !== p.id) : [...(su.packages || []), p.id] })}>{p.icon} {p.name}</button>;
+                  return <button key={p.id} className={`chip ${has ? 'active' : ''}`} onClick={() => setUser(selUser.username, { packages: has ? (su.packages || []).filter((x) => x !== p.id) : [...(su.packages || []), p.id] })}><Ico e={p.icon} /> {p.name}</button>;
                 })}</div>
                 <p className="muted small">{m.settings.packagesControlAccess ? 'Packages control course access: this student only sees courses from the packages ticked above.' : 'Package access control is OFF (Packages tab): packages are informational for now.'}</p>
-                <h4>🔐 Permissions</h4>
+                <h4><Ico e="🔐" /> Permissions</h4>
                 <label className="check"><input type="checkbox" checked={!!su.custom} onChange={(e) => setUser(selUser.username, e.target.checked ? { custom: true, rules: JSON.parse(JSON.stringify(m.roles.student || {})) } : { custom: false })} /> Use custom permissions for this student (otherwise the student defaults apply)</label>
               </div>
               {su.custom && <PermMatrix rules={su.rules} onChange={(r) => setUser(selUser.username, { rules: r })} />}
@@ -195,10 +201,10 @@ export default function Admin() {
             const tr = packageTracks(p);
             return (
               <details key={p.id} className="card pkg-edit">
-                <summary><b>{p.icon} {p.name}</b> <span className="muted small">· {tr.length} courses · {inr(p.offerPrice || p.price)}</span> {!p.visible && <span className="badge">hidden</span>}</summary>
+                <summary><b><Ico e={p.icon} /> {p.name}</b> <span className="muted small">· {tr.length} courses · {inr(p.offerPrice || p.price)}</span> {!p.visible && <span className="badge">hidden</span>}</summary>
                 <div className="grid2">
                   <label className="field">Name<input className="input" value={p.name} onChange={(e) => upd({ name: e.target.value })} /></label>
-                  <label className="field">Icon (emoji)<input className="input" value={p.icon} onChange={(e) => upd({ icon: e.target.value })} /></label>
+                  <label className="field">Icon (emoji, shown as a line icon)<input className="input" value={p.icon} onChange={(e) => upd({ icon: e.target.value })} /></label>
                   <label className="field">Price (₹)<input className="input" type="number" value={p.price} onChange={(e) => upd({ price: Number(e.target.value) })} /></label>
                   <label className="field">Offer price (₹, 0 = none)<input className="input" type="number" value={p.offerPrice || 0} onChange={(e) => upd({ offerPrice: Number(e.target.value) })} /></label>
                   <label className="field">Duration (months)<input className="input" type="number" value={p.months} onChange={(e) => upd({ months: Number(e.target.value) })} /></label>
@@ -212,7 +218,7 @@ export default function Admin() {
                 {p.tracks !== '*' && <div className="pkg-tracks">{trackOrder.filter((k) => tracks[k]).map((k) => (
                   <label key={k} className="check small"><input type="checkbox" checked={tr.includes(k)} onChange={(e) => upd({ tracks: e.target.checked ? [...tr, k] : tr.filter((x) => x !== k) })} /> {tracks[k].name}</label>
                 ))}</div>}
-                <div className="row-btns"><button className="btn small" onClick={() => window.confirm(`Delete package ${p.name}?`) && setPackages(packages.filter((_, j) => j !== i))}>🗑 Delete package</button></div>
+                <div className="row-btns"><button className="btn small" onClick={() => window.confirm(`Delete package ${p.name}?`) && setPackages(packages.filter((_, j) => j !== i))}><Ico e="🗑" /> Delete package</button></div>
               </details>
             );
           })}
@@ -220,12 +226,13 @@ export default function Admin() {
         </div>
       )}
 
+      {tab === 'uploads' && <AdminUploads />}
       {tab === 'media' && <AdminMedia />}
 
       {tab === 'settings' && (
         <div className="grid2">
           <div className="card">
-            <h3>📤 Publish settings to every device</h3>
+            <h3><Ico e="📤" /> Publish settings to every device</h3>
             <p>UpSkillr has no server yet, so admin settings are saved in this browser. To apply them for <b>all students on all devices</b>:</p>
             <ol>
               <li>Click <b>Download settings file</b> (upskillr-config.json).</li>
@@ -233,8 +240,8 @@ export default function Admin() {
               <li>Every browser loads it at start-up. Changes you make later on this computer stay local until you publish again.</li>
             </ol>
             <div className="row-btns">
-              <button className="btn primary" onClick={exportConfig}>⬇ Download settings file</button>
-              <button className="btn" onClick={() => fileRef.current?.click()}>⬆ Import settings file</button>
+              <button className="btn primary" onClick={exportConfig}><Ico e="⬇" /> Download settings file</button>
+              <button className="btn" onClick={() => fileRef.current?.click()}><Ico e="⬆" /> Import settings file</button>
               <input ref={fileRef} type="file" accept="application/json" hidden onChange={(e) => e.target.files[0] && importConfig(e.target.files[0])} />
             </div>
           </div>

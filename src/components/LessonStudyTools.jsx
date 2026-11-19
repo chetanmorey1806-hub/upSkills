@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supaMode } from '../supabase.js';
 import { Highlighter, NotebookPen, HelpCircle, Trash2, Copy, Sparkles, X } from 'lucide-react';
 import { useStudy, saveNote, addHighlight } from '../study.js';
 import AiText from './AiText.jsx';
 import ApiKeyBox, { useApiKey } from '../ai/ApiKeyBox.jsx';
 import { streamClaude, describeError, stopNote } from '../ai/claudeClient.js';
 
+import Ico from './Ico.jsx';
 const HL_NAME = 'upskillr-notes';
 const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -48,7 +50,7 @@ function paintHighlights(root, texts) {
 
 const LANGS = [['English', 'simple English'], ['Marathi', 'Marathi (मराठी, Devanagari script) with technical terms kept in English'], ['Hindi', 'Hindi (हिंदी) with technical terms kept in English'], ['Marathi in English letters', 'Marathi written in English letters (Roman script, like WhatsApp Marathi) with technical terms in English']];
 
-function DoubtPanel({ lesson, courseName, initial, onClose }) {
+function DoubtPanel({ lesson, courseName, initial, onClose, link }) {
   const [q, setQ] = useState(initial || '');
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('upskillr-doubt-lang') || 'English'; } catch { return 'English'; } });
   const [apiKey, setKey] = useApiKey();
@@ -80,7 +82,7 @@ function DoubtPanel({ lesson, courseName, initial, onClose }) {
       const { message } = await streamClaude({ apiKey, model, effort, system, messages: [{ role: 'user', content: user }], onText: (d) => setAns((a) => a + d), signal: ctrl.current.signal });
       const note = stopNote(message);
       if (note) setAns((a) => `${a}\n\n_${note}_`);
-    } catch (e) { setAns(`⚠ ${describeError(e)}`); } finally { setBusy(false); }
+    } catch (e) { setAns(`${describeError(e)}`); } finally { setBusy(false); }
   };
   const copyPrompt = async () => {
     try { await navigator.clipboard.writeText(`${system}\n\n${user}`); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ }
@@ -100,6 +102,7 @@ function DoubtPanel({ lesson, courseName, initial, onClose }) {
         {busy && <button className="btn" onClick={() => ctrl.current?.abort()}>Stop</button>}
         <button className="btn" disabled={!q.trim()} onClick={copyPrompt}><Copy size={15} /> {copied ? 'Copied ✓' : 'Copy prompt'}</button>
         <a className="btn" href="https://claude.ai/new" target="_blank" rel="noreferrer">Open Claude.ai</a>
+        {supaMode && <Link className="btn" to={`/community/forum?new=1&course=${encodeURIComponent((link || '').split('/')[2] || '')}&lesson=${encodeURIComponent(link || '')}&title=${encodeURIComponent((q.trim() || `Doubt in ${lesson.title}`).slice(0, 190))}&body=${encodeURIComponent(`Lesson: ${lesson.title}\n\n${q.trim()}`)}`}>Ask in the forum</Link>}
       </div>
       {!apiKey && <p className="muted small">No API key? Click <b>Copy prompt</b> and paste it into Claude.ai, ChatGPT or Gemini — the prompt already contains the lesson context.</p>}
       {ans && <div className="ai-answer lst-answer"><AiText text={ans} /></div>}
@@ -164,12 +167,12 @@ export default function LessonStudyTools({ lessonKey, lesson, courseName, link, 
       )}
 
       <div className="lst-bar">
-        <span className="muted small">💡 Select any text in the lesson to highlight it, save it to notes or ask what it means.</span>
+        <span className="muted small"><Ico e="💡" /> Select any text in the lesson to highlight it, save it to notes or ask what it means.</span>
         <button className="btn small" onClick={() => openDoubt('')}><HelpCircle size={14} /> I didn't understand</button>
         <button className="btn small" onClick={() => document.getElementById('lst-notes')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><NotebookPen size={14} /> My notes{note.highlights.length || note.text ? ` (${note.highlights.length + (note.text ? 1 : 0)})` : ''}</button>
       </div>
 
-      <div ref={panelRef}>{doubt !== null && <DoubtPanel lesson={lesson} courseName={courseName} initial={doubt} onClose={() => setDoubt(null)} />}</div>
+      <div ref={panelRef}>{doubt !== null && <DoubtPanel lesson={lesson} courseName={courseName} initial={doubt} link={link} onClose={() => setDoubt(null)} />}</div>
 
       <div className="card lst-panel" id="lst-notes">
         <div className="lst-head"><h3><NotebookPen size={18} /> My notes for this lesson</h3><Link to="/study/notes" className="small">All my notes →</Link></div>

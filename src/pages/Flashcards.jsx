@@ -3,6 +3,7 @@ import { allTopics, trackOrder, tracks, topicKey } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import RichText, { Inline } from '../components/RichText.jsx';
 
+import Ico from '../components/Ico.jsx';
 export default function Flashcards() {
   const p = useProgress();
   const [track, setTrack] = useState('both');
@@ -30,7 +31,7 @@ export default function Flashcards() {
   return (
     <div>
       <div className="page-head">
-        <h1>🃏 Interview flashcards</h1>
+        <h1> Interview flashcards</h1>
         <p className="muted">Read the question, answer it out loud as you would in an interview, then flip the card to compare. Star the questions you find hard.</p>
         <div className="quiz-settings">
           <label>Track <select value={track} onChange={reset((e) => setTrack(e.target.value))}><option value="both">All courses</option>{trackOrder.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</select></label>

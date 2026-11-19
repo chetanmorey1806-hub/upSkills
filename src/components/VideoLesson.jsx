@@ -6,6 +6,7 @@ import { LANGS } from '../video/i18n.js';
 import { translateTexts, cached, engineFor, prepareBuiltIn } from '../video/translate.js';
 import { subjectOf, pictureFor, findPicture, loadImage } from '../video/images.js';
 
+import Ico from './Ico.jsx';
 const PREF_KEY = 'upskillr-video-prefs';
 
 // CSS colour (incl. var(--x)) -> #rrggbb so the canvas can use it with alpha suffixes
@@ -402,7 +403,7 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
   const engineNote = lang === 'en' ? null
     : engine === 'builtin' ? '✓ Lesson content is translated on your device (free, built into your browser).'
       : engine === 'claude' ? '✓ Lesson content is translated with your Claude API key (from the AI tools).'
-        : '⚠ Your browser cannot translate. Intro, steps and code explanations are in this language; the lesson content is spoken in English. Use the latest Chrome or Edge, or add your Claude API key in the AI Lab.';
+        : 'Your browser cannot translate. Intro, steps and code explanations are in this language; the lesson content is spoken in English. Use the latest Chrome or Edge, or add your Claude API key in the AI Lab.';
 
   return (
     <div className="vl" ref={wrapRef}>
@@ -412,7 +413,7 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
           {LANGS.map((l) => (
             <button key={l.id} className={`vl-lang ${lang === l.id ? 'on' : ''}`} onClick={() => setLang(l.id)}>{l.label}</button>
           ))}
-          {busy && <span className="vl-busy">{busy.startsWith('down') ? `⬇ Language model ${busy}` : '⏳ Translating…'}</span>}
+          {busy && <span className="vl-busy">{busy.startsWith('down') ? `Language model ${busy}` : <><Ico e="⏳" /> Translating…</>}</span>}
         </div>
         <div className="vl-stage" onClick={toggle}>
           <canvas ref={canvasRef} width={W} height={H} />
@@ -455,7 +456,7 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
             <button key={v} className={`chip ${Math.abs(prefs.speed - v) < 0.01 ? 'active' : ''}`} onClick={() => { setPrefs({ ...prefs, speed: v }); restartSpeech(); }}>{v}x</button>
           ))}
           {hasSpeech && (
-            <label>🎙 Voice{' '}
+            <label><Ico e="🎙" /> Voice{' '}
               <select value={prefs.voices?.[lang] || ''} onChange={(e) => { setPrefs({ ...prefs, voices: { ...(prefs.voices || {}), [lang]: e.target.value } }); restartSpeech(); }}>
                 <option value="">Auto {voice ? `(${voice.name})` : ''}</option>
                 {langVoices.map((v) => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
@@ -472,10 +473,10 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
             {hasSpeech && voices.length > 0 && !indianNatural && (
               <p className="muted small">
                 {!voice
-                  ? '⚠ No voice for this language is installed, subtitles are shown instead. '
+                  ? <><Ico e="⚠" /> No voice for this language is installed, subtitles are shown instead. </>
                   : !exactVoice
-                    ? `⚠ No ${LANGS.find((l) => l.id === lang)?.label} voice is installed, so “${voice.name}” is used. `
-                    : `🎙 Now speaking with “${voice.name}”. For the most natural Indian teacher voice, open UpSkillr in Microsoft Edge (voices Neerja / Prabhat for English, Swara for Hindi, Aarohi for Marathi). `}
+                    ? `No ${LANGS.find((l) => l.id === lang)?.label} voice is installed, so “${voice.name}” is used. `
+                    : `Now speaking with “${voice.name}”. For the most natural Indian teacher voice, open UpSkillr in Microsoft Edge (voices Neerja / Prabhat for English, Swara for Hindi, Aarohi for Marathi). `}
                 Microsoft Edge has natural Indian voices for English, Hindi and Marathi (e.g. Neerja, Swara, Aarohi). On Windows you can also add them in Settings → Time &amp; language → Speech.
               </p>
             )}

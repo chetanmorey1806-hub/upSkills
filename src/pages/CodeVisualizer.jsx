@@ -75,6 +75,7 @@ finally:
 json.dumps({'steps': __steps, 'error': __err, 'out': __out.getvalue()})
 `;
 
+import Ico from '../components/Ico.jsx';
 const EXAMPLES = {
   'Loop: sum of numbers': 'total = 0\nfor i in range(1, 6):\n    total = total + i\n    print("i =", i, "total =", total)\nprint("Final total:", total)\n',
   'List: find the maximum': 'marks = [56, 89, 72, 94, 61]\nbest = marks[0]\nfor m in marks:\n    if m > best:\n        best = m\nprint("Highest:", best)\n',
@@ -94,7 +95,7 @@ function describe(s, prev) {
   const fn = s.stack[s.stack.length - 1]?.fn || 'main';
   if (s.event === 'call') return fn === 'main' ? 'Program starts.' : `Calling ${fn}(${Object.entries(s.stack[s.stack.length - 1].locals).map(([k, v]) => `${k}=${v[0]}`).join(', ')}) — a new frame is created on the stack.`;
   if (s.event === 'return') return fn === 'main' ? 'Program finished.' : `${fn} returns ${s.ret} — its frame is removed from the stack.`;
-  if (s.event === 'exception') return `⚠ ${s.exc}`;
+  if (s.event === 'exception') return `${s.exc}`;
   const changed = prev ? Object.keys({ ...s.globals, ...(s.stack[s.stack.length - 1]?.locals || {}) }).filter((k) => {
     const now = (s.stack[s.stack.length - 1]?.locals || {})[k] || s.globals[k];
     const before = (prev.stack[prev.stack.length - 1]?.locals || {})[k] || prev.globals[k];
@@ -159,7 +160,7 @@ export default function CodeVisualizer() {
   return (
     <div>
       <div className="page-head">
-        <h1>🔍 Code Visualizer</h1>
+        <h1><Ico e="🔍" /> Code Visualizer</h1>
         <p className="muted">Run Python one step at a time and watch every variable, function call and output change. Perfect for understanding loops, lists, functions and recursion.</p>
       </div>
       <div className="card cv-top">
@@ -202,7 +203,7 @@ export default function CodeVisualizer() {
               </div>
               <div className="cv-side">
                 <div className="card">
-                  <h4>📚 Call stack (frames)</h4>
+                  <h4><Ico e="📚" /> Call stack (frames)</h4>
                   <div className="cv-stack">
                     {[...s.stack].reverse().map((f, k) => {
                       const depth = s.stack.length - 1 - k;
@@ -217,7 +218,7 @@ export default function CodeVisualizer() {
                   </div>
                 </div>
                 <div className="card">
-                  <h4>🖥 Output</h4>
+                  <h4><Ico e="🖥" /> Output</h4>
                   <pre className="cv-out">{s.out || ' '}</pre>
                   {i === trace.steps.length - 1 && trace.error && <div className="explain bad">{trace.error}</div>}
                 </div>

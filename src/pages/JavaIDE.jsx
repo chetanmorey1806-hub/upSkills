@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 
+import Ico from '../components/Ico.jsx';
 export const JAVA_LOAD_KEY = 'xlpbi-java-load';
 const STORE = 'xlpbi-java-ide-v1';
 
@@ -93,7 +94,7 @@ export default function JavaIDE() {
     <div className={`jide ${isLight ? 'light' : ''}`}>
       <div className="jide-top">
         <div className="jide-title">
-          <span className="jide-logo">☕</span>
+          <span className="jide-logo"><Ico e="☕" /></span>
           <b>Java IDE</b>
           <span className="jide-sub">{theme === 'intellij' ? 'IntelliJ IDEA style' : 'Eclipse style'}{title ? ` · ${title}` : ''}</span>
         </div>
@@ -103,20 +104,20 @@ export default function JavaIDE() {
             <button className={theme === 'eclipse' ? 'on' : ''} onClick={() => setTheme('eclipse')}>Eclipse (light)</button>
           </div>
           <select value="" onChange={(e) => loadTemplate(e.target.value)}>
-            <option value="">📂 Load example…</option>
+            <option value="">Load example…</option>
             {Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
           </select>
           <button className="btn small primary jide-run" disabled title="Running Java needs a JDK on this computer. See the Run panel.">▶ Run 'Main'</button>
           <button className="btn small" onClick={() => copy(files[cur], 'file')}>{copied === 'file' ? 'Copied ✓' : '⧉ Copy file'}</button>
-          <button className="btn small" onClick={downloadAll}>⬇ Download .java files</button>
+          <button className="btn small" onClick={downloadAll}><Ico e="⬇" /> Download .java files</button>
         </div>
       </div>
 
       <div className="jide-body">
         <aside className="jide-tree">
           <div className="jide-tree-head"><span>Project</span><button className="link-btn" onClick={addFile} title="New Java class">＋ Class</button></div>
-          <div className="jide-node">▾ 📁 MyJavaProject</div>
-          <div className="jide-node l2">▾ 📁 src</div>
+          <div className="jide-node">▾ <Ico e="📁" /> MyJavaProject</div>
+          <div className="jide-node l2">▾ <Ico e="📁" /> src</div>
           {names.map((n) => (
             <div key={n} className={`jide-file ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}>
               <span>Ⓒ {n.replace(/\.java$/, '')}</span>
@@ -130,7 +131,7 @@ export default function JavaIDE() {
 
         <section className="jide-editor">
           <div className="pg-tabs">
-            {names.map((n) => <button key={n} className={`pg-tab ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}>☕ {n}</button>)}
+            {names.map((n) => <button key={n} className={`pg-tab ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}><Ico e="☕" /> {n}</button>)}
           </div>
           <div className="pg-monaco">
             {fallback ? (
@@ -152,7 +153,7 @@ export default function JavaIDE() {
 
         <section className="jide-bottom">
           <div className="jide-ptabs">
-            {[['expected', '📋 Expected Output'], ['input', '⌨ Program Input (stdin)'], ['run', '▶ Run in Eclipse / IntelliJ']].map(([k, l]) => (
+            {[['expected', 'Expected Output'], ['input', '⌨ Program Input (stdin)'], ['run', '▶ Run in Eclipse / IntelliJ']].map(([k, l]) => (
               <button key={k} className={panel === k ? 'on' : ''} onClick={() => setPanel(k)}>{l}</button>
             ))}
           </div>

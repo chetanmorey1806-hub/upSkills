@@ -7,6 +7,7 @@ import RichText, { Inline } from './RichText.jsx';
 import ProgressBar from './ProgressBar.jsx';
 import { usePerms } from '../permissions.js';
 
+import Ico from './Ico.jsx';
 const STORE = 'upskillr-daytasks-v1';
 const readAll = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
 const save = (key, patch) => { const all = readAll(); all[key] = { ...(all[key] || {}), ...patch }; try { localStorage.setItem(STORE, JSON.stringify(all)); } catch { /* ignore */ } window.dispatchEvent(new Event('upskillr-daytasks')); };
@@ -189,10 +190,10 @@ export default function DayTask({ track, lesson }) {
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
-  if (!allowed) return <div className="card locked"><div className="locked-ic">🔒</div><h3>Day Task is locked</h3><p className="muted">Your admin has not enabled Day Tasks for this course yet.</p></div>;
+  if (!allowed) return <div className="card locked"><div className="locked-ic"><Ico e="🔒" /></div><h3>Day Task is locked</h3><p className="muted">Your admin has not enabled Day Tasks for this course yet.</p></div>;
   if (data === undefined) return <div className="card"><p className="muted">Loading today's tasks…</p></div>;
   if (data === null) return (
-    <div className="card dt-empty"><h3>📝 Day Task</h3><p className="muted">Timed practice tasks for this day are being added. Meanwhile, do the exercises in the <b>Practice</b> tab and the <b>Quiz</b>.</p></div>
+    <div className="card dt-empty"><h3><Ico e="📝" /> Day Task</h3><p className="muted">Timed practice tasks for this day are being added. Meanwhile, do the exercises in the <b>Practice</b> tab and the <b>Quiz</b>.</p></div>
   );
 
   const view = phase === 'result' && !st.result ? 'intro' : phase;
@@ -203,13 +204,13 @@ export default function DayTask({ track, lesson }) {
       <div className="card dt-intro">
         <div className="dt-intro-top">
           <div>
-            <h2>📝 Day Task: {lesson.title}</h2>
+            <h2><Ico e="📝" /> Day Task: {lesson.title}</h2>
             <p className="muted">{data.intro || 'Solve these tasks to check what you learned today. Your answers are checked automatically and every mistake is explained.'}</p>
           </div>
           <div className="dt-time"><b>{data.minutes || 20}</b><span>minutes</span></div>
         </div>
         <div className="chips">
-          <span className="tag">🧩 {total} tasks</span>
+          <span className="tag"><Ico e="🧩" /> {total} tasks</span>
           {Object.entries(counts).map(([k, n]) => <span key={k} className="tag">{n} × {k.startsWith('code:') ? LANG_LABEL[k.slice(5)] || k.slice(5) : TYPE_LABEL[k]}</span>)}
         </div>
         <ol className="dt-rules">
@@ -231,7 +232,7 @@ export default function DayTask({ track, lesson }) {
     return (
       <div ref={topRef} className="dt">
         <div className={`dt-bar ${left < 60 ? 'low' : ''}`}>
-          <span>⏱ {fmt(left)}</span>
+          <span><Ico e="⏱" /> {fmt(left)}</span>
           <span className="muted small">{answered}/{total} answered</span>
           <button className="btn small primary" onClick={() => submit(false)} disabled={!!grading}>{grading ? `Checking ${grading.done}/${grading.total}…` : '✔ Submit all'}</button>
         </div>
@@ -239,13 +240,13 @@ export default function DayTask({ track, lesson }) {
           <div key={i} className="card dt-task">
             <div className="dt-task-head">
               <span className="dt-num">{i + 1}</span>
-              <span className="tag">{t.type === 'code' ? `💻 ${LANG_LABEL[t.lang] || t.lang}` : TYPE_LABEL[t.type]}</span>
+              <span className="tag">{t.type === 'code' ? `${LANG_LABEL[t.lang] || t.lang}` : TYPE_LABEL[t.type]}</span>
               {t.mins && <span className="muted small">~{t.mins} min</span>}
             </div>
             <div className="dt-q"><RichText text={t.q} /></div>
             {t.example && (
               <div className="dt-example">
-                <b>💡 Example{t.example.title ? `: ${t.example.title}` : ''}</b>
+                <b><Ico e="💡" /> Example{t.example.title ? `: ${t.example.title}` : ''}</b>
                 {t.example.text && <RichText text={t.example.text} />}
                 {t.example.code && <pre>{t.example.code}</pre>}
               </div>
@@ -266,8 +267,8 @@ export default function DayTask({ track, lesson }) {
       <div className={`card result-card ${pct >= 60 ? 'pass' : 'fail'} dt-summary`}>
         <div className="score-ring" style={{ '--p': pct }}><span>{r.score}</span><small>/{r.total}</small></div>
         <div>
-          <h2>{pct === 100 ? '🏆 Perfect!' : pct >= 60 ? '🎉 Well done!' : '📚 Keep practising'}</h2>
-          <p><b className="ok-t">✅ {r.score} correct</b> · <b className="bad-t">❌ {r.total - r.score} wrong</b> · ⏱ {fmt(r.secs || 0)}{r.timeUp ? ' (time up)' : ''}</p>
+          <h2>{pct === 100 ? <><Ico e="🏆" /> Perfect!</> : pct >= 60 ? <><Ico e="🎉" /> Well done!</> : <><Ico e="📚" /> Keep practising</>}</h2>
+          <p><b className="ok-t"><Ico e="✅" /> {r.score} correct</b> · <b className="bad-t"><Ico e="❌" /> {r.total - r.score} wrong</b> · <Ico e="⏱" /> {fmt(r.secs || 0)}{r.timeUp ? ' (time up)' : ''}</p>
           <ProgressBar value={r.score / r.total} color={pct >= 60 ? 'var(--ok)' : undefined} />
           <p className="muted small">Best score: {st.best}/{r.total} · attempts: {(st.history || []).length}</p>
           <div className="row-btns"><button className="btn primary" onClick={start}>↻ Try again</button></div>
@@ -278,7 +279,7 @@ export default function DayTask({ track, lesson }) {
         const ans = (st.answers || {})[i];
         return (
           <div key={i} className={`card dt-task dt-r ${it.ok ? 'ok' : 'bad'}`}>
-            <div className="dt-task-head"><span className="dt-num">{i + 1}</span><b>{it.ok ? '✅ Correct' : '❌ Wrong'}</b><span className="tag">{t.type === 'code' ? LANG_LABEL[t.lang] || t.lang : TYPE_LABEL[t.type]}</span></div>
+            <div className="dt-task-head"><span className="dt-num">{i + 1}</span><b>{it.ok ? <><Ico e="✅" /> Correct</> : <><Ico e="❌" /> Wrong</>}</b><span className="tag">{t.type === 'code' ? LANG_LABEL[t.lang] || t.lang : TYPE_LABEL[t.type]}</span></div>
             <div className="dt-q"><RichText text={t.q} /></div>
             {t.type === 'output' && <pre className="dt-codeblock">{t.code}</pre>}
             <div className="dt-yours"><span className="muted small">Your answer</span><AnswerView task={t} value={t.type === 'code' ? ans ?? '' : ans} /></div>

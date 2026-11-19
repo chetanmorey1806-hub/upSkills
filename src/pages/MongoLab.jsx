@@ -5,6 +5,7 @@ import { runChallenge } from '../engine/mongoChallenge.js';
 import { DATASETS } from '../data/mongoDatasets.js';
 import { CHALLENGES, CHALLENGE_LEVELS, CHEATSHEET } from '../data/mongoChallenges.js';
 
+import Ico from '../components/Ico.jsx';
 export const MONGO_LOAD_KEY = 'upskillr-mongo-load';
 const STORE = 'upskillr-mongo-lab-v1';
 const readStore = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
@@ -107,17 +108,17 @@ export default function MongoLab() {
     <div className="jide mongo-lab">
       <div className="jide-top">
         <div className="jide-title">
-          <span className="jide-logo mongo">🍃</span>
+          <span className="jide-logo mongo"><Ico e="🍃" /></span>
           <b>MongoDB Shell Lab</b>
           <span className="jide-sub">mongosh in your browser · db: <b>{current}</b>{initial.title ? ` · ${initial.title}` : ''}</span>
         </div>
         <div className="jide-actions">
           <select value={current in DATASETS ? current : ''} onChange={(e) => switchDb(e.target.value)}>
             {!(current in DATASETS) && <option value="">{current}</option>}
-            {Object.entries(DATASETS).map(([k, d]) => <option key={k} value={k}>🗄 {k} ({d.title})</option>)}
+            {Object.entries(DATASETS).map(([k, d]) => <option key={k} value={k}>{k} ({d.title})</option>)}
           </select>
           <button className="btn small primary" onClick={() => run()} title="Ctrl+Enter (runs the selection if you selected text)">▶ Run</button>
-          <button className="btn small" onClick={() => setLog([])}>🧹 Clear</button>
+          <button className="btn small" onClick={() => setLog([])}><Ico e="🧹" /> Clear</button>
           <button className="btn small" onClick={reset}>↺ Reset data</button>
         </div>
       </div>
@@ -127,10 +128,10 @@ export default function MongoLab() {
           <div className="jide-tree-head"><span>Databases</span></div>
           {Object.keys(sh.state.dbs).map((dbn) => (
             <div key={dbn}>
-              <div className={`jide-node mongo-db ${dbn === current ? 'on' : ''}`} onClick={() => dbn !== current && switchDb(dbn)}>{dbn === current ? '▾' : '▸'} 🗄 {dbn}</div>
+              <div className={`jide-node mongo-db ${dbn === current ? 'on' : ''}`} onClick={() => dbn !== current && switchDb(dbn)}>{dbn === current ? '▾' : '▸'} <Ico e="🗄" /> {dbn}</div>
               {dbn === current && collections.map(([c, docs]) => (
                 <div key={c} className="jide-file" onClick={() => { const q = `db.${c}.find().limit(5)`; setCode((x) => `${x.trimEnd()}\n\n${q}\n`); run(q); }} title={`Click to run db.${c}.find().limit(5)`}>
-                  <span>📄 {c}</span><span className="muted small">{docs.length}</span>
+                  <span><Ico e="📄" /> {c}</span><span className="muted small">{docs.length}</span>
                 </div>
               ))}
             </div>
@@ -144,7 +145,7 @@ export default function MongoLab() {
         </aside>
 
         <section className="jide-editor">
-          <div className="pg-tabs"><button className="pg-tab on">🍃 query.mongodb.js</button></div>
+          <div className="pg-tabs"><button className="pg-tab on"><Ico e="🍃" /> query.mongodb.js</button></div>
           <div className="pg-monaco">
             {fallback ? (
               <textarea className="pg-fallback" spellCheck={false} value={code} onChange={(e) => setCode(e.target.value)} />
@@ -158,7 +159,7 @@ export default function MongoLab() {
 
         <section className="jide-bottom">
           <div className="jide-ptabs">
-            {[['output', '▶ Shell output'], ['table', `▦ Table${lastDocs ? ` (${lastDocs.docs.length})` : ''}`], ['challenge', `🎯 Challenges ${solvedCount}/${CHALLENGES.length}`], ['cheat', '📋 Cheat sheet'], ...(initial.expected ? [['expected', '📋 Expected']] : [])].map(([k, l]) => (
+            {[['output', '▶ Shell output'], ['table', `▦ Table${lastDocs ? ` (${lastDocs.docs.length})` : ''}`], ['challenge', `Challenges ${solvedCount}/${CHALLENGES.length}`], ['cheat', 'Cheat sheet'], ...(initial.expected ? [['expected', 'Expected']] : [])].map(([k, l]) => (
               <button key={k} className={panel === k ? 'on' : ''} onClick={() => setPanel(k)}>{l}</button>
             ))}
           </div>
@@ -191,13 +192,13 @@ export default function MongoLab() {
                 <p className="mongo-task"><b>Task:</b> {ch.task}</p>
                 <div className="row-btns">
                   <button className="btn small primary" onClick={check}>✔ Check my answer</button>
-                  <button className="btn small" onClick={() => setShowSol((s) => !s)}>{showSol ? 'Hide' : '💡 Hint / solution'}</button>
-                  <button className="btn small" onClick={() => { const i = CHALLENGES.findIndex((c) => c.id === ch.id); pickChallenge(CHALLENGES[(i + 1) % CHALLENGES.length].id); }}>Next ⏭</button>
+                  <button className="btn small" onClick={() => setShowSol((s) => !s)}>{showSol ? 'Hide' : <><Ico e="💡" /> Hint / solution</>}</button>
+                  <button className="btn small" onClick={() => { const i = CHALLENGES.findIndex((c) => c.id === ch.id); pickChallenge(CHALLENGES[(i + 1) % CHALLENGES.length].id); }}>Next <Ico e="⏭" /></button>
                 </div>
                 <p className="muted small">Your editor code runs on a fresh copy of the <b>{ch.dataset}</b> data. The last query's result is compared with the expected result.</p>
                 {chResult && (
                   <div className={`mongo-verdict ${chResult.ok ? 'ok' : 'bad'}`}>
-                    <b>{chResult.ok ? '✅ Correct!' : '❌ Not yet'}</b> {!chResult.ok && chResult.message}
+                    <b>{chResult.ok ? <><Ico e="✅" /> Correct!</> : <><Ico e="❌" /> Not yet</>}</b> {!chResult.ok && chResult.message}
                     {!chResult.ok && chResult.expected && (
                       <div className="mongo-cmp">
                         <div><span className="muted small">Your result</span><pre>{chResult.got || '(none)'}</pre></div>

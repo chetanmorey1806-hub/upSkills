@@ -5,6 +5,7 @@ import { useProgress } from '../progress.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { TrackIcon } from '../components/Icons.jsx';
 
+import Ico from '../components/Ico.jsx';
 function addCourse(plan, trackKey, startDay) {
   let day = startDay;
   let lastModule = null;
@@ -73,7 +74,7 @@ export default function Roadmap() {
       {topicItems.length === 0 && <p className="muted">Lessons are being added…</p>}
       <div className="timeline">
         {plan.map((p, i) => {
-          if (p.type === 'heading') return <div key={'h' + i} className="tl-module">📦 {p.label}</div>;
+          if (p.type === 'heading') return <div key={'h' + i} className="tl-module"><Ico e="📦" /> {p.label}</div>;
           if (p.type === 'revision') {
             return (
               <div key={'r' + i} className="tl-item revision">

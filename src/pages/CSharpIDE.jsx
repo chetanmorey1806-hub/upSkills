@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 
+import Ico from '../components/Ico.jsx';
 export const CS_LOAD_KEY = 'xlpbi-csharp-load';
 const STORE = 'xlpbi-csharp-ide-v1';
 
 const TEMPLATES = {
-  'Hello World (Console App)': { files: { 'Program.cs': '// Console App (.NET 10) – top-level statements\nConsole.WriteLine("Hello, C#! 👋");\n\nstring name = "Student";\nint year = 2026;\nConsole.WriteLine($"Welcome {name}, year {year}");\n' }, expected: 'Hello, C#! 👋\nWelcome Student, year 2026' },
+  'Hello World (Console App)': { files: { 'Program.cs': '// Console App (.NET 10) – top-level statements\nConsole.WriteLine("Hello, C#! ");\n\nstring name = "Student";\nint year = 2026;\nConsole.WriteLine($"Welcome {name}, year {year}");\n' }, expected: 'Hello, C#! Welcome Student, year 2026' },
   'Read input (Console.ReadLine)': { files: { 'Program.cs': 'Console.Write("Enter your name: ");\nstring? name = Console.ReadLine();\nConsole.Write("Enter your age: ");\nint age = int.Parse(Console.ReadLine() ?? "0");\nConsole.WriteLine($"Hello {name}, next year you will be {age + 1}");\n' }, stdin: 'Asha\n21\n', expected: 'Enter your name: Enter your age: Hello Asha, next year you will be 22' },
   'OOP: Encapsulation (BankAccount)': {
     files: {
@@ -81,18 +82,18 @@ export default function CSharpIDE() {
       <div className="vs-menu">
         <span className="vs-logo">◆</span>
         {['File', 'Edit', 'View', 'Git', 'Project', 'Build', 'Debug', 'Test', 'Analyze', 'Tools', 'Extensions', 'Window', 'Help'].map((m) => <span key={m} className="vs-mi">{m}</span>)}
-        <span className="vs-search">🔍 Search</span>
+        <span className="vs-search"><Ico e="🔍" /> Search</span>
         <span className="vs-sol">{project}</span>
       </div>
       <div className="vs-toolbar">
         <select value="" onChange={(e) => loadTemplate(e.target.value)}>
-          <option value="">📂 Open example…</option>
+          <option value="">Open example…</option>
           {Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
         </select>
         <span className="vs-cfg">Debug</span><span className="vs-cfg">Any CPU</span>
         <button className="vs-run" onClick={() => { setRunMsg(true); setPanel('output'); }} title="Start (F5)">▶ {project}</button>
         <button className="vs-btn" onClick={() => copy(files[cur], 'file')}>{copied === 'file' ? 'Copied ✓' : '⧉ Copy file'}</button>
-        <button className="vs-btn" onClick={download}>⬇ Download .cs files</button>
+        <button className="vs-btn" onClick={download}><Ico e="⬇" /> Download .cs files</button>
         {title && <span className="vs-title">{title}</span>}
       </div>
       <div className="vs-body">
@@ -113,16 +114,16 @@ export default function CSharpIDE() {
         </section>
         <aside className="vs-solution">
           <div className="vs-pane-head">Solution Explorer <button className="link-btn" onClick={addClass} title="Add > Class">＋</button></div>
-          <div className="vs-node">📋 Solution '{project}' (1 of 1 project)</div>
+          <div className="vs-node"><Ico e="📋" /> Solution '{project}' (1 of 1 project)</div>
           <div className="vs-node l1">▾ <b>C#</b> {project}</div>
-          <div className="vs-node l2">▸ 🔗 Dependencies</div>
-          <div className="vs-node l2">▸ 📁 Properties</div>
+          <div className="vs-node l2">▸ <Ico e="🔗" /> Dependencies</div>
+          <div className="vs-node l2">▸ <Ico e="📁" /> Properties</div>
           {names.map((n) => (
             <div key={n} className={`vs-node l2 file ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}>
               <span>C# {n}</span>{names.length > 1 && <button className="link-btn" onClick={(e) => { e.stopPropagation(); delFile(n); }}>✕</button>}
             </div>
           ))}
-          <div className="vs-node l2 muted" onClick={() => copy(csproj, 'csproj')} title="Copy .csproj">⚙ {project}.csproj {copied === 'csproj' ? '✓' : ''}</div>
+          <div className="vs-node l2 muted" onClick={() => copy(csproj, 'csproj')} title="Copy .csproj"><Ico e="⚙" /> {project}.csproj {copied === 'csproj' ? '✓' : ''}</div>
           <div className="vs-help"><b>Shortcuts (Visual Studio)</b><br />F5 Start debugging · Ctrl+F5 Run<br />F9 Breakpoint · F10 Step over · F11 Step into<br />Ctrl+K, Ctrl+D Format · Ctrl+. Quick fix<br />Ctrl+K, Ctrl+C Comment</div>
         </aside>
         <section className="vs-bottom">
@@ -134,9 +135,9 @@ export default function CSharpIDE() {
           <div className="vs-pbody">
             {panel === 'output' && (
               <div>
-                {runMsg && <div className="vs-note">ℹ This page can't run .NET code. Copy the files into Visual Studio (see "Run in Visual Studio") and press Ctrl+F5. The expected console output is shown below.</div>}
+                {runMsg && <div className="vs-note"><Ico e="ℹ" /> This page can't run .NET code. Copy the files into Visual Studio (see "Run in Visual Studio") and press Ctrl+F5. The expected console output is shown below.</div>}
                 <div className="vs-out-head">Show output from: Expected console output</div>
-                {expected ? <pre className="vs-out">{expected}</pre> : <div className="pg-muted">Open an example from a lesson ("🟣 Open in C# IDE") to see its expected output here.</div>}
+                {expected ? <pre className="vs-out">{expected}</pre> : <div className="pg-muted">Open an example from a lesson ("<Ico e="🟣" /> Open in C# IDE") to see its expected output here.</div>}
               </div>
             )}
             {panel === 'input' && (

@@ -19,6 +19,7 @@ import ApiKeyBox, { useApiKey } from '../ai/ApiKeyBox.jsx';
 import { streamClaude, describeError, stopNote } from '../ai/claudeClient.js';
 import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
+import Ico from '../components/Ico.jsx';
 const readLS = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 
 /* ============================== Certificates ============================== */
@@ -31,7 +32,7 @@ export function CertificatesPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>🎓 Course Certificates</h1>
+        <h1><Ico e="🎓" /> Course Certificates</h1>
         <p className="muted">Complete every lesson of a course and pass its <b>Grand Test</b> (60% or more) in the Test Series to unlock a certificate you can print or save as PDF.</p>
       </div>
       <div className="ts-stats">
@@ -172,7 +173,7 @@ export function ResumeBuilder() {
   return (
     <div>
       <div className="page-head">
-        <h1>📄 Resume Builder</h1>
+        <h1><Ico e="📄" /> Resume Builder</h1>
         <p className="muted">An ATS-friendly one-column resume. Your completed courses, submitted projects and certificates are filled in automatically — edit anything, then print or save as PDF.</p>
         <div className="row-btns">
           <button className="btn primary" onClick={print}><Printer size={15} /> Print / Save as PDF</button>
@@ -213,7 +214,7 @@ export function ResumeBuilder() {
           </div>
         </div>
         <div className="rb-side">
-          <div className="card"><h3>ATS checklist ({checks.filter((c) => c[1]).length}/{checks.length})</h3>{checks.map(([l, ok]) => <div key={l} className={ok ? 'jc-ok' : 'muted'}>{ok ? '✅' : '⬜'} {l}</div>)}
+          <div className="card"><h3>ATS checklist ({checks.filter((c) => c[1]).length}/{checks.length})</h3>{checks.map(([l, ok]) => <div key={l} className={ok ? 'jc-ok' : 'muted'}>{ok ? <><Ico e="✅" /></> : <><Ico e="⬜" /></>} {l}</div>)}
             <p className="muted small">ATS (Applicant Tracking System) software reads your resume before a recruiter does. Keep one column, standard headings and plain text, as this template does.</p></div>
           <div className="card rb-preview"><div className="db-card-head"><h3>Preview</h3></div><iframe title="Resume preview" srcDoc={html} sandbox="" /></div>
         </div>
@@ -246,20 +247,20 @@ export function DailyChallenge() {
   return (
     <div>
       <div className="page-head">
-        <h1>💻 Daily Coding Challenge</h1>
+        <h1><Ico e="💻" /> Daily Coding Challenge</h1>
         <p className="muted">One interview coding problem every day. Solve it in the Java IDE, compare the output, then mark it solved to keep your streak and earn 20 XP.</p>
       </div>
       <div className="dc-top">
-        <div className="card dc-streak"><b>🔥 {streak}</b><span>day challenge streak</span><div className="dc-days">{last14.map((x) => <i key={x} className={daily[x] ? 'on' : x === today ? 'today' : ''} title={x} />)}</div></div>
+        <div className="card dc-streak"><b><Ico e="🔥" /> {streak}</b><span>day challenge streak</span><div className="dc-days">{last14.map((x) => <i key={x} className={daily[x] ? 'on' : x === today ? 'today' : ''} title={x} />)}</div></div>
         <div className="card dc-streak"><b>{Object.keys(daily).length}</b><span>challenges solved</span></div>
         <div className="card dc-streak"><b>{Object.values(coding).filter(Boolean).length}/{codingProblems.length}</b><span>coding problems solved</span></div>
       </div>
       <div className={`card dc-problem ${solvedToday ? 'done' : ''}`}>
-        <div className="meta"><span className="badge">📅 {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</span><span className={`lvl lvl-${p.level}`}>{p.level}</span><span>{p.topic}</span>{solvedToday && <span className="badge ok">✓ Solved today</span>}</div>
+        <div className="meta"><span className="badge"><Ico e="📅" /> {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</span><span className={`lvl lvl-${p.level}`}>{p.level}</span><span>{p.topic}</span>{solvedToday && <span className="badge ok">✓ Solved today</span>}</div>
         <h2>{p.title}</h2>
         <RichText text={p.statement} />
         <div className="grid2" style={{ marginBottom: 0 }}><div><b>Sample input</b><pre className="jc-io">{p.input || '—'}</pre></div><div><b>Sample output</b><pre className="jc-io">{p.output || '—'}</pre></div></div>
-        {(p.hints || []).slice(0, hints).map((h, i) => <div key={i} className="tip">💡 Hint {i + 1}: <Inline text={h} /></div>)}
+        {(p.hints || []).slice(0, hints).map((h, i) => <div key={i} className="tip"><Ico e="💡" /> Hint {i + 1}: <Inline text={h} /></div>)}
         <div className="row-btns">
           <button className="btn primary" onClick={() => open(p.starter, `Daily: ${p.title}`)}><Code2 size={15} /> Solve in Java IDE</button>
           {hints < (p.hints || []).length && <button className="btn" onClick={() => setHints(hints + 1)}>Show hint {hints + 1}</button>}
@@ -313,14 +314,14 @@ export function AiCodeReview() {
     try {
       const { message } = await streamClaude({ apiKey, model, effort, system, messages: [{ role: 'user', content: user }], onText: (d) => setOut((x) => x + d), signal: ctrl.current.signal });
       const note = stopNote(message); if (note) setOut((x) => `${x}\n\n_${note}_`);
-    } catch (e) { setOut(`⚠ ${describeError(e)}`); } finally { setBusy(false); }
+    } catch (e) { setOut(`${describeError(e)}`); } finally { setBusy(false); }
   };
   const copy = async () => { try { await navigator.clipboard.writeText(`${system}\n\n${user}`); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ } };
 
   return (
     <div>
       <div className="page-head">
-        <h1>🤖 AI Code Review</h1>
+        <h1><Ico e="🤖" /> AI Code Review</h1>
         <p className="muted">Paste your code (or load it from your IDEs and projects) and get a review like a senior developer would give: bugs, improvements, a better version and interview questions about your code.</p>
       </div>
       <div className="card jc-form">

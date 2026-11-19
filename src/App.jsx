@@ -44,9 +44,13 @@ import { ExplainError, CodePuzzles, QuizBattle } from './pages/PracticeGames.jsx
 import { AptitudeHome, AptitudeTopic, CompanyKits, VideoInterview } from './pages/PlacementTools.jsx';
 import { DiagnosticTest, PortfolioBuilder, WeeklyReport } from './pages/GrowthTools.jsx';
 import TodayPage from './pages/TodayPage.jsx';
+import { Leaderboard, Forum, ForumThread, ExperienceBank } from './pages/Community.jsx';
+import Classroom, { AdminUsers } from './pages/Classroom.jsx';
 import { ApplicationTracker, OfferComparison, InterviewJournal } from './pages/CareerHub.jsx';
 import { RequireAuth } from './auth.js';
 import Admin from './pages/Admin.jsx';
+import Chat from './pages/Chat.jsx';
+import StudyMaterial from './pages/StudyMaterial.jsx';
 import Profile from './pages/Profile.jsx';
 import PermissionGate from './components/PermissionGate.jsx';
 import { loadPublishedConfig } from './permissions.js';
@@ -85,6 +89,8 @@ function AppShell() {
         <Route path="/tools/api-lab" element={<ApiLab />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/videos" element={<Videos />} />
+        <Route path="/materials" element={<StudyMaterial />} />
+        <Route path="/chat" element={<Chat />} />
         <Route path="/tools/java-ide" element={<JavaIDE />} />
         <Route path="/tools/python-ide" element={<PythonIDE />} />
         <Route path="/tools/sql-lab" element={<SqlLab />} />
@@ -128,6 +134,12 @@ function AppShell() {
         <Route path="/study/portfolio" element={<PortfolioBuilder />} />
         <Route path="/study/report" element={<WeeklyReport />} />
         <Route path="/today" element={<TodayPage />} />
+        <Route path="/community/leaderboard" element={<Leaderboard />} />
+        <Route path="/community/forum" element={<Forum />} />
+        <Route path="/community/forum/:id" element={<ForumThread />} />
+        <Route path="/community/experiences" element={<ExperienceBank />} />
+        <Route path="/classroom" element={<Classroom />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/career/applications" element={<ApplicationTracker />} />
         <Route path="/career/offers" element={<OfferComparison />} />
         <Route path="/career/experiences" element={<InterviewJournal />} />

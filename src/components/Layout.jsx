@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Home, BookOpen, Map as MapIcon, Wrench, Sparkles, Rocket, Code2, Coffee, Terminal, Database, Cpu, Server, Search,
-  ClipboardCheck, MessageCircle, Trophy, Hammer, LayoutDashboard, ChevronDown, BarChart3, Globe, Layers, BookMarked,
+  ClipboardCheck, MessageCircle, MessagesSquare, FolderOpen, Trophy, Hammer, LayoutDashboard, ChevronDown, BarChart3, Globe, Layers, BookMarked,
   Brain, ListChecks, Library, GraduationCap, PlayCircle, Film, Shield } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useAuth, logout, firstName } from '../auth.js';
@@ -10,11 +10,14 @@ import FocusPill from './FocusTimer.jsx';
 import { CommandPalette, DisplayMenu, openPalette } from './GlobalTools.jsx';
 import Onboarding, { startTour, openOnboarding } from './Onboarding.jsx';
 import { checkReminder } from '../reminders.js';
-import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard, Sunrise, Briefcase, KanbanSquare, Scale, BookUser } from 'lucide-react';
+import { supaMode } from '../supabase.js';
+import { startSync, syncNow, syncState, SYNC_EVENT } from '../cloudSync.js';
+import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard, Sunrise, Briefcase, KanbanSquare, Scale, BookUser, Cloud, UsersRound, MessagesSquare as Forum2, School } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
 import { Avatar } from './MediaBits.jsx';
 import { tracks, trackGroups } from '../data/index.js';
 
+import Ico from './Ico.jsx';
 const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
 
 /*
@@ -66,6 +69,7 @@ function buildMenu() {
       key: 'videos', label: 'Videos', icon: PlayCircle,
       items: [
         { to: '/videos', label: 'All Video Lessons', icon: Film },
+        { to: '/materials', label: 'Study Material (recorded classes, PDFs, photos)', icon: FolderOpen },
         ...groupsWith((g, ks, I) => (ks.length === 1
           ? { to: `/videos?group=${g.key}&course=${ks[0]}`, label: courseName(ks[0]), icon: I }
           : { label: g.name, icon: I, children: ks.map((k) => ({ to: `/videos?group=${g.key}&course=${k}`, label: courseName(k), icon: PlayCircle })) })),
@@ -119,6 +123,15 @@ function buildMenu() {
         { to: '/tools/flashcards', label: 'Flashcards', icon: Brain },
       ],
     },
+    supaMode && {
+      key: 'community', label: 'Community', icon: UsersRound,
+      items: [
+        { to: '/classroom', label: 'My Class / Teacher Panel', icon: School },
+        { to: '/community/forum', label: 'Doubt Forum', icon: Forum2 },
+        { to: '/community/leaderboard', label: 'Leaderboard', icon: Trophy },
+        { to: '/community/experiences', label: 'Interview Experience Bank', icon: BookUser },
+      ],
+    },
     {
       key: 'career', label: 'Career', icon: Briefcase,
       items: [
@@ -138,7 +151,8 @@ function buildMenu() {
         { to: '/tools/java-projects', label: 'Java Projects', icon: Coffee },
       ],
     },
-  ];
+    { to: '/chat', label: 'Chat', icon: MessagesSquare },
+  ].filter(Boolean);
 }
 
 const leavesOf = (items) => items.flatMap((it) => (it.children ? leavesOf(it.children) : it.items ? leavesOf(it.items) : it.to ? [it] : []));
@@ -314,6 +328,14 @@ function useScrollReveal(rootRef, key) {
   }, [rootRef, key]);
 }
 
+function SyncBadge() {
+  const [s, setS] = useState(syncState);
+  useEffect(() => { const h = () => setS(syncState()); window.addEventListener(SYNC_EVENT, h); return () => window.removeEventListener(SYNC_EVENT, h); }, []);
+  if (!supaMode) return null;
+  const label = s.status === 'syncing' ? 'Syncing…' : s.status === 'synced' ? `Synced ${new Date(s.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : s.status === 'offline' ? 'Offline — will sync later' : s.status === 'error' ? 'Sync problem — retrying' : 'Cloud sync on';
+  return <button className={`um-sync ${s.status}`} title={s.error || 'Your progress is saved to your account and appears on every device'} onClick={() => syncNow({ pullFirst: true })}><Cloud size={13} /> {label}</button>;
+}
+
 function UserMenu({ user, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -333,12 +355,13 @@ function UserMenu({ user, onLogout }) {
       </button>
       {open && (
         <div className="um-drop">
-          <div className="um-head"><Avatar size={44} className="um-ava big" /><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
+          <div className="um-head"><Avatar size={44} className="um-ava big" /><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : user.role === 'teacher' ? 'Teacher' : 'Student'}</div></div></div>
+          <SyncBadge />
           <Link to="/dashboard" onClick={() => setOpen(false)}>My dashboard</Link>
-          <Link to="/profile" onClick={() => setOpen(false)}>👤 My profile</Link>
+          <Link to="/profile" onClick={() => setOpen(false)}><Ico e="👤" /> My profile</Link>
           <button className="um-link" onClick={() => { setOpen(false); startTour(); }}>Take the app tour</button>
           <button className="um-link" onClick={() => { setOpen(false); openOnboarding(); }}>Change my goals &amp; plan</button>
-          {user.role === 'admin' && <Link to="/admin" onClick={() => setOpen(false)}>🛡️ Admin panel</Link>}
+          {user.role === 'admin' && <Link to="/admin" onClick={() => setOpen(false)}><Ico e="🛡" /> Admin panel</Link>}
           <Link to="/" onClick={() => setOpen(false)}>Home page</Link>
           <button className="um-out" onClick={() => { setOpen(false); onLogout(); }}>Logout</button>
         </div>
@@ -350,7 +373,8 @@ function UserMenu({ user, onLogout }) {
 export default function Layout({ children }) {
   const user = useAuth();
   useEffect(() => { checkReminder(); const t = setInterval(checkReminder, 5 * 60 * 1000); return () => clearInterval(t); }, [user?.username]);
-  const doLogout = () => { logout(); window.location.hash = '#/'; };
+  const doLogout = async () => { if (supaMode) await syncNow(); logout(); window.location.hash = '#/'; };
+  useEffect(() => { if (supaMode) startSync(user?.server ? user.id : null); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);

@@ -15,6 +15,7 @@ import { FocusControls } from '../components/FocusTimer.jsx';
 import ReminderCard from '../components/ReminderCard.jsx';
 import { downloadFile, esc } from '../components/careerUtils.js';
 
+import Ico from '../components/Ico.jsx';
 const shuffleIdx = (n) => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 /* ============================== Install as app ============================== */
@@ -34,7 +35,7 @@ function InstallApp() {
       <button className="btn" onClick={async () => {
         if (window.__installPrompt) { window.__installPrompt.prompt(); try { await window.__installPrompt.userChoice; } catch { /* ignore */ } window.__installPrompt = null; setCan(false); } else setIos(true);
       }}><Smartphone size={15} /> Install app</button>
-      {(ios || (!can && isIos)) && <span className="muted small">{isIos ? 'On iPhone: tap Share ⬆ then "Add to Home Screen".' : 'Use your browser menu → "Install app" / "Add to Home screen". (Works on the published https site.)'}</span>}
+      {(ios || (!can && isIos)) && <span className="muted small">{isIos ? <>On iPhone: tap Share <Ico e="⬆" /> then "Add to Home Screen".</> : 'Use your browser menu → "Install app" / "Add to Home screen". (Works on the published https site.)'}</span>}
     </>
   );
 }
@@ -51,7 +52,7 @@ export function StudyHub() {
   const solvedToday = !!studyRead('upskillr-study-daily', {})[today];
   const ch = codingProblems.length ? codingProblems[challengeIndex(today, codingProblems.length)] : null;
   const tiles = [
-    ['/study/revision', Repeat, 'Smart Revision', due ? `${due} card${due === 1 ? '' : 's'} due today` : 'Nothing due today 🎉', due ? 'hot' : ''],
+    ['/study/revision', Repeat, 'Smart Revision', due ? `${due} card${due === 1 ? '' : 's'} due today` : 'Nothing due today ', due ? 'hot' : ''],
     ['/study/mistakes', AlertTriangle, 'Mistake Notebook', mistakes ? `${mistakes} question${mistakes === 1 ? '' : 's'} to fix` : 'No mistakes saved', mistakes ? 'warn' : ''],
     ['/study/planner', CalendarDays, 'Planner & Focus Timer', `${goals.filter((g) => g.got >= g.want).length}/${goals.length} goals done today`, ''],
     ['/study/challenge', Code2, 'Daily Coding Challenge', solvedToday ? 'Solved today ✓' : ch ? `Today: ${ch.title}` : '—', solvedToday ? 'ok' : 'hot'],
@@ -64,7 +65,7 @@ export function StudyHub() {
   return (
     <div>
       <div className="page-head">
-        <h1>📚 Study Hub</h1>
+        <h1><Ico e="📚" /> Study Hub</h1>
         <p className="muted">Everything for daily online study in one place: what to revise today, your mistakes, goals, focus timer, notes, XP, certificates and resume.</p>
         <div className="row-btns"><InstallApp /></div>
       </div>
@@ -82,7 +83,7 @@ export function StudyHub() {
           <div className="db-card-head"><h3><Target size={18} /> Today's goals</h3><Link className="small" to="/study/planner">Edit →</Link></div>
           {goals.map((g) => (
             <div key={g.key} className="sh-goal">
-              <div className="db-part-top"><span>{g.got >= g.want ? '✅' : '⬜'} {g.label}</span><span className="muted small">{Math.min(g.got, g.want)}/{g.want}</span></div>
+              <div className="db-part-top"><span>{g.got >= g.want ? <><Ico e="✅" /></> : <><Ico e="⬜" /></>} {g.label}</span><span className="muted small">{Math.min(g.got, g.want)}/{g.want}</span></div>
               <ProgressBar value={g.want ? g.got / g.want : 0} color={g.got >= g.want ? 'var(--ok)' : undefined} />
             </div>
           ))}
@@ -124,7 +125,7 @@ ${courses.map((c) => `<h2>${esc(c)}</h2>${list.filter((n) => (n.course || 'Other
   return (
     <div>
       <div className="page-head">
-        <h1>📝 My Notes</h1>
+        <h1><Ico e="📝" /> My Notes</h1>
         <p className="muted">All your lesson notes and highlights in one place. Write notes at the bottom of any lesson; select text in a lesson to highlight it.</p>
         <div className="row-btns">
           <button className="btn primary" disabled={!list.length} onClick={printPdf}><Printer size={15} /> Download as PDF</button>
@@ -216,7 +217,7 @@ export function MistakesPage() {
     if (!item) {
       return (
         <div className="card center sp-done">
-          <h2>🎯 Practice finished</h2>
+          <h2><Ico e="🎯" /> Practice finished</h2>
           <p>Correct this round: <b>{stats.ok}</b> · Still wrong: <b>{stats.bad}</b></p>
           <p className="muted">Correct answers are removed from the notebook. Every question also goes into Smart Revision so you see it again after a few days.</p>
           <div className="row-btns center"><button className="btn primary" onClick={() => { setPractice(null); setStats({ ok: 0, bad: 0 }); }}>Back to notebook</button><Link className="btn" to="/study/revision">Smart Revision</Link></div>
@@ -234,7 +235,7 @@ export function MistakesPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>⚠️ Mistake Notebook</h1>
+        <h1><Ico e="⚠" /> Mistake Notebook</h1>
         <p className="muted">Every question you get wrong in a lesson quiz, Quiz Arena or test series is saved here automatically. Practise them again: when you answer correctly, the question leaves the notebook.</p>
         <div className="row-btns">
           <button className="btn primary" disabled={!shown.length} onClick={() => { setStats({ ok: 0, bad: 0 }); setPractice(shuffleIdx(shown.length).map((i) => shown[i].id)); }}>▶ Practise {shown.length} question{shown.length === 1 ? '' : 's'}</button>
@@ -276,7 +277,7 @@ export function RevisionPage() {
     if (!item) {
       return (
         <div className="card center sp-done">
-          <h2>✅ Revision done for now</h2>
+          <h2><Ico e="✅" /> Revision done for now</h2>
           <p>Remembered: <b>{round.ok}</b> · Forgot: <b>{round.bad}</b></p>
           <p className="muted">Remembered cards come back after {BOX_DAYS.join(', ')} days; forgotten ones come back tomorrow.</p>
           <button className="btn primary" onClick={() => setQueue(null)}>Back</button>
@@ -295,9 +296,9 @@ export function RevisionPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>🔁 Smart Revision</h1>
-        <p className="muted">Spaced repetition: each question comes back just before you forget it — after <b>1, 3, 7 and 30 days</b>. Wrong quiz answers are added automatically; add interview questions with the 🔁 button in any lesson.</p>
-        <button className="btn primary" disabled={!due.length} onClick={() => { setRound({ ok: 0, bad: 0 }); setQueue(shuffleIdx(due.length).map((i) => due[i].id)); }}>{due.length ? `▶ Revise ${due.length} card${due.length === 1 ? '' : 's'} due today` : 'Nothing due today 🎉'}</button>
+        <h1><Ico e="🔁" /> Smart Revision</h1>
+        <p className="muted">Spaced repetition: each question comes back just before you forget it — after <b>1, 3, 7 and 30 days</b>. Wrong quiz answers are added automatically; add interview questions with the <Ico e="🔁" /> button in any lesson.</p>
+        <button className="btn primary" disabled={!due.length} onClick={() => { setRound({ ok: 0, bad: 0 }); setQueue(shuffleIdx(due.length).map((i) => due[i].id)); }}>{due.length ? `▶ Revise ${due.length} card${due.length === 1 ? '' : 's'} due today` : <>Nothing due today <Ico e="🎉" /></>}</button>
       </div>
       <div className="ts-stats">
         <div className="card"><b>{due.length}</b><span>Due today</span></div>
@@ -312,7 +313,7 @@ export function RevisionPage() {
           <div className="ok"><b>{mastered}</b><span>Mastered</span></div>
         </div>
       </div>
-      {!all.length && <div className="card empty-state"><Repeat size={34} /><p>Your revision deck is empty. Take quizzes (wrong answers are added) or click 🔁 next to interview questions in a lesson.</p></div>}
+      {!all.length && <div className="card empty-state"><Repeat size={34} /><p>Your revision deck is empty. Take quizzes (wrong answers are added) or click <Ico e="🔁" /> next to interview questions in a lesson.</p></div>}
     </div>
   );
 }
@@ -339,16 +340,16 @@ export function PlannerPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>🗓️ Study Planner &amp; Focus Timer</h1>
+        <h1><Ico e="🗓" /> Study Planner &amp; Focus Timer</h1>
         <p className="muted">Set daily goals, plan your week and study in focused Pomodoro sessions. Goals update automatically when you complete lessons, take quizzes, revise and focus.</p>
       </div>
       <div className="sp-plan-top">
-        <div className="card"><h3>⏱️ Focus timer</h3><FocusControls /></div>
+        <div className="card"><h3><Ico e="⏱" /> Focus timer</h3><FocusControls /></div>
         <div className="card">
-          <h3>🎯 Today's goals</h3>
+          <h3><Ico e="🎯" /> Today's goals</h3>
           {prog.map((g) => (
             <div key={g.key} className="sh-goal">
-              <div className="db-part-top"><span>{g.got >= g.want ? '✅' : '⬜'} {g.label}</span><span className="muted small">{Math.min(g.got, g.want)}/{g.want}</span></div>
+              <div className="db-part-top"><span>{g.got >= g.want ? <><Ico e="✅" /></> : <><Ico e="⬜" /></>} {g.label}</span><span className="muted small">{Math.min(g.got, g.want)}/{g.want}</span></div>
               <ProgressBar value={g.want ? g.got / g.want : 0} color={g.got >= g.want ? 'var(--ok)' : undefined} />
             </div>
           ))}
@@ -362,7 +363,7 @@ export function PlannerPage() {
 
       <div className="card">
         <div className="db-card-head">
-          <h3>📅 Week of {new Date(days[0]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</h3>
+          <h3><Ico e="📅" /> Week of {new Date(days[0]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</h3>
           <div className="row-btns"><button className="btn small" onClick={() => setOffset(offset - 1)}><ChevronLeft size={15} /></button><button className="btn small" onClick={() => { setOffset(0); setSel(today); }}>This week</button><button className="btn small" onClick={() => setOffset(offset + 1)}><ChevronRight size={15} /></button></div>
         </div>
         <div className="sp-week">
@@ -375,10 +376,10 @@ export function PlannerPage() {
             return (
               <button key={d} className={`sp-day ${d === today ? 'today' : ''} ${d === sel ? 'sel' : ''}`} onClick={() => setSel(d)}>
                 <span className="sp-dname">{WEEK[i]} <b>{Number(d.slice(8))}</b></span>
-                {lessons > 0 && <span>📘 {lessons}</span>}
-                {qz > 0 && <span>🏆 {qz}</span>}
-                {fm > 0 && <span>⏱ {fm}m</span>}
-                {t.length > 0 && <span>☑ {t.filter((x) => x.done).length}/{t.length}</span>}
+                {lessons > 0 && <span><Ico e="📘" /> {lessons}</span>}
+                {qz > 0 && <span><Ico e="🏆" /> {qz}</span>}
+                {fm > 0 && <span><Ico e="⏱" /> {fm}m</span>}
+                {t.length > 0 && <span><Ico e="☑" /> {t.filter((x) => x.done).length}/{t.length}</span>}
               </button>
             );
           })}
@@ -410,7 +411,7 @@ export function AchievementsPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>🏅 XP, Levels &amp; Badges</h1>
+        <h1><Ico e="🏅" /> XP, Levels &amp; Badges</h1>
         <p className="muted">Earn XP for everything you learn and practise. Level up and unlock badges.</p>
       </div>
       <div className="card sh-level big">
@@ -426,7 +427,7 @@ export function AchievementsPage() {
       <div className="sp-badges">
         {BADGES.map(([id, ic, name, desc, test]) => {
           const on = test(s);
-          return <div key={id} className={`card sp-badge ${on ? 'on' : ''}`}><span className="sp-bic">{ic}</span><b>{name}</b><span className="muted small">{desc}</span>{on ? <span className="badge ok">Unlocked</span> : <span className="badge">Locked</span>}</div>;
+          return <div key={id} className={`card sp-badge ${on ? 'on' : ''}`}><span className="sp-bic"><Ico e={ic} /></span><b>{name}</b><span className="muted small">{desc}</span>{on ? <span className="badge ok">Unlocked</span> : <span className="badge">Locked</span>}</div>;
         })}
       </div>
       <h2 className="section-title">How you earned your XP</h2>

@@ -9,6 +9,7 @@ import { useStudy, useStudyTick, studyRead, dayKey, addDays, eventsOn, dueItems,
 import ProgressBar from '../components/ProgressBar.jsx';
 import { openOnboarding } from '../components/Onboarding.jsx';
 
+import Ico from '../components/Ico.jsx';
 export const DEFAULT_WEEKLY = { lessons: 5, tests: 2 };
 export const weekStart = (d = dayKey()) => { const [y, m, dd] = d.split('-').map(Number); const x = new Date(y, m - 1, dd); const back = (x.getDay() + 6) % 7; return addDays(d, -back); };
 
@@ -82,8 +83,8 @@ export default function TodayPage() {
       <div className="td-hero">
         <div>
           <div className="td-date">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-          <h1>{hello}, {firstName(user) || 'there'}! ☀️</h1>
-          <p>{done === items.length ? 'All done for today — amazing work! 🎉 Rest, or get ahead with one more lesson.' : `${items.length - done} thing${items.length - done === 1 ? '' : 's'} left on today's plan. Start from the top.`}</p>
+          <h1>{hello}, {firstName(user) || 'there'}! <Ico e="☀" /></h1>
+          <p>{done === items.length ? <>All done for today — amazing work! <Ico e="🎉" /> Rest, or get ahead with one more lesson.</> : `${items.length - done} thing${items.length - done === 1 ? '' : 's'} left on today's plan. Start from the top.`}</p>
           <div className="db-hero-chips"><span><Flame size={15} /> {s.streak}-day streak</span><span><Trophy size={15} /> Level {lv.level} · {s.xp} XP</span>{!profile && <button className="td-setup" onClick={openOnboarding}><Settings2 size={14} /> Set my goal</button>}</div>
         </div>
         <div className="td-ring" style={{ '--p': Math.round(pct * 100) }}><b>{done}/{items.length}</b><span>done today</span></div>
@@ -97,7 +98,7 @@ export default function TodayPage() {
         {items.map((it) => (
           <Link key={it.key} to={it.to} className={`card td-item ${it.done ? 'done' : ''}`}>
             <span className="td-check">{it.done ? <CheckCircle2 size={24} /> : <Circle size={24} />}</span>
-            <span className="td-ic">{it.icon}</span>
+            <span className="td-ic"><Ico e={it.icon} /></span>
             <span className="td-txt"><b>{it.title}</b><span>{it.sub}</span></span>
             {it.extra && <span className="badge">{it.extra}</span>}
             <span className="td-go">{it.done ? 'Done' : 'Start →'}</span>
@@ -106,20 +107,20 @@ export default function TodayPage() {
       </div>
 
       <div className="card td-week">
-        <div className="db-card-head"><h3>🏅 Weekly challenge</h3><span className="muted small">Week of {new Date(`${wk.start}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {weeksWon} week{weeksWon === 1 ? '' : 's'} won</span></div>
+        <div className="db-card-head"><h3><Ico e="🏅" /> Weekly challenge</h3><span className="muted small">Week of {new Date(`${wk.start}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {weeksWon} week{weeksWon === 1 ? '' : 's'} won</span></div>
         <div className="td-wk">
-          <div><div className="db-part-top"><span>📘 Lessons</span><span className="muted small">{Math.min(wk.lessons, wk.target.lessons)}/{wk.target.lessons}</span></div><ProgressBar value={wk.lessons / wk.target.lessons} color={wk.lessons >= wk.target.lessons ? 'var(--ok)' : undefined} /></div>
-          <div><div className="db-part-top"><span>🏆 Tests & quizzes</span><span className="muted small">{Math.min(wk.tests, wk.target.tests)}/{wk.target.tests}</span></div><ProgressBar value={wk.tests / wk.target.tests} color={wk.tests >= wk.target.tests ? 'var(--ok)' : undefined} /></div>
+          <div><div className="db-part-top"><span><Ico e="📘" /> Lessons</span><span className="muted small">{Math.min(wk.lessons, wk.target.lessons)}/{wk.target.lessons}</span></div><ProgressBar value={wk.lessons / wk.target.lessons} color={wk.lessons >= wk.target.lessons ? 'var(--ok)' : undefined} /></div>
+          <div><div className="db-part-top"><span><Ico e="🏆" /> Tests & quizzes</span><span className="muted small">{Math.min(wk.tests, wk.target.tests)}/{wk.target.tests}</span></div><ProgressBar value={wk.tests / wk.target.tests} color={wk.tests >= wk.target.tests ? 'var(--ok)' : undefined} /></div>
         </div>
-        {wk.met ? <div className="explain ok">🎉 Challenge complete! +50 XP and progress towards the "Weekly Winner" badges.</div> : <p className="muted small">Complete it before Sunday night to win the week (+50 XP).</p>}
+        {wk.met ? <div className="explain ok"><Ico e="🎉" /> Challenge complete! +50 XP and progress towards the "Weekly Winner" badges.</div> : <p className="muted small">Complete it before Sunday night to win the week (+50 XP).</p>}
         <details className="sp-goal-edit"><summary className="small">Change weekly target</summary>
           <label className="db-part-top">Lessons per week<input className="input" type="number" min={1} value={wk.target.lessons} onChange={(e) => setWeeklyTarget('lessons', e.target.value)} style={{ width: 90 }} /></label>
           <label className="db-part-top">Tests per week<input className="input" type="number" min={1} value={wk.target.tests} onChange={(e) => setWeeklyTarget('tests', e.target.value)} style={{ width: 90 }} /></label>
         </details>
       </div>
       <div className="grid2">
-        <Link to="/study/planner" className="card sh-tile"><span className="sh-ic">📅</span><div><b>Planner, reminders &amp; calendar</b><div className="muted small">Set daily reminders and add your plan to Google Calendar</div></div></Link>
-        <Link to="/study/report" className="card sh-tile"><span className="sh-ic">📊</span><div><b>Weekly report</b><div className="muted small">Share your progress with parents or teachers</div></div></Link>
+        <Link to="/study/planner" className="card sh-tile"><span className="sh-ic"><Ico e="📅" /></span><div><b>Planner, reminders &amp; calendar</b><div className="muted small">Set daily reminders and add your plan to Google Calendar</div></div></Link>
+        <Link to="/study/report" className="card sh-tile"><span className="sh-ic"><Ico e="📊" /></span><div><b>Weekly report</b><div className="muted small">Share your progress with parents or teachers</div></div></Link>
       </div>
     </div>
   );

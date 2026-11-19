@@ -3,6 +3,7 @@ import Editor, { loader } from '@monaco-editor/react';
 import { ensurePython, runPyExec, restartPython } from '../components/pyodideRunner.js';
 import { WB_ENGINE_PY } from '../engine/wbEngine.js';
 
+import Ico from '../components/Ico.jsx';
 export const MYSQL_LOAD_KEY = 'xlpbi-mysql-load';
 export const SSMS_LOAD_KEY = 'xlpbi-ssms-load';
 
@@ -254,7 +255,7 @@ const CFG = {
     title: 'MySQL Workbench', logo: '🐬', conn: 'Local instance 3306', nav: 'Navigator', navSub: 'SCHEMAS', schemaWord: 'schema',
     samples: [['college', SAMPLE_COLLEGE], ['ecommerce', SAMPLE_SHOP]], snippets: SNIPPETS, practice: PRACTICE,
     resultTab: 'Result Grid', outTab: 'Output', useStmt: (s) => `USE ${s};`, selectRows: (s, t) => `USE ${s};\nSELECT * FROM ${t} LIMIT 1000;`,
-    welcome: '-- Welcome to the MySQL Workbench Lab 🐬\n-- 1) Click "Load sample DB: college" on the left (or write CREATE DATABASE ...)\n-- 2) Write a query and press Ctrl+Shift+Enter (execute all) or Ctrl+Enter (current statement)\n\nSHOW DATABASES;\n',
+    welcome: '-- Welcome to the MySQL Workbench Lab -- 1) Click "Load sample DB: college" on the left (or write CREATE DATABASE ...)\n-- 2) Write a query and press Ctrl+Shift+Enter (execute all) or Ctrl+Enter (current statement)\n\nSHOW DATABASES;\n',
     help: ['Ctrl+Shift+Enter: execute all (or selection)', 'Ctrl+Enter: execute statement under cursor', 'Double-click a schema: set as default (USE)', '⊞ next to a table: Select Rows - Limit 1000'],
     limits: 'This lab emulates MySQL 8 on SQLite. Stored procedures, users/GRANT, ALTER … MODIFY and EXPLAIN need real MySQL Workbench; the course shows how.',
   },
@@ -263,7 +264,7 @@ const CFG = {
     title: 'SQL Server Management Studio', logo: '🗄️', conn: '(localdb)\\MSSQLLocalDB (SQL Server 16.0)', nav: 'Object Explorer', navSub: 'DATABASES', schemaWord: 'database',
     samples: [['StudentDB', TSQL_STUDENTDB], ['EmployeeDB', TSQL_EMPLOYEEDB]], snippets: TSQL_SNIPPETS, practice: TSQL_PRACTICE,
     resultTab: 'Results', outTab: 'Messages', useStmt: (s) => `USE ${s};`, selectRows: (s, t) => `USE ${s};\nSELECT TOP (1000) * FROM ${t};`,
-    welcome: '-- Welcome to the SSMS Lab (SQL Server / T-SQL) 🗄️\n-- 1) Click "Load sample DB: StudentDB" on the left (or write CREATE DATABASE ... GO USE ...)\n-- 2) Write a query and press F5 / Ctrl+E (execute all or selection)\n\nSELECT name FROM sys.tables;\n',
+    welcome: '-- Welcome to the SSMS Lab (SQL Server / T-SQL) -- 1) Click "Load sample DB: StudentDB" on the left (or write CREATE DATABASE ... GO USE ...)\n-- 2) Write a query and press F5 / Ctrl+E (execute all or selection)\n\nSELECT name FROM sys.tables;\n',
     help: ['F5 or Ctrl+E: execute all (or the selected text)', 'Ctrl+Enter: execute statement under cursor', 'Double-click a database: USE it', '⊞ next to a table: Select Top 1000 Rows', 'GO separates batches'],
     limits: 'This lab emulates SQL Server T-SQL on SQLite. Stored procedures, functions, T-SQL triggers, DECLARE variables, cursors, logins and BACKUP need real SQL Server + SSMS; the course shows how.',
   },
@@ -437,18 +438,18 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
   return (
     <div className={cfg.cls}>
       <div className="wb-top">
-        <div className="wb-brand"><span className="wb-logo">{cfg.logo}</span><b>{cfg.title}</b><span className="wb-conn">{cfg.conn} · {status === 'loading' ? 'connecting…' : status === 'error' ? 'not connected' : 'connected'}</span></div>
+        <div className="wb-brand"><span className="wb-logo"><Ico e={cfg.logo} /></span><b>{cfg.title}</b><span className="wb-conn">{cfg.conn} · {status === 'loading' ? 'connecting…' : status === 'error' ? 'not connected' : 'connected'}</span></div>
         <div className="wb-tools">
-          <label className="wb-btn" title="Open SQL script">📂<input type="file" accept=".sql,.txt" hidden onChange={openFile} /></label>
-          <button className="wb-btn" title="Save script" onClick={saveFile}>💾</button>
+          <label className="wb-btn" title="Open SQL script"><Ico e="📂" /><input type="file" accept=".sql,.txt" hidden onChange={openFile} /></label>
+          <button className="wb-btn" title="Save script" onClick={saveFile}><Ico e="💾" /></button>
           <span className="wb-sep" />
           {dialect === 'tsql'
             ? <button className="wb-btn exec ssms-exec" title="Execute (F5)" disabled={status !== 'ready'} onClick={runAll}>▶ Execute</button>
-            : <button className="wb-btn exec" title="Execute all / selection (Ctrl+Shift+Enter)" disabled={status !== 'ready'} onClick={runAll}>⚡</button>}
-          <button className="wb-btn exec" title="Execute the statement under the cursor (Ctrl+Enter)" disabled={status !== 'ready'} onClick={runCurrent}>⚡<small>I</small></button>
-          <button className="wb-btn" title="Stop" disabled={status !== 'running'} onClick={stop}>⛔</button>
+            : <button className="wb-btn exec" title="Execute all / selection (Ctrl+Shift+Enter)" disabled={status !== 'ready'} onClick={runAll}><Ico e="⚡" /></button>}
+          <button className="wb-btn exec" title="Execute the statement under the cursor (Ctrl+Enter)" disabled={status !== 'ready'} onClick={runCurrent}><Ico e="⚡" /><small>I</small></button>
+          <button className="wb-btn" title="Stop" disabled={status !== 'running'} onClick={stop}><Ico e="⛔" /></button>
           <span className="wb-sep" />
-          <button className="wb-btn" title="New query tab" onClick={() => newTab('')}>{dialect === 'tsql' ? '📄 New Query' : '＋SQL'}</button>
+          <button className="wb-btn" title="New query tab" onClick={() => newTab('')}>{dialect === 'tsql' ? <><Ico e="📄" /> New Query</> : '＋SQL'}</button>
           <span className="wb-db">{dialect === 'tsql' ? 'Available Databases' : 'Default schema'}: <b>{currentDb || 'none'}</b></span>
         </div>
       </div>
@@ -463,7 +464,7 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
             {schemaNames.map((s) => (
               <div key={s}>
                 <div className={`wb-schema ${currentDb === s ? 'cur' : ''}`} onClick={() => setOpen({ ...open, [s]: !open[s] })} onDoubleClick={() => execute(cfg.useStmt(s))} title={`Double-click to set as default ${cfg.schemaWord}`}>
-                  {open[s] ? '▾' : '▸'} 🛢 {s}
+                  {open[s] ? '▾' : '▸'} <Ico e="🛢" /> {s}
                 </div>
                 {open[s] && (
                   <div className="wb-children">
@@ -474,11 +475,11 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
                           {open[`${s}.${t}`] ? '▾' : '▸'} ▦ {t}
                           <button className="wb-mini" title={dialect === 'tsql' ? 'Select Top 1000 Rows' : 'Select Rows - Limit 1000'} onClick={(e) => { e.stopPropagation(); const q = cfg.selectRows(s, t); newTab(q, t); setTimeout(() => execute(q), 50); }}>⊞</button>
                         </div>
-                        {open[`${s}.${t}`] && v.columns.map(([c, ty, pk]) => <div key={c} className="wb-col">{pk ? '🔑' : '◆'} {c} <span>{ty}</span></div>)}
+                        {open[`${s}.${t}`] && v.columns.map(([c, ty, pk]) => <div key={c} className="wb-col">{pk ? <><Ico e="🔑" /></> : '◆'} {c} <span>{ty}</span></div>)}
                       </div>
                     ))}
                     {Object.entries(schemas[s]).some(([, v]) => v.kind === 'view') && <div className="wb-folder">▾ Views</div>}
-                    {Object.entries(schemas[s]).filter(([, v]) => v.kind === 'view').map(([t]) => <div key={t} className="wb-table">👁 {t}</div>)}
+                    {Object.entries(schemas[s]).filter(([, v]) => v.kind === 'view').map(([t]) => <div key={t} className="wb-table"><Ico e="👁" /> {t}</div>)}
                     <div className="wb-folder muted">▸ Stored Procedures</div>
                     <div className="wb-folder muted">▸ Functions</div>
                   </div>
@@ -488,9 +489,9 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
           </div>
           <div className="wb-nav-actions">
             {cfg.samples.map(([n, sql]) => (
-              <button key={n} className="wb-act" onClick={() => { newTab(sql, `${n}_setup.sql`); setTimeout(() => execute(dialect === 'tsql' ? sql.replace(/CREATE DATABASE (\w+);/, (m, db) => (schemas[db.toLowerCase()] || schemas[db] ? '' : m)) : sql), 50); }}>⬇ Load sample DB: {n}</button>
+              <button key={n} className="wb-act" onClick={() => { newTab(sql, `${n}_setup.sql`); setTimeout(() => execute(dialect === 'tsql' ? sql.replace(/CREATE DATABASE (\w+);/, (m, db) => (schemas[db.toLowerCase()] || schemas[db] ? '' : m)) : sql), 50); }}><Ico e="⬇" /> Load sample DB: {n}</button>
             ))}
-            <button className="wb-act danger" onClick={resetAll}>🗑 Drop all {cfg.schemaWord}s</button>
+            <button className="wb-act danger" onClick={resetAll}><Ico e="🗑" /> Drop all {cfg.schemaWord}s</button>
           </div>
         </aside>
 
@@ -512,7 +513,7 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
             )}
           </div>
           {cur.expected && (
-            <details className="wb-expected"><summary>📋 Expected output for this lesson script</summary><pre>{cur.expected}</pre></details>
+            <details className="wb-expected"><summary><Ico e="📋" /> Expected output for this lesson script</summary><pre>{cur.expected}</pre></details>
           )}
         </section>
 
@@ -545,7 +546,7 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
         <div className="wb-btabs">
           <button className={bottom === 'result' ? 'on' : ''} onClick={() => setBottom('result')}>{cfg.resultTab}</button>
           {bottom === 'result' && results.length > 1 && results.map((_, i) => <button key={i} className={`sub ${resTab === i ? 'on' : ''}`} onClick={() => setResTab(i)}>Result {i + 1}</button>)}
-          <button className={bottom === 'output' ? 'on' : ''} onClick={() => setBottom('output')}>{cfg.outTab} {output.some((o) => !o.ok) ? '⚠' : ''}</button>
+          <button className={bottom === 'output' ? 'on' : ''} onClick={() => setBottom('output')}>{cfg.outTab} {output.some((o) => !o.ok) ? <><Ico e="⚠" /></> : ''}</button>
           {bottom === 'output' && <button className="sub" onClick={() => setOutput([])}>Clear</button>}
         </div>
         <div className="wb-bbody">
@@ -559,7 +560,7 @@ export default function MySQLWorkbench({ dialect = 'mysql' }) {
             <table className="wb-out">
               <thead><tr><th></th><th>#</th><th>Time</th><th>Action</th><th>Message</th><th>Duration</th></tr></thead>
               <tbody>{output.slice().reverse().map((o) => (
-                <tr key={o.n} className={o.ok ? '' : 'bad'}><td>{o.ok ? '✅' : '⛔'}</td><td>{o.n}</td><td>{o.time}</td><td className="act">{o.action}</td><td>{o.message}</td><td>{o.ms != null ? `${(o.ms / 1000).toFixed(3)} sec` : ''}</td></tr>
+                <tr key={o.n} className={o.ok ? '' : 'bad'}><td>{o.ok ? <><Ico e="✅" /></> : <><Ico e="⛔" /></>}</td><td>{o.n}</td><td>{o.time}</td><td className="act">{o.action}</td><td>{o.message}</td><td>{o.ms != null ? `${(o.ms / 1000).toFixed(3)} sec` : ''}</td></tr>
               ))}</tbody>
             </table>
           )}

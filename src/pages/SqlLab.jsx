@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 import { ensurePython, runSQL } from '../components/pyodideRunner.js';
 
+import Ico from '../components/Ico.jsx';
 export const SQL_LOAD_KEY = 'xlpbi-sql-load';
 
 const SAMPLE_SETUP = `-- Sample company database (SQLite)
@@ -75,27 +76,27 @@ export default function SqlLab() {
   return (
     <div className="jide">
       <div className="jide-top">
-        <div className="jide-title"><span className="jide-logo sql">🗄️</span><b>SQL Lab</b><span className="jide-sub">MySQL Workbench style · SQLite engine in your browser{title ? ` · ${title}` : ''}</span></div>
+        <div className="jide-title"><span className="jide-logo sql"><Ico e="🗄" /></span><b>SQL Lab</b><span className="jide-sub">MySQL Workbench style · SQLite engine in your browser{title ? ` · ${title}` : ''}</span></div>
         <div className="jide-actions">
           <select value="" onChange={(e) => { const x = EXERCISES[Number(e.target.value)]; if (x) { setQuery(`-- ${x[0]}\n${x[1]}`); setTab('query'); setTitle(x[0]); } }}>
-            <option value="">🎯 Practice queries…</option>
+            <option value="">Practice queries…</option>
             {EXERCISES.map((x, i) => <option key={i} value={i}>{x[0]}</option>)}
           </select>
           <button className="btn small" onClick={() => { setSetup(SAMPLE_SETUP); setQuery(SAMPLE_QUERY); setTitle(null); }}>↺ Sample database</button>
-          <button id="sql-run-btn" className="btn small primary" disabled={status !== 'ready'} onClick={run} title="Ctrl+Enter">⚡ Execute</button>
+          <button id="sql-run-btn" className="btn small primary" disabled={status !== 'ready'} onClick={run} title="Ctrl+Enter"><Ico e="⚡" /> Execute</button>
         </div>
       </div>
       <div className="jide-body sqlbody">
         <aside className="jide-tree">
           <div className="jide-tree-head"><span>SCHEMAS</span></div>
-          <div className="jide-node">▾ 🛢 practice_db</div>
+          <div className="jide-node">▾ <Ico e="🛢" /> practice_db</div>
           {[...setup.matchAll(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(\w+)/gi)].map((m) => <div key={m[1]} className="jide-file">▦ {m[1]}</div>)}
           <div className="jide-help">Engine: SQLite (most MySQL queries work the same). MySQL-only syntax like AUTO_INCREMENT or stored procedures should be practised in MySQL Workbench.</div>
         </aside>
         <section className="jide-editor">
           <div className="pg-tabs">
-            <button className={`pg-tab ${tab === 'query' ? 'on' : ''}`} onClick={() => setTab('query')}>📝 Query</button>
-            <button className={`pg-tab ${tab === 'setup' ? 'on' : ''}`} onClick={() => setTab('setup')}>🛠 Setup (tables & data)</button>
+            <button className={`pg-tab ${tab === 'query' ? 'on' : ''}`} onClick={() => setTab('query')}><Ico e="📝" /> Query</button>
+            <button className={`pg-tab ${tab === 'setup' ? 'on' : ''}`} onClick={() => setTab('setup')}><Ico e="🛠" /> Setup (tables & data)</button>
           </div>
           <div className="pg-monaco">
             {fallback ? (
@@ -109,7 +110,7 @@ export default function SqlLab() {
           </div>
         </section>
         <section className="jide-bottom">
-          <div className="jide-ptabs"><button className="on">Result Grid</button>{expected && <button onClick={() => window.alert(expected)}>📋 Expected</button>}</div>
+          <div className="jide-ptabs"><button className="on">Result Grid</button>{expected && <button onClick={() => window.alert(expected)}><Ico e="📋" /> Expected</button>}</div>
           <div className="jide-pbody">
             {status === 'loading' && <div className="pg-muted">Loading SQL engine (first time takes a few seconds)…</div>}
             {status === 'error' && <div className="pg-muted">Could not load the engine. An internet connection is needed the first time.</div>}

@@ -4,6 +4,7 @@ import { useProfile, imageToDataUrl, profileCompleteness } from '../profile.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { Avatar } from '../components/MediaBits.jsx';
 
+import Ico from '../components/Ico.jsx';
 const FIELDS = [
   ['fullName', 'Full name (as on certificates)', 'Asha Ramesh Patil'],
   ['phone', 'Mobile number', '+91 98765 43210'],
@@ -34,7 +35,7 @@ export default function Profile() {
   return (
     <div className="profile-page">
       <div className="page-head">
-        <h1>👤 My profile</h1>
+        <h1><Ico e="👤" /> My profile</h1>
         <p className="muted">Your photo and full name appear on your certificates. A complete profile also makes your project certificates look professional for recruiters.</p>
       </div>
 
@@ -42,7 +43,7 @@ export default function Profile() {
         <div className="card prof-photo-card">
           <div className="prof-photo">
             <Avatar size={140} />
-            <button className="prof-cam" onClick={() => fileRef.current?.click()} title="Change photo">📷</button>
+            <button className="prof-cam" onClick={() => fileRef.current?.click()} title="Change photo"><Ico e="📷" /></button>
           </div>
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { if (e.target.files[0]) onPhoto(e.target.files[0]); e.target.value = ''; }} />
           <h2>{p.fullName || user?.name}</h2>

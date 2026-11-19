@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, CheckCircle2, AlertCircle, ArrowLeft, BookOpenCheck, ClipboardCheck, Hammer, MessageCircle } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
-import { login, register, useAuth } from '../auth.js';
+import { login, register, useAuth, sendPasswordReset } from '../auth.js';
+import { supaMode } from '../supabase.js';
 
 function Field({ icon: I, label, error, right, ...props }) {
   return (
@@ -41,8 +42,14 @@ export default function AuthPage({ mode }) {
   const [remember, setRemember] = useState(true);
   const [err, setErr] = useState({});
   const [busy, setBusy] = useState(false);
-  const [ok, setOk] = useState(loc.state?.registered ? `Registration successful! Welcome ${loc.state.name || ''}. Please sign in with your new username and password.` : '');
+  const [ok, setOk] = useState(loc.state?.registered ? `Registration successful! Welcome ${loc.state.name || ''}. ${loc.state?.confirm ? 'We sent a confirmation link to your email — open it first, then sign in here.' : 'Please sign in with your new username and password.'}` : '');
   useEffect(() => { document.title = `${isLogin ? 'Sign in' : 'Create account'} · UpSkillr`; setErr({}); }, [isLogin]);
+  // /register and /login share this component: reset when switching, and show the "registered" note on arrival
+  useEffect(() => {
+    setBusy(false);
+    setOk(isLogin && loc.state?.registered ? `Registration successful! Welcome ${loc.state.name || ''}. ${loc.state?.confirm ? 'We sent a confirmation link to your email — open it first, then sign in here.' : 'Please sign in with your new username and password.'}` : '');
+    if (isLogin && loc.state?.username) setF((x) => ({ ...x, username: loc.state.username, password: '', confirm: '' }));
+  }, [isLogin, loc.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (user) return <Navigate to={from} replace />;
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setErr({ ...err, [k]: '', form: '' }); };
@@ -51,17 +58,17 @@ export default function AuthPage({ mode }) {
   const submit = (e) => {
     e.preventDefault();
     setBusy(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       if (isLogin) {
         if (!f.username.trim() || !f.password) { setErr({ form: 'Enter your username and password.' }); setBusy(false); return; }
-        const r = login(f.username, f.password, remember);
+        const r = await login(f.username, f.password, remember);
         if (!r.ok) { setErr({ form: r.error }); setBusy(false); return; }
         nav(from, { replace: true });
       } else {
         if (f.password !== f.confirm) { setErr({ confirm: 'Passwords do not match.' }); setBusy(false); return; }
-        const r = register(f);
+        const r = await register(f);
         if (!r.ok) { setErr({ [r.field]: r.error }); setBusy(false); return; }
-        nav('/login', { replace: true, state: { registered: true, username: r.username, name: f.name.trim().split(' ')[0], from: loc.state?.from } });
+        nav('/login', { replace: true, state: { registered: true, confirm: !!r.confirm, username: r.username, name: f.name.trim().split(' ')[0], from: loc.state?.from } });
       }
     }, 350);
   };
@@ -96,12 +103,18 @@ export default function AuthPage({ mode }) {
 
           <form onSubmit={submit} noValidate>
             {!isLogin && <Field icon={User} label="Full name" placeholder="e.g. Riya Patil" value={f.name} onChange={set('name')} error={err.name} autoComplete="name" autoFocus />}
-            <Field icon={User} label="Username" placeholder={isLogin ? 'Your username' : 'Choose a username (e.g. riya_p)'} value={f.username} onChange={set('username')} error={err.username} autoComplete="username" autoFocus={isLogin} autoCapitalize="none" />
-            {!isLogin && <Field icon={Mail} label="Email (optional)" type="email" placeholder="you@example.com" value={f.email} onChange={set('email')} error={err.email} autoComplete="email" />}
+            <Field icon={User} label={isLogin && supaMode ? 'Username or email' : 'Username'} placeholder={isLogin ? (supaMode ? 'Your username or email' : 'Your username') : 'Choose a username (e.g. riya_p)'} value={f.username} onChange={set('username')} error={err.username} autoComplete="username" autoFocus={isLogin} autoCapitalize="none" />
+            {!isLogin && <Field icon={Mail} label={supaMode ? 'Email' : 'Email (optional)'} type="email" placeholder="you@example.com" value={f.email} onChange={set('email')} error={err.email} autoComplete="email" />}
             <Field icon={Lock} label="Password" type={show ? 'text' : 'password'} placeholder={isLogin ? 'Your password' : 'At least 6 characters'} value={f.password} onChange={set('password')} error={err.password} autoComplete={isLogin ? 'current-password' : 'new-password'} right={eye} />
             {!isLogin && <Strength pw={f.password} />}
             {!isLogin && <Field icon={Lock} label="Confirm password" type={show ? 'text' : 'password'} placeholder="Type the password again" value={f.confirm} onChange={set('confirm')} error={err.confirm} autoComplete="new-password" />}
             {isLogin && <label className="check au-remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Keep me signed in on this device</label>}
+            {isLogin && supaMode && <button type="button" className="link-btn au-forgot" onClick={async () => {
+              const email = window.prompt('Enter the email you registered with. We will send you a link to set a new password.', f.username.includes('@') ? f.username : '');
+              if (!email) return;
+              const r = await sendPasswordReset(email);
+              window.alert(r.ok ? 'Check your inbox (and spam folder) for the reset link.' : r.error);
+            }}>Forgot password?</button>}
             <button className="btn primary au-submit" disabled={busy}>
               {busy ? <span className="au-spin" /> : isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
               {busy ? (isLogin ? 'Signing in…' : 'Creating account…') : isLogin ? 'Sign in' : 'Register'}

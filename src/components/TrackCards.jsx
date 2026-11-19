@@ -4,7 +4,6 @@ import { useProgress } from '../progress.js';
 import ProgressBar from './ProgressBar.jsx';
 import { usePerms } from '../permissions.js';
 import { CourseCover } from './MediaBits.jsx';
-import { TrackIcon } from './Icons.jsx';
 import { BrainCircuit, BarChart3, Globe, Coffee, Code2, Cpu, Database } from 'lucide-react';
 
 const GROUP_ICONS = { ai: BrainCircuit, data: BarChart3, web: Globe, java: Coffee, python: Code2, dotnet: Cpu, db: Database };
@@ -15,7 +14,7 @@ export default function TrackCards() {
   return trackGroups.filter((g) => g.tracks.some((k) => tracks[k] && canCourse(k))).map((g) => (
     <section key={g.key} className="track-group">
       <h2 className="section-title group-title">{(() => { const G = GROUP_ICONS[g.key]; return G ? <G size={22} /> : null; })()} {g.name}</h2>
-      <div className="grid3">
+      <div className={`grid3${g.tracks.filter((k) => tracks[k] && canCourse(k)).length === 1 ? ' single' : ''}`}>
         {g.tracks.filter((k) => tracks[k] && canCourse(k)).map((k) => tracks[k]).map((t) => {
           const total = t.topics.length;
           const completed = t.topics.filter((x) => done[topicKey(t.key, x.id)]).length;
@@ -24,7 +23,6 @@ export default function TrackCards() {
           return (
             <Link key={t.key} to={`/track/${t.key}`} className="card track-card" style={{ borderTopColor: t.color }}>
               <div className="tc-cover"><CourseCover track={t} height={118} showTitle={false} /></div>
-              <div className="track-icon" style={{ color: t.color, background: `color-mix(in srgb, ${t.color} 12%, transparent)` }}><TrackIcon track={t.key} size={24} /></div>
               <h3>{t.name}</h3>
               <p className="muted small">{t.tagline}</p>
               <div className="stats">

@@ -124,7 +124,7 @@ export default function AiPromptLab() {
             </div>
             {mode === 'builder' && (
               <select value="" onChange={(e) => e.target.value && setP({ ...TEMPLATES[e.target.value] })}>
-                <option value="">📚 Template library…</option>
+                <option value="">Template library…</option>
                 {Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
               </select>
             )}

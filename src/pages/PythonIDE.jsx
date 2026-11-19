@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 import { ensurePython, runPython, restartPython } from '../components/pyodideRunner.js';
 
+import Ico from '../components/Ico.jsx';
 export const PY_LOAD_KEY = 'xlpbi-python-load';
 const STORE = 'xlpbi-python-ide-v1';
 
 const TEMPLATES = {
-  'Hello World': { files: { 'main.py': 'print("Hello, Python! 🐍")\n\nname = "Student"\nprint(f"Welcome, {name}!")\n' } },
+  'Hello World': { files: { 'main.py': 'print("Hello, Python! ")\n\nname = "Student"\nprint(f"Welcome, {name}!")\n' } },
   'input() example': { files: { 'main.py': 'name = input("Enter your name: ")\nage = int(input("Enter your age: "))\nprint(f"Hello {name}, next year you will be {age + 1}")\n' }, stdin: 'Asha\n21\n' },
   'Functions & lists': { files: { 'main.py': 'def average(marks):\n    return sum(marks) / len(marks)\n\nstudents = {"Riya": [88, 92, 79], "Aman": [72, 65, 80], "Neha": [95, 90, 98]}\n\nfor name, marks in students.items():\n    avg = average(marks)\n    grade = "A" if avg >= 85 else "B" if avg >= 70 else "C"\n    print(f"{name:<6} avg={avg:6.2f} grade={grade}")\n\ntopper = max(students, key=lambda n: average(students[n]))\nprint("Topper:", topper)\n' } },
   'OOP with modules (2 files)': {
@@ -105,28 +106,28 @@ export default function PythonIDE() {
     <div className="jide pyide">
       <div className="jide-top">
         <div className="jide-title">
-          <span className="jide-logo py">🐍</span>
+          <span className="jide-logo py"><Ico e="🐍" /></span>
           <b>Python IDE</b>
           <span className="jide-sub">PyCharm style · {status === 'loading' ? 'loading Python…' : status === 'error' ? 'Python failed to load (needs internet once)' : `Python ${version} in your browser`}{title ? ` · ${title}` : ''}</span>
         </div>
         <div className="jide-actions">
           <select value="" onChange={(e) => loadTemplate(e.target.value)}>
-            <option value="">📂 Load example…</option>
+            <option value="">Load example…</option>
             {Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
           </select>
           <button id="py-run-btn" className="btn small primary" onClick={run} disabled={status !== 'ready'} title="Shift+F10 / Ctrl+Enter">▶ Run 'main'</button>
           <button className="btn small" onClick={stop} disabled={status !== 'running'}>■ Stop</button>
-          <button className="btn small" onClick={download}>⬇ Download .py</button>
+          <button className="btn small" onClick={download}><Ico e="⬇" /> Download .py</button>
         </div>
       </div>
 
       <div className="jide-body">
         <aside className="jide-tree">
           <div className="jide-tree-head"><span>Project</span><button className="link-btn" onClick={addFile}>＋ File</button></div>
-          <div className="jide-node">▾ 📁 my_python_project</div>
+          <div className="jide-node">▾ <Ico e="📁" /> my_python_project</div>
           {names.map((n) => (
             <div key={n} className={`jide-file ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}>
-              <span>🐍 {n}</span>
+              <span><Ico e="🐍" /> {n}</span>
               {n !== 'main.py' && <button className="link-btn" onClick={(e) => { e.stopPropagation(); delFile(n); }}>✕</button>}
             </div>
           ))}
@@ -135,7 +136,7 @@ export default function PythonIDE() {
 
         <section className="jide-editor">
           <div className="pg-tabs">
-            {names.map((n) => <button key={n} className={`pg-tab ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}>🐍 {n}</button>)}
+            {names.map((n) => <button key={n} className={`pg-tab ${n === cur ? 'on' : ''}`} onClick={() => setActive(n)}><Ico e="🐍" /> {n}</button>)}
           </div>
           <div className="pg-monaco">
             {fallback ? (
@@ -151,7 +152,7 @@ export default function PythonIDE() {
 
         <section className="jide-bottom">
           <div className="jide-ptabs">
-            {[['run', '▶ Run'], ['input', `⌨ Input (stdin)${stdin.trim() ? ' •' : ''}`], ['expected', '📋 Expected Output']].map(([k, l]) => (
+            {[['run', '▶ Run'], ['input', `⌨ Input (stdin)${stdin.trim() ? ' •' : ''}`], ['expected', 'Expected Output']].map(([k, l]) => (
               <button key={k} className={panel === k ? 'on' : ''} onClick={() => setPanel(k)}>{l}</button>
             ))}
             {expected && actual && <span className={`py-match ${matches ? 'ok' : 'bad'}`}>{matches ? '✓ Output matches expected' : '≠ Output differs from expected'}</span>}

@@ -10,6 +10,7 @@ import { useStudy, studyRead, dayKey, addDays, computeStats, levelOf, courseComp
 import { autoData } from './CareerTools.jsx';
 import { downloadFile, esc, fmtTime } from '../components/careerUtils.js';
 
+import Ico from '../components/Ico.jsx';
 const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
 /* ============================== Diagnostic test + adaptive path ============================== */
@@ -65,7 +66,7 @@ export function DiagnosticTest() {
   if (test && !test.done) {
     return (
       <div>
-        <div className="row-btns"><button className="btn" onClick={() => setTest(null)}>← Cancel</button><span className={`timer ${left < 120 ? 'low' : ''}`}>{left > 0 ? `⏱ ${fmtTime(left)}` : "⏰ Time's up — submit now"}</span></div>
+        <div className="row-btns"><button className="btn" onClick={() => setTest(null)}>← Cancel</button><span className={`timer ${left < 120 ? 'low' : ''}`}>{left > 0 ? `${fmtTime(left)}` : <><Ico e="⏰" /> Time's up — submit now</>}</span></div>
         <h2>{tracks[test.course].name}: diagnostic test</h2>
         <p className="muted">{test.qs.length} questions from every module. Answer honestly — skip guessing; it only decides where you should start.</p>
         <Quiz questions={test.qs} onFinish={finish} origin={{ label: `Diagnostic · ${tracks[test.course].short}`, kind: 'test' }} />
@@ -75,7 +76,7 @@ export function DiagnosticTest() {
   return (
     <div>
       <div className="page-head">
-        <h1>🧭 Diagnostic Test &amp; Learning Path</h1>
+        <h1><Ico e="🧭" /> Diagnostic Test &amp; Learning Path</h1>
         <p className="muted">A 20-minute test with questions from every module of a course. It finds what you already know and builds your personal path: skip strong modules, revise average ones and focus on weak ones.</p>
         <div className="quiz-settings">
           <label>Course <select value={course} onChange={(e) => { setCourse(e.target.value); setTest(null); }}>{courses.map((k) => <option key={k} value={k}>{tracks[k].name}</option>)}</select></label>
@@ -178,7 +179,7 @@ export function PortfolioBuilder() {
   return (
     <div>
       <div className="page-head">
-        <h1>🌐 Portfolio Website Generator</h1>
+        <h1><Ico e="🌐" /> Portfolio Website Generator</h1>
         <p className="muted">One click turns your resume, projects and certificates into an animated, responsive portfolio website. Download one <code className="ic">index.html</code> and publish it free on GitHub Pages or Netlify.</p>
         <div className="row-btns">
           <button className="btn primary" onClick={() => downloadFile('index.html', html)}><Download size={15} /> Download index.html</button>
@@ -241,7 +242,7 @@ export function WeeklyReport() {
   return (
     <div className="wr">
       <div className="page-head no-print">
-        <h1>📊 Weekly Progress Report</h1>
+        <h1><Ico e="📊" /> Weekly Progress Report</h1>
         <p className="muted">A one-page summary of the week for you, your parents or your teacher. Print it or save it as PDF.</p>
         <div className="row-btns">
           <button className="btn" onClick={() => setWeekOff(weekOff + 1)}>← Previous week</button>
@@ -254,7 +255,7 @@ export function WeeklyReport() {
           <div><div className="cert-brand">UpSkillr</div><h2>Weekly Progress Report</h2><div className="muted">{user?.name || 'Student'} · {fmt(start)} – {fmt(end)}</div></div>
           <div className="wr-lv"><b>Level {lv.level}</b><span>{lv.name} · {s.xp} XP</span></div>
         </div>
-        <div className="wr-tiles">{tiles.map(([i, v, l]) => <div key={l}><span>{i}</span><b>{v}</b><small>{l}</small></div>)}</div>
+        <div className="wr-tiles">{tiles.map(([i, v, l]) => <div key={l}><span><Ico e={i} /></span><b>{v}</b><small>{l}</small></div>)}</div>
         <h3>Daily activity</h3>
         <div className="wr-bars">{perDay.map((x) => <div key={x.d}><i style={{ height: `${(x.n / max) * 100}%` }} title={`${x.n} activities`} /><span>{new Date(`${x.d}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'short' })}</span><small>{x.n}</small></div>)}</div>
         <div className="grid2">
@@ -264,7 +265,7 @@ export function WeeklyReport() {
           </div>
           <div>
             <h3>Topics to focus on</h3>
-            {weak.length ? <ul className="small">{weak.map(([src, n]) => <li key={src}>{src} <span className="muted">({n} mistakes)</span></li>)}</ul> : <p className="muted">No open mistakes. 🎉</p>}
+            {weak.length ? <ul className="small">{weak.map(([src, n]) => <li key={src}>{src} <span className="muted">({n} mistakes)</span></li>)}</ul> : <p className="muted">No open mistakes. <Ico e="🎉" /></p>}
           </div>
         </div>
         <h3>Course progress</h3>
