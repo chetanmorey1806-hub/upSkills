@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Inline } from './RichText.jsx';
+import { recordAnswers } from '../study.js';
 
 // Deterministic option shuffle so the correct answer isn't always in the same position.
 // Same question => same order every time. Questions whose order matters are left as-is.
@@ -14,7 +15,8 @@ function shuffleQuestion(q) {
 }
 
 // questions: [{question, options, answer, explanation, source?}]
-export default function Quiz({ questions: rawQuestions, onFinish, title }) {
+// origin: { label, link, kind: 'quiz' | 'test' } – used by the Mistake Notebook / revision
+export default function Quiz({ questions: rawQuestions, onFinish, title, origin }) {
   const questions = rawQuestions.map(shuffleQuestion);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -23,6 +25,7 @@ export default function Quiz({ questions: rawQuestions, onFinish, title }) {
 
   const submit = () => {
     setSubmitted(true);
+    try { recordAnswers(questions, answers, origin); } catch { /* never block the quiz */ }
     onFinish && onFinish(score, questions.length);
   };
   const retry = () => {

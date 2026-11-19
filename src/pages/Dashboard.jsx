@@ -10,6 +10,7 @@ import { useAuth, firstName } from '../auth.js';
 import { codingProblems, javaProjects, softSkillModules, JAVA_TRACKS } from '../data/javaCareer.js';
 import { useLocalState, downloadFile } from '../components/careerUtils.js';
 import ProgressBar from '../components/ProgressBar.jsx';
+import { StudyTodayCard } from './StudyPages.jsx';
 import { TrackIcon } from '../components/Icons.jsx';
 
 const readJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -221,6 +222,8 @@ export default function Dashboard() {
         </div>
         {lastInfo ? <Link className="btn primary" to={`/track/${last.track}/${last.id}`}>Resume <ArrowRight size={15} /></Link> : <Link className="btn primary" to="/home">Browse courses <ArrowRight size={15} /></Link>}
       </div>
+
+      <StudyTodayCard />
 
       {/* KPI tiles */}
       <div className="db-tiles">

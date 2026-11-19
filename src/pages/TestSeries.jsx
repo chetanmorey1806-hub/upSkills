@@ -146,7 +146,7 @@ function McqRun({ test, onExit }) {
           <p>You scored <b>{done.score}/{done.total} ({done.pct}%)</b>. Review the explanations below, then retake the test or try the mock interview.</p>
         </div>
       )}
-      <Quiz questions={qs} onFinish={finish} />
+      <Quiz questions={qs} onFinish={finish} origin={{ label: test.label, kind: 'test' }} />
     </div>
   );
 }

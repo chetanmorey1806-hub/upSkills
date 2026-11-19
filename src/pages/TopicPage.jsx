@@ -2,7 +2,7 @@ import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { API_LOAD_KEY } from './ApiLab.jsx';
 import { MONGO_LOAD_KEY } from './MongoLab.jsx';
 import { openInPlayground } from '../components/playgroundRuntime.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { tracks, findTopic, topicKey, topicLabel, isPbi, isWeb, isJava, isPython, isMySQL, isDotnet, isAI, isSoft } from '../data/index.js';
 import { AI_LOAD_KEY } from './AiPromptLab.jsx';
 import { ExternalLink, Sparkles } from 'lucide-react';
@@ -19,6 +19,8 @@ import DataTable from '../components/DataTable.jsx';
 import Quiz from '../components/Quiz.jsx';
 import VideoLesson from '../components/VideoLesson.jsx';
 import DayTask from '../components/DayTask.jsx';
+import LessonStudyTools from '../components/LessonStudyTools.jsx';
+import { logEvent, addCardToRevision, useStudy, hashText } from '../study.js';
 
 const TABS = [
   ['video', '🎬 Video'],
@@ -63,6 +65,8 @@ export default function TopicPage() {
   const [qaFilter, setQaFilter] = useState('All');
   const [openAll, setOpenAll] = useState(false);
   const navigate = useNavigate();
+  const contentRef = useRef(null);
+  const [srs] = useStudy('srs', {});
   useEffect(() => {
     if (!found) return;
     try { localStorage.setItem('xlpbi-last-topic', JSON.stringify({ track, id, at: new Date().toISOString() })); } catch { /* ignore */ }
@@ -118,7 +122,7 @@ export default function TopicPage() {
           {t.duration && <span>⏱ {t.duration}</span>}
           {p.quiz[key] != null && <span>🏆 Best quiz: {p.quiz[key]}/{t.quiz.length}</span>}
         </div>
-        <button className={`btn ${p.done[key] ? 'success' : 'primary'}`} onClick={() => p.toggleDone(key)}>
+        <button className={`btn ${p.done[key] ? 'success' : 'primary'}`} onClick={() => { if (!p.done[key]) logEvent('lesson', { key }); p.toggleDone(key); }}>
           {p.done[key] ? '✓ Completed (click to undo)' : 'Mark topic as completed'}
         </button>
       </div>
@@ -147,6 +151,7 @@ export default function TopicPage() {
         ))}
       </div>
 
+      <div ref={contentRef} className="topic-content">
       {tab === 'video' && (
         <div>
           <VideoLesson topic={t} track={tr} label={topicLabel(track, t, index)} toolName={lab[1]} lessonKey={key} />
@@ -286,6 +291,11 @@ export default function TopicPage() {
                       title="Bookmark for revision"
                       onClick={(e) => { e.preventDefault(); p.toggleBookmark(qid); }}
                     >★</button>
+                    <button
+                      className={`star rev ${srs[`c-${hashText(qa.q)}`] ? 'on' : ''}`}
+                      title="Add to Smart Revision (asked again after 1, 3, 7 and 30 days)"
+                      onClick={(e) => { e.preventDefault(); addCardToRevision({ question: qa.q, answer: qa.a, source: `${tr.short} · ${t.title}`, link: `/track/${track}/${t.id}?tab=interview` }); }}
+                    >🔁</button>
                   </summary>
                   <div className="qa-a"><RichText text={qa.a} /></div>
                 </details>
@@ -362,8 +372,11 @@ export default function TopicPage() {
       {tab === 'task' && <DayTask track={track} lesson={t} />}
 
       {tab === 'quiz' && (
-        <Quiz key={key} questions={t.quiz} onFinish={(s) => p.setQuiz(key, s)} />
+        <Quiz key={key} questions={t.quiz} onFinish={(s) => p.setQuiz(key, s)} origin={{ label: `${tr.short} · ${t.title}`, link: `/track/${track}/${t.id}?tab=quiz` }} />
       )}
+      </div>
+
+      <LessonStudyTools lessonKey={key} lesson={t} courseName={tr.name} link={`/track/${track}/${t.id}`} contentRef={contentRef} tab={tab} />
 
       <div className="pager">
         {prev ? <Link className="btn" to={`/track/${track}/${prev.id}`}>← {topicLabel(track, prev, index - 1)}: {prev.title}</Link> : <span />}

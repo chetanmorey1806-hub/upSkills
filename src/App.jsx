@@ -36,6 +36,8 @@ import SoftSkills from './pages/SoftSkills.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import { WebProjectList, WebProjectWorkspace } from './pages/WebProjects.jsx';
+import { StudyHub, NotesPage, MistakesPage, RevisionPage, PlannerPage, AchievementsPage } from './pages/StudyPages.jsx';
+import { CertificatesPage, CertificateView, ResumeBuilder, DailyChallenge, AiCodeReview } from './pages/CareerTools.jsx';
 import { RequireAuth } from './auth.js';
 import Admin from './pages/Admin.jsx';
 import PermissionGate from './components/PermissionGate.jsx';
@@ -92,6 +94,17 @@ function AppShell() {
         <Route path="/tools/java-projects" element={<JavaProjects />} />
         <Route path="/tools/java-projects/:id" element={<JavaProjects />} />
         <Route path="/tools/soft-skills" element={<SoftSkills />} />
+        <Route path="/study" element={<StudyHub />} />
+        <Route path="/study/notes" element={<NotesPage />} />
+        <Route path="/study/mistakes" element={<MistakesPage />} />
+        <Route path="/study/revision" element={<RevisionPage />} />
+        <Route path="/study/planner" element={<PlannerPage />} />
+        <Route path="/study/achievements" element={<AchievementsPage />} />
+        <Route path="/study/certificates" element={<CertificatesPage />} />
+        <Route path="/study/certificate/:track" element={<CertificateView />} />
+        <Route path="/study/resume" element={<ResumeBuilder />} />
+        <Route path="/study/challenge" element={<DailyChallenge />} />
+        <Route path="/tools/ai-code-review" element={<AiCodeReview />} />
         <Route path="/tools/web-projects" element={<WebProjectList />} />
         <Route path="/tools/web-projects/:id" element={<WebProjectWorkspace />} />
         <Route path="/tools/test-series" element={<TestSeries />} />

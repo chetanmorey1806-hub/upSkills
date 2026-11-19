@@ -6,6 +6,8 @@ import {
   Brain, ListChecks, Library, GraduationCap, PlayCircle, Film, Shield } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useAuth, logout, firstName } from '../auth.js';
+import FocusPill from './FocusTimer.jsx';
+import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
 import { tracks, trackGroups } from '../data/index.js';
 
@@ -27,6 +29,21 @@ function buildMenu() {
   return [
     { to: '/home', label: 'Home', icon: Home },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {
+      key: 'study', label: 'Study', icon: NotebookPen,
+      items: [
+        { to: '/study', label: 'Study Hub', icon: LayoutDashboard },
+        { to: '/study/revision', label: 'Smart Revision', icon: Repeat },
+        { to: '/study/mistakes', label: 'Mistake Notebook', icon: AlertTriangle },
+        { to: '/study/notes', label: 'My Notes', icon: NotebookPen },
+        { to: '/study/planner', label: 'Planner & Focus Timer', icon: CalendarDays },
+        { to: '/study/challenge', label: 'Daily Coding Challenge', icon: CodeXml },
+        { to: '/study/achievements', label: 'XP & Badges', icon: Medal },
+        { to: '/study/certificates', label: 'Certificates', icon: Award },
+        { to: '/study/resume', label: 'Resume Builder', icon: FileUser },
+        { to: '/tools/ai-code-review', label: 'AI Code Review', icon: Bot },
+      ],
+    },
     {
       key: 'courses', label: 'Courses', icon: BookOpen,
       items: [
@@ -420,6 +437,7 @@ export default function Layout({ children }) {
         </div>
       </footer>
 
+      <FocusPill />
       <button
         className={`to-top ${scrolled && progress > 0.15 ? 'show' : ''}`}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

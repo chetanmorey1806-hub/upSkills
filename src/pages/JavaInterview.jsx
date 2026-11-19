@@ -67,6 +67,7 @@ function TestSeries({ results, setResults }) {
         <Quiz
           key={runId}
           questions={active.questions}
+          origin={{ label: active.title, kind: 'test' }}
           onFinish={(score, total) => {
             setDone(true);
             setResults((r) => ({ ...r, tests: [...r.tests, { id: active.id, title: active.title, score, total, secs: active.minutes * 60 - left, date: new Date().toISOString() }] }));
