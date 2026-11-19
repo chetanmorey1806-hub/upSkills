@@ -35,7 +35,7 @@ export default function AuthPage({ mode }) {
   const nav = useNavigate();
   const loc = useLocation();
   const isLogin = mode === 'login';
-  const from = loc.state?.from && !['/login', '/register'].includes(loc.state.from) ? loc.state.from : '/dashboard';
+  const from = loc.state?.from && !['/login', '/register'].includes(loc.state.from) ? loc.state.from : '/today';
   const [f, setF] = useState({ name: '', username: loc.state?.username || '', email: '', password: '', confirm: '' });
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);

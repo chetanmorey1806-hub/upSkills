@@ -43,8 +43,11 @@ import Visualizers from './pages/Visualizers.jsx';
 import { ExplainError, CodePuzzles, QuizBattle } from './pages/PracticeGames.jsx';
 import { AptitudeHome, AptitudeTopic, CompanyKits, VideoInterview } from './pages/PlacementTools.jsx';
 import { DiagnosticTest, PortfolioBuilder, WeeklyReport } from './pages/GrowthTools.jsx';
+import TodayPage from './pages/TodayPage.jsx';
+import { ApplicationTracker, OfferComparison, InterviewJournal } from './pages/CareerHub.jsx';
 import { RequireAuth } from './auth.js';
 import Admin from './pages/Admin.jsx';
+import Profile from './pages/Profile.jsx';
 import PermissionGate from './components/PermissionGate.jsx';
 import { loadPublishedConfig } from './permissions.js';
 const DevVerifyTasks = import.meta.env.DEV ? lazy(() => import('./pages/DevVerifyTasks.jsx')) : null;
@@ -67,6 +70,7 @@ function AppShell() {
       <PermissionGate>
       <Routes>
         <Route path="/admin" element={<Admin />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/home" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
@@ -123,6 +127,10 @@ function AppShell() {
         <Route path="/study/diagnostic" element={<DiagnosticTest />} />
         <Route path="/study/portfolio" element={<PortfolioBuilder />} />
         <Route path="/study/report" element={<WeeklyReport />} />
+        <Route path="/today" element={<TodayPage />} />
+        <Route path="/career/applications" element={<ApplicationTracker />} />
+        <Route path="/career/offers" element={<OfferComparison />} />
+        <Route path="/career/experiences" element={<InterviewJournal />} />
         <Route path="/tools/web-projects" element={<WebProjectList />} />
         <Route path="/tools/web-projects/:id" element={<WebProjectWorkspace />} />
         <Route path="/tools/test-series" element={<TestSeries />} />

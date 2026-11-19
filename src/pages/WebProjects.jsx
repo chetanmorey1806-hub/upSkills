@@ -6,6 +6,7 @@ import { runAllTests, previewDoc, standaloneDoc } from '../components/webProject
 import { useProjectState, readProject, projectProgress, projectScore } from '../projectStore.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { Inline } from '../components/RichText.jsx';
+import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
 const FILES = {
   web: [['html', 'index.html', 'html', '🟧'], ['css', 'style.css', 'css', '🟦'], ['js', 'script.js', 'javascript', '🟨']],
@@ -331,10 +332,10 @@ export function WebProjectWorkspace() {
           {st.submission && (
             <div className="certificate" id="certificate">
               <div className="cert-inner">
-                <div className="cert-brand">UpSkillr</div>
+                <div className="cert-brand">UpSkillr</div><CertPhoto />
                 <div className="cert-title">Certificate of Project Completion</div>
                 <p>This certifies that</p>
-                <div className="cert-name">{st.name || 'Student'}</div>
+                <div className="cert-name"><CertName fallback={st.name} /></div>
                 <p>successfully built the web project</p>
                 <div className="cert-project">{title}</div>
                 <p>with a final score of <b>{st.submission.score}/100</b>{project.tests ? ` (${st.submission.passed}/${st.submission.total} automated checks passing)` : ''}</p>

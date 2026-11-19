@@ -8,6 +8,7 @@ import { useProjectState, projectProgress, projectScore } from '../projectStore.
 import { CUSTOM_PROJECT } from './Projects.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { Inline } from '../components/RichText.jsx';
+import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
 const TABS = [['brief', '📋 Brief'], ['code', '💻 Code'], ['tests', '✅ Tests'], ['submit', '🏁 Submit']];
 const ICON = { PASS: '✅', FAIL: '❌', ERROR: '💥', TODO: '⏳' };
@@ -307,10 +308,10 @@ export default function ProjectWorkspace() {
           {st.submission && (
             <div className="certificate" id="certificate">
               <div className="cert-inner">
-                <div className="cert-brand">UpSkillr</div>
+                <div className="cert-brand">UpSkillr</div><CertPhoto />
                 <div className="cert-title">Certificate of Project Completion</div>
                 <p>This certifies that</p>
-                <div className="cert-name">{st.name || 'Student'}</div>
+                <div className="cert-name"><CertName fallback={st.name} /></div>
                 <p>successfully built the project</p>
                 <div className="cert-project">{custom ? (st.custom?.title || 'Own Project') : project.title}</div>
                 <p>with a final score of <b>{st.submission.score}/100</b>{project.tests ? ` (${st.submission.passed}/${st.submission.total} automated tests passing)` : ''}</p>

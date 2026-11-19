@@ -4,6 +4,7 @@ import { tracks, topicKey, topicLabel } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { TrackIcon } from '../components/Icons.jsx';
+import { CourseCover, RecordedVideos } from '../components/MediaBits.jsx';
 
 function TopicRow({ track, t, x, idx, done, quiz }) {
   const k = topicKey(track, x.id);
@@ -51,6 +52,8 @@ export default function TrackPage() {
 
   return (
     <div>
+      <div className="track-banner"><CourseCover track={t} height={190} wide /></div>
+      <RecordedVideos track={track} />
       <div className="page-head" style={{ borderLeftColor: t.color }}>
         <h1 className="with-icon"><span className="track-icon" style={{ color: t.color }}><TrackIcon track={track} size={26} /></span> {t.name}</h1>
         <p className="muted">{t.tagline}</p>

@@ -4,6 +4,7 @@ import { buildScenes, totalSeconds, fmtTime } from '../video/scenes.js';
 import { drawFrame, W, H } from '../video/draw.js';
 import { LANGS } from '../video/i18n.js';
 import { translateTexts, cached, engineFor, prepareBuiltIn } from '../video/translate.js';
+import { subjectOf, pictureFor, findPicture, loadImage } from '../video/images.js';
 
 const PREF_KEY = 'upskillr-video-prefs';
 
@@ -45,14 +46,53 @@ function loadPrefs() {
   try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') }; } catch { return DEFAULT_PREFS; }
 }
 
-// pick the best installed voice for a language
-function autoVoice(voices, lang) {
+// Rank installed voices: Indian accent first, then natural/neural voices; robotic engines last.
+const ROBOTIC = /espeak|festival|pico|mbrola|flite|klatt|\bspd\b/i;
+const NATURAL = /natural|neural|online|wavenet|enhanced|premium/i;
+const INDIAN_NAMES = /neerja|prabhat|heera|ravi|swara|madhur|aarohi|manohar|kalpana|hemant|lekha|rishi|veena|aditi|kajal/i;
+export function voiceScore(v, lang) {
   const order = LANGS.find((l) => l.id === lang)?.tts || ['en'];
-  for (const code of order) {
-    const list = voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(code.toLowerCase()));
-    if (list.length) return list.find((v) => /natural|online|neural/i.test(v.name)) || list.find((v) => /google/i.test(v.name)) || list[0];
+  const code = v.lang.toLowerCase().replace('_', '-');
+  const pos = order.findIndex((c) => code.startsWith(c.toLowerCase()));
+  if (pos < 0) return -1;
+  let sc = (order.length - pos) * 100;
+  if (NATURAL.test(v.name)) sc += 60;
+  if (INDIAN_NAMES.test(v.name)) sc += 40;
+  if (/google/i.test(v.name)) sc += 25;
+  if (/microsoft|apple|samsung/i.test(v.name)) sc += 15;
+  if (ROBOTIC.test(v.name)) sc -= 250;
+  return sc;
+}
+function autoVoice(voices, lang) {
+  let best = null;
+  let bestScore = -1;
+  voices.forEach((v) => { const sc = voiceScore(v, lang); if (sc > bestScore) { best = v; bestScore = sc; } });
+  return best;
+}
+export const isNaturalVoice = (v) => !!v && NATURAL.test(v.name) && !ROBOTIC.test(v.name);
+
+// Make lesson text sound like a person reading it, not a machine reading symbols.
+export function speakable(text, lang) {
+  let t = String(text || '');
+  t = t.replace(/UpSkillr/g, 'Up Skiller')
+    .replace(/https?:\/\/\S+/g, 'the link')
+    .replace(/\s*(->|=>|→|⇒)\s*/g, ', then ')
+    .replace(/[“”"]/g, '')
+    .replace(/\s*[|•▸►]\s*/g, ', ')
+    .replace(/\.{3}|…/g, ', ');
+  if (lang === 'en') {
+    t = t.replace(/\be\.g\.,?/gi, 'for example,')
+      .replace(/\bi\.e\.,?/gi, 'that is,')
+      .replace(/\betc\./gi, 'etcetera.')
+      .replace(/\bvs\.?(?=\s)/gi, 'versus')
+      .replace(/\s&\s/g, ' and ')
+      .replace(/(\w)\/(\w)/g, '$1 or $2')
+      .replace(/\bw\/o\b/gi, 'without')
+      .replace(/\bapprox\.?/gi, 'approximately')
+      .replace(/\bNOT\b/g, 'not')
+      .replace(/\bDOES\b/g, 'does');
   }
-  return null;
+  return t.replace(/\s{2,}/g, ' ').trim();
 }
 
 /**
@@ -78,6 +118,9 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
   const [engine, setEngine] = useState('none');
   const [busy, setBusy] = useState('');
   const [, force] = useState(0);
+  const subject = useMemo(() => subjectOf(track), [track]);
+  const photos = useRef(new Map()); // scene index -> { url, title, img } | null
+  const [photoTick, setPhotoTick] = useState(0);
 
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
@@ -86,6 +129,29 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
 
   const hasSpeech = typeof window !== 'undefined' && 'speechSynthesis' in window;
   const scene = scenes[Math.min(idx, scenes.length - 1)];
+  useEffect(() => { photos.current = new Map(); }, [scenes]);
+  // fetch a real picture for a scene: the slide's own candidates first, then the course's picture pool
+  // (rotated by slide number so slides take turns); never the same picture as the slide just before/after
+  const want = useCallback((sc) => {
+    if (!sc || photos.current.has(sc.index)) return;
+    photos.current.set(sc.index, null);
+    const req = pictureFor(sc, subject);
+    if (!req) return;
+    const map = photos.current;
+    Promise.all([
+      req.kind === 'slide' ? findPicture(req) : findPicture({ kind: 'subject', subject }),
+      findPicture({ kind: 'pool', subject }),
+    ]).then(async ([own, pool]) => {
+      const near = new Set([-1, 1].map((d) => map.get(sc.index + d)?.url).filter(Boolean));
+      const k = pool.length ? sc.index % pool.length : 0;
+      const list = [...own, ...pool.slice(k), ...pool.slice(0, k)].filter((c, i, all) => c?.url && all.findIndex((x) => x.url === c.url) === i);
+      for (const ph of list) {
+        if (near.has(ph.url)) continue;
+        const img = await loadImage(ph.url); // eslint-disable-line no-await-in-loop
+        if (img && map === photos.current) { map.set(sc.index, { ...ph, img }); setPhotoTick((n) => n + 1); return; }
+      }
+    });
+  }, [subject]);
   const doneBefore = useMemo(() => scenes.slice(0, idx).reduce((a, s) => a + s.est, 0), [scenes, idx]);
   const voice = useMemo(() => voices.find((v) => v.name === prefs.voices?.[lang]) || autoVoice(voices, lang), [voices, prefs.voices, lang]);
 
@@ -132,17 +198,31 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
     const list = s.units.slice(s.unit);
     if (!list.length) { s.speaking = false; return; }
     s.speaking = true;
-    list.forEach((u, k) => {
-      const ut = new SpeechSynthesisUtterance(u.text);
+    const natural = isNaturalVoice(voice);
+    // one sentence at a time with a short breath between sentences and a longer one between points
+    const say = (k) => {
+      if (token !== s.token) return;
+      if (k >= list.length) { s.speaking = false; return; }
+      const u = list[k];
+      const ut = new SpeechSynthesisUtterance(speakable(u.text, lang));
       if (voice) ut.voice = voice;
       ut.lang = voice?.lang || (lang === 'en' ? 'en-IN' : `${lang}-IN`);
-      ut.rate = Math.min(2, Math.max(0.5, prefs.speed));
+      ut.rate = Math.min(2, Math.max(0.5, prefs.speed * (natural ? 1 : 0.92)));
+      ut.pitch = 1;
       ut.onstart = () => { if (token === s.token) s.unit = from + k; };
-      const end = () => { if (token === s.token && k === list.length - 1) s.speaking = false; };
-      ut.onend = end;
-      ut.onerror = end;
+      let done = false;
+      const next = () => {
+        if (done) return;
+        done = true;
+        const newPoint = list[k + 1] && list[k + 1].item !== u.item;
+        const gap = (newPoint ? 450 : /[.!?।]$/.test(u.text.trim()) ? 220 : 120) / Math.max(0.5, prefs.speed);
+        setTimeout(() => say(k + 1), gap);
+      };
+      ut.onend = next;
+      ut.onerror = next;
       window.speechSynthesis.speak(ut);
-    });
+    };
+    say(0);
   }, [hasSpeech, prefs.voice, prefs.speed, voice, lang, recording, unitsOf]);
 
   // start a scene: translate first (if needed), then speak; prefetch the next scenes
@@ -188,14 +268,16 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
       globalProgress: (doneBefore + Math.min(s.elapsed, scene.est)) / total,
       caption: prefs.captions || recording ? cur.text || '' : '',
       time: s.time, part, partText,
+      photo: photos.current.get(scene.index) || null,
     });
-  }, [scene, prefs.captions, prefs.voice, recording, hasSpeech, color, track, label, topic.title, idx, scenes.length, doneBefore, total, unitsOf, lang]);
+  }, [scene, prefs.captions, prefs.voice, recording, hasSpeech, color, track, label, topic.title, idx, scenes.length, doneBefore, total, unitsOf, lang, photoTick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // scene change
   useEffect(() => {
     st.current.elapsed = 0;
     st.current.units = scene ? unitsOf(scene) : [];
     st.current.unit = 0;
+    want(scene); want(scenes[idx + 1]); want(scenes[idx + 2]);
     if (playing && scene) startScene(scene, 0);
     render();
   }, [idx, scene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -316,6 +398,7 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
 
   const langVoices = voices.filter((v) => (LANGS.find((l) => l.id === lang)?.tts || []).some((c) => v.lang.toLowerCase().startsWith(c.toLowerCase())));
   const exactVoice = voice && voice.lang.toLowerCase().startsWith(lang);
+  const indianNatural = !!voice && voice.lang.toLowerCase().replace('_', '-').startsWith(lang === 'en' ? 'en-in' : lang) && isNaturalVoice(voice);
   const engineNote = lang === 'en' ? null
     : engine === 'builtin' ? '✓ Lesson content is translated on your device (free, built into your browser).'
       : engine === 'claude' ? '✓ Lesson content is translated with your Claude API key (from the AI tools).'
@@ -383,14 +466,16 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
             ? <button className="btn small" onClick={cancelRecord}>■ Stop recording &amp; save</button>
             : <button className="btn small" onClick={record} title="Plays the whole video once and saves it as a video file"><Download size={14} /> Download video</button>}
         </div>
-        {(engineNote || (hasSpeech && voices.length > 0 && !exactVoice)) && (
+        {(engineNote || (hasSpeech && voices.length > 0 && !indianNatural)) && (
           <div className="vl-notes">
             {engineNote && <p className="muted small">{engineNote}</p>}
-            {hasSpeech && voices.length > 0 && !exactVoice && (
+            {hasSpeech && voices.length > 0 && !indianNatural && (
               <p className="muted small">
-                {voice
-                  ? `⚠ No ${LANGS.find((l) => l.id === lang)?.label} voice is installed, so “${voice.name}” is used. `
-                  : '⚠ No voice for this language is installed, subtitles are shown instead. '}
+                {!voice
+                  ? '⚠ No voice for this language is installed, subtitles are shown instead. '
+                  : !exactVoice
+                    ? `⚠ No ${LANGS.find((l) => l.id === lang)?.label} voice is installed, so “${voice.name}” is used. `
+                    : `🎙 Now speaking with “${voice.name}”. For the most natural Indian teacher voice, open UpSkillr in Microsoft Edge (voices Neerja / Prabhat for English, Swara for Hindi, Aarohi for Marathi). `}
                 Microsoft Edge has natural Indian voices for English, Hindi and Marathi (e.g. Neerja, Swara, Aarohi). On Windows you can also add them in Settings → Time &amp; language → Speech.
               </p>
             )}

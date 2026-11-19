@@ -17,6 +17,7 @@ import { downloadFile, esc } from '../components/careerUtils.js';
 import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
 import ApiKeyBox, { useApiKey } from '../ai/ApiKeyBox.jsx';
 import { streamClaude, describeError, stopNote } from '../ai/claudeClient.js';
+import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
 const readLS = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 
@@ -79,7 +80,7 @@ export function CertificateView() {
       <div className="row-btns no-print"><Link className="btn" to="/study/certificates">← All certificates</Link><button className="btn primary" onClick={() => window.print()}><Printer size={15} /> Print / Save as PDF</button></div>
       <div className="certificate course-cert" id="certificate">
         <div className="cert-inner">
-          <div className="cert-brand">UpSkillr</div>
+          <div className="cert-brand">UpSkillr</div><CertPhoto />
           <div className="cert-title">Certificate of Course Completion</div>
           <p>This certifies that</p>
           <div className="cert-name">{name}</div>

@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './styles.css';
+import { applyPrefs } from './uiPrefs.js';
+
+applyPrefs();
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyPrefs());
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

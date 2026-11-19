@@ -112,19 +112,19 @@ export function buildScenes(t, tr, { toolName = 'Practice Tool', label = '', lan
     const { text, codes } = splitFences(th.content || '');
     const pages = paginate(text);
     pages.forEach((pg, pi) => add({
-      type: 'text', art: 'book', chapter: ch('Theory', i + 1), heading: th.heading + (pages.length > 1 ? `  (${pi + 1}/${pages.length})` : ''), body: pg,
+      type: 'text', art: 'book', chapter: ch('Theory', i + 1), heading: th.heading + (pages.length > 1 ? `  (${pi + 1}/${pages.length})` : ''), body: pg, photoHeading: th.heading,
       say: [...(pi === 0 ? [lang === 'en' ? en(th.heading) : own(X.theory(plain(th.heading)))] : []), en(pg)],
     }));
     if (th.points?.length) {
       const items = th.points.slice(0, 7);
-      add({ type: 'bullets', art: 'bulb', chapter: ch('Theory', i + 1), heading: `${th.heading}: ${L.keyPoints}`, items, reveal: true, say: [own(X.keyPoints), ...items.map(en)] });
+      add({ type: 'bullets', art: 'bulb', chapter: ch('Theory', i + 1), heading: `${th.heading}: ${L.keyPoints}`, photoHeading: th.heading, items, reveal: true, say: [own(X.keyPoints), ...items.map(en)] });
     }
     const syntax = th.syntax || codes[0];
     if (syntax) {
       add({ type: 'code', chapter: ch('Theory', i + 1), heading: th.syntax ? L.syntax : th.heading, code: syntax, file: 'syntax',
         say: [own(X.syntax)], minDur: Math.min(14, 4 + syntax.split('\n').length * 0.6) });
     }
-    if (th.tip) add({ type: 'tip', chapter: ch('Theory', i + 1), heading: L.proTip, body: th.tip, say: [own(X.tip), en(th.tip)] });
+    if (th.tip) add({ type: 'tip', chapter: ch('Theory', i + 1), heading: L.proTip, photoHeading: th.heading, body: th.tip, say: [own(X.tip), en(th.tip)] });
   });
 
   // 4. Practical: how to practise (pipeline graphic)
@@ -158,7 +158,7 @@ export function buildScenes(t, tr, { toolName = 'Practice Tool', label = '', lan
         minDur: Math.min(30, 8 + lines * 0.45),
       });
     } else if (ex.explanation) {
-      add({ type: 'text', art: 'book', chapter: ch('Example', i + 1), heading: ex.title, body: ex.explanation, say: [en(ex.explanation)] });
+      add({ type: 'text', art: 'book', chapter: ch('Example', i + 1), heading: ex.title, photoHeading: ex.title, body: ex.explanation, say: [en(ex.explanation)] });
     }
   });
 

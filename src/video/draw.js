@@ -322,21 +322,19 @@ function chrome(ctx, meta) {
   rg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg;
   ctx.fillRect(0, 0, W, H);
-  // floating shapes (animated)
+  // soft light sweep + vignette (calm, studio-like background)
   const tm = meta.time || 0;
-  for (let k = 0; k < 7; k += 1) {
-    const r = 40 + ((k * 37) % 90);
-    const span = W + 2 * r;
-    const bx = ((((k * 211 + tm * (8 + k * 2) * (k % 2 ? 1 : -1)) % span) + span) % span) - r;
-    const by = 110 + ((k * 97) % 480) + Math.sin(tm * 0.4 + k) * 24;
-    ctx.fillStyle = k % 3 === 0 ? `${meta.color}14` : k % 3 === 1 ? 'rgba(34,211,238,.05)' : 'rgba(99,102,241,.06)';
-    if (k % 2) { ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill(); }
-    else { ctx.save(); ctx.translate(bx, by); ctx.rotate(tm * 0.1 + k); rr(ctx, -r * 0.7, -r * 0.7, r * 1.4, r * 1.4, r * 0.3); ctx.fill(); ctx.restore(); }
-  }
-  // subtle grid
-  ctx.strokeStyle = 'rgba(255,255,255,.025)';
-  ctx.lineWidth = 1;
-  for (let gx = 0; gx < W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  const sx = W * (0.75 + Math.sin(tm * 0.08) * 0.1);
+  const sw = ctx.createRadialGradient(sx, H * 0.35, 20, sx, H * 0.35, 700);
+  sw.addColorStop(0, 'rgba(255,255,255,.045)');
+  sw.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sw;
+  ctx.fillRect(0, 0, W, H);
+  const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, W * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,.45)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
   // header
   ctx.fillStyle = 'rgba(5,8,20,.55)';
   ctx.fillRect(0, 0, W, 62);
@@ -394,13 +392,111 @@ function caption(ctx, text) {
   ctx.restore();
 }
 
+// ---------- real pictures (Wikipedia / Wikimedia Commons) ----------
+export const isLogo = (ph) => /\.svg|logo|icon|wordmark/i.test(ph?.url || '');
+
+// Photo card: rounded, shadowed, slow "Ken Burns" zoom, credit line. Logos are shown whole on a white card.
+function drawPhoto(ctx, ph, x, y, w, h, p = 0, alpha = 1) {
+  const im = ph?.img;
+  if (!im) return;
+  const iw = im.naturalWidth || im.width;
+  const ih = im.naturalHeight || im.height;
+  const logo = isLogo(ph);
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.shadowColor = 'rgba(0,0,0,.55)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 12;
+  ctx.fillStyle = logo ? '#ffffff' : '#0b1020';
+  rr(ctx, x, y, w, h, 18);
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.save();
+  rr(ctx, x, y, w, h, 18);
+  ctx.clip();
+  if (logo) {
+    const pad = 36;
+    const sc = Math.min((w - pad * 2) / iw, (h - pad * 2 - 30) / ih) * (1 + 0.04 * p);
+    ctx.drawImage(im, x + (w - iw * sc) / 2, y + (h - 30 - ih * sc) / 2, iw * sc, ih * sc);
+  } else {
+    const sc = Math.max(w / iw, h / ih) * (1.03 + 0.09 * p);
+    const dw = iw * sc;
+    const dh = ih * sc;
+    const pan = (p - 0.5) * 0.5;
+    ctx.drawImage(im, x + (w - dw) / 2 + pan * (dw - w), y + (h - dh) / 2 - pan * 0.4 * (dh - h), dw, dh);
+  }
+  // credit strip
+  const g = ctx.createLinearGradient(0, y + h - 56, 0, y + h);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,.72)');
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y + h - 56, w, 56);
+  ctx.font = `500 12.5px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  let credit = `Image: Wikipedia · ${ph.title}`;
+  while (ctx.measureText(credit).width > w - 28 && credit.length > 12) credit = `${credit.slice(0, -2)}`;
+  ctx.fillText(credit, x + 14, y + h - 16);
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.14)';
+  ctx.lineWidth = 1.5;
+  rr(ctx, x, y, w, h, 18);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Full-frame background photo behind intro / outro, darkened so the text stays readable.
+function drawHero(ctx, ph, p, color) {
+  const im = ph?.img;
+  if (!im || isLogo(ph)) return false;
+  const iw = im.naturalWidth || im.width;
+  const ih = im.naturalHeight || im.height;
+  const top = 63;
+  const bh = H - 40 - top;
+  const sc = Math.max(W / iw, bh / ih) * (1.04 + 0.08 * p);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, top, W, bh); ctx.clip();
+  ctx.filter = 'blur(1.5px) saturate(.9)';
+  ctx.drawImage(im, (W - iw * sc) / 2, top + (bh - ih * sc) / 2, iw * sc, ih * sc);
+  ctx.filter = 'none';
+  const g = ctx.createLinearGradient(0, top, 0, top + bh);
+  g.addColorStop(0, 'rgba(8,12,28,.86)');
+  g.addColorStop(0.5, 'rgba(8,12,28,.80)');
+  g.addColorStop(1, 'rgba(8,12,28,.94)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, top, W, bh);
+  const cg = ctx.createRadialGradient(140, 80, 10, 140, 80, 620);
+  cg.addColorStop(0, `${color}40`);
+  cg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = cg;
+  ctx.fillRect(0, top, W, bh);
+  ctx.font = `500 12.5px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`Image: Wikipedia · ${ph.title}`, W - 18, H - 54);
+  ctx.restore();
+  return true;
+}
+
+const PHOTO_W = 400;
+
 // ---------- scenes ----------
 const BODY_TOP = 92;
 const BODY_BOTTOM = 600;
 
 function sIntro(ctx, s, p, meta) {
-  const a = ease(p * 4);
-  drawLogo(ctx, W / 2 - 60, 110 - (1 - a) * 30, 120, a);
+  const sec = p * (s.est || 10);
+  const a = ease(sec / 1.0);
+  const hero = drawHero(ctx, meta.photo, p, meta.color);
+  if (meta.photo?.img && isLogo(meta.photo)) {
+    ctx.save(); ctx.globalAlpha = a;
+    const im = meta.photo.img; const sc = Math.min(150 / im.naturalWidth, 120 / im.naturalHeight);
+    ctx.fillStyle = '#fff'; rr(ctx, W / 2 - 95, 92 - (1 - a) * 30, 190, 150, 22); ctx.fill();
+    ctx.drawImage(im, W / 2 - (im.naturalWidth * sc) / 2, 167 - (1 - a) * 30 - (im.naturalHeight * sc) / 2, im.naturalWidth * sc, im.naturalHeight * sc);
+    ctx.restore();
+  } else drawLogo(ctx, W / 2 - 60, 110 - (1 - a) * 30, 120, a);
   ctx.save();
   ctx.globalAlpha = a;
   ctx.textAlign = 'center';
@@ -408,7 +504,7 @@ function sIntro(ctx, s, p, meta) {
   ctx.fillStyle = meta.color;
   ctx.fillText(`${s.course}${s.label ? `  ·  ${s.label}` : ''}`.toUpperCase(), W / 2, 270);
   ctx.restore();
-  const b = ease(p * 4 - 0.4);
+  const b = ease((sec - 0.5) / 1.0);
   ctx.save();
   ctx.globalAlpha = b;
   const size = fitSize(ctx, `**${s.title}**`, W - 200, 130, 46, 26, 1.2);
@@ -419,14 +515,14 @@ function sIntro(ctx, s, p, meta) {
   ctx.textBaseline = 'middle';
   lines.slice(0, 3).forEach((ln, i) => ctx.fillText(ln.words.map((w) => w.t).join(''), W / 2, 320 + i * size * 1.2));
   ctx.restore();
-  const c = ease(p * 4 - 0.9);
+  const c = ease((sec - 1.1) / 1.0);
   const ty = 320 + Math.min(3, lines.length) * size * 1.2 + 10;
   ctx.save();
   ctx.globalAlpha = c;
   const sum = s.summary.length > 220 ? `${s.summary.slice(0, 220)}…` : s.summary;
   const sl = layoutRich(ctx, sum, W - 300, 21);
   ctx.font = `400 21px ${FONT}`;
-  ctx.fillStyle = C.muted;
+  ctx.fillStyle = hero ? '#d5dcec' : C.muted;
   ctx.textAlign = 'center';
   sl.slice(0, 3).forEach((ln, i) => ctx.fillText(ln.words.map((w) => w.t).join(''), W / 2, ty + i * 30));
   // meta pills
@@ -455,8 +551,10 @@ function sBullets(ctx, s, p, meta) {
   const items = s.items || [];
   const avail = BODY_BOTTOM - y;
   const joined = items.join('\n');
-  const artW = s.art ? 280 : 0;
-  if (s.art) drawArt(ctx, s.art, W - 170, (y + BODY_BOTTOM) / 2, 190, meta.color, meta.time);
+  const photo = meta.photo?.img ? meta.photo : null;
+  const artW = photo ? PHOTO_W + 40 : s.art ? 280 : 0;
+  if (photo) drawPhoto(ctx, photo, W - 60 - PHOTO_W, y - 6, PHOTO_W, Math.min(330, BODY_BOTTOM - y - 70), p, ease((p * (s.est || 10)) / 0.9));
+  else if (s.art) drawArt(ctx, s.art, W - 170, (y + BODY_BOTTOM) / 2, 190, meta.color, meta.time);
   const size = fitSize(ctx, joined, W - 200 - artW, avail - items.length * 14, 27, 16, 1.38);
   items.forEach((it, i) => {
     const appear = s.reveal ? clamp01((p * 1.15 - (i / Math.max(1, items.length)) * 0.85) * items.length * 1.2) : 1;
@@ -483,9 +581,11 @@ function sBullets(ctx, s, p, meta) {
 function sText(ctx, s, p, meta) {
   const y = heading(ctx, s.heading, BODY_TOP + 8, { color: meta.color, size: 34 });
   const avail = BODY_BOTTOM - y;
-  const artW = s.art ? 280 : 0;
-  if (s.art) drawArt(ctx, s.art, W - 170, (y + BODY_BOTTOM) / 2, 190, meta.color, meta.time);
-  const size = fitSize(ctx, s.body, W - 140 - artW, avail, 28, 16, 1.5);
+  const photo = meta.photo?.img ? meta.photo : null;
+  const artW = photo ? PHOTO_W + 40 : s.art ? 280 : 0;
+  if (photo) drawPhoto(ctx, photo, W - 60 - PHOTO_W, y - 6, PHOTO_W, Math.min(330, BODY_BOTTOM - y - 70), p, ease((p * (s.est || 10)) / 0.9));
+  else if (s.art) drawArt(ctx, s.art, W - 170, (y + BODY_BOTTOM) / 2, 190, meta.color, meta.time);
+  const size = fitSize(ctx, s.body, W - 140 - artW, avail - 60, 28, 16, 1.5);
   // reveal paragraph by paragraph
   const paras = s.body.split(/\n{2,}/);
   let yy = y;
@@ -505,9 +605,11 @@ function sTip(ctx, s, p, meta) {
   const a = ease(p * 3);
   ctx.save();
   ctx.globalAlpha = a;
-  const bx = 120;
+  const photo = meta.photo?.img ? meta.photo : null;
+  const bx = photo ? 60 : 120;
   const by = 180;
-  const bw = W - 240;
+  const bw = photo ? W - 120 - PHOTO_W - 40 : W - 240;
+  if (photo) drawPhoto(ctx, photo, W - 60 - PHOTO_W, by, PHOTO_W, 300, p);
   ctx.fillStyle = 'rgba(253,224,71,.08)';
   ctx.strokeStyle = 'rgba(253,224,71,.5)';
   ctx.lineWidth = 2;
@@ -522,7 +624,6 @@ function sTip(ctx, s, p, meta) {
   ctx.fillText(`💡  ${s.L?.proTip || 'Pro Tip'}`, bx + 36, by + 50);
   drawRich(ctx, s.body, bx + 36, by + 90, bw - 72, size, { lh: 1.5 });
   ctx.restore();
-  void meta;
 }
 
 
@@ -627,25 +728,29 @@ function sQa(ctx, s, p, meta) {
   const a = ease(clamp01((p - 0.18) * 3));
   ctx.save();
   ctx.globalAlpha = a;
-  const size = fitSize(ctx, s.a, W - 176, BODY_BOTTOM - y - 70, 26, 15, 1.5);
-  const boxH = Math.min(BODY_BOTTOM - y, richHeight(ctx, s.a, W - 176, size, 1.5) + 76);
+  const photo = meta.photo?.img ? meta.photo : null;
+  const bw = photo ? W - 120 - PHOTO_W - 30 : W - 120;
+  const size = fitSize(ctx, s.a, bw - 56, BODY_BOTTOM - y - 70, 26, 15, 1.5);
+  const boxH = Math.min(BODY_BOTTOM - y, richHeight(ctx, s.a, bw - 56, size, 1.5) + 76);
   ctx.fillStyle = 'rgba(52,211,153,.07)';
   ctx.strokeStyle = 'rgba(52,211,153,.4)';
-  rr(ctx, 60, y, W - 120, boxH, 16);
+  rr(ctx, 60, y, bw, boxH, 16);
   ctx.fill();
   ctx.stroke();
   ctx.font = `700 16px ${FONT}`;
   ctx.fillStyle = C.green;
   ctx.textBaseline = 'middle';
   ctx.fillText(s.L?.answer || 'ANSWER', 88, y + 28);
-  drawRich(ctx, s.a, 88, y + 50, W - 176, size, { lh: 1.5 });
+  drawRich(ctx, s.a, 88, y + 50, bw - 56, size, { lh: 1.5 });
   ctx.restore();
+  if (photo) drawPhoto(ctx, photo, W - 60 - PHOTO_W, y, PHOTO_W, Math.min(320, BODY_BOTTOM - y - 60), p, ease((p * (s.est || 10)) / 0.9));
   const free = BODY_BOTTOM - (y + boxH);
-  if (free > 150) drawArt(ctx, 'chat', W / 2, y + boxH + free / 2 + 10, Math.min(170, free - 20), meta.color, meta.time);
+  if (!photo && free > 150) drawArt(ctx, 'chat', W / 2, y + boxH + free / 2 + 10, Math.min(170, free - 20), meta.color, meta.time);
 }
 
 function sOutro(ctx, s, p, meta) {
-  const a = ease(p * 3);
+  const a = ease((p * (s.est || 10)) / 1.0);
+  drawHero(ctx, meta.photo, p, meta.color);
   ctx.save();
   ctx.globalAlpha = a;
   drawLogo(ctx, W / 2 - 50, 100, 100);

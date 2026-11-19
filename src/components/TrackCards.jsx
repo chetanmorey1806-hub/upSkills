@@ -3,6 +3,7 @@ import { tracks, trackGroups, topicKey } from '../data/index.js';
 import { useProgress } from '../progress.js';
 import ProgressBar from './ProgressBar.jsx';
 import { usePerms } from '../permissions.js';
+import { CourseCover } from './MediaBits.jsx';
 import { TrackIcon } from './Icons.jsx';
 import { BrainCircuit, BarChart3, Globe, Coffee, Code2, Cpu, Database } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export default function TrackCards() {
           const quizzes = t.topics.filter((x) => quiz[topicKey(t.key, x.id)] != null).length;
           return (
             <Link key={t.key} to={`/track/${t.key}`} className="card track-card" style={{ borderTopColor: t.color }}>
+              <div className="tc-cover"><CourseCover track={t} height={118} showTitle={false} /></div>
               <div className="track-icon" style={{ color: t.color, background: `color-mix(in srgb, ${t.color} 12%, transparent)` }}><TrackIcon track={t.key} size={24} /></div>
               <h3>{t.name}</h3>
               <p className="muted small">{t.tagline}</p>

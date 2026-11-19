@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Sparkles, Copy, ArrowUp, ArrowDown, CheckCircle2, XCircle, RotateCcw, Swords, Bot, Trophy, Timer } from 'lucide-react';
 import { tracks, trackOrder } from '../data/index.js';
 import CodeBlock from '../components/CodeBlock.jsx';
@@ -78,7 +78,8 @@ function ErrorCard({ e, lang }) {
 }
 
 export function ExplainError() {
-  const [err, setErr] = useState('');
+  const [params] = useSearchParams();
+  const [err, setErr] = useState(() => params.get('q') || '');
   const [code, setCode] = useState('');
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('upskillr-err-lang') || 'en'; } catch { return 'en'; } });
   const [browse, setBrowse] = useState('');

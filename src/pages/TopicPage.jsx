@@ -19,6 +19,7 @@ import DataTable from '../components/DataTable.jsx';
 import Quiz from '../components/Quiz.jsx';
 import VideoLesson from '../components/VideoLesson.jsx';
 import DayTask from '../components/DayTask.jsx';
+import { RecordedVideos } from '../components/MediaBits.jsx';
 import LessonStudyTools from '../components/LessonStudyTools.jsx';
 import TheoryView from '../components/LessonLearnTools.jsx';
 import { VIS_LOAD_KEY } from './CodeVisualizer.jsx';
@@ -141,6 +142,8 @@ export default function TopicPage() {
         <Link className="btn small" to={lab[0]}>Open {lab[1]} →</Link>
         <Link className="btn small" to={`/track/${track}/${t.id}?tab=quiz`} onClick={() => setTab('quiz')}>Take the quiz</Link>
       </div>
+
+      <RecordedVideos track={track} lessonId={t.id} />
 
       <div className="tabs">
         {TABS.map(([k, l]) => (

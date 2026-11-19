@@ -208,6 +208,7 @@ export function computeStats() {
   const battlesWon = safe('upskillr-study-battles', {}).won || 0;
   const feynman = log.filter((e) => e.type === 'feynman').length;
   const interviews = log.filter((e) => e.type === 'interview').length;
+  const weeksWon = Object.keys(safe('upskillr-study-weekly', {})).length;
   // streak: any logged activity or progress activity per day
   const days = new Set([...log.map((e) => e.day), ...Object.keys(prog.activity || {})]);
   let streak = 0;
@@ -216,8 +217,8 @@ export function computeStats() {
   while (days.has(d)) { streak++; d = addDays(d, -1); }
   const xp = done * 10 + quizzes * 5 + perfect * 10 + practice * 5 + tests.length * 5 + testsPassed * 50 + coding * 15
     + projects * 100 + Math.floor(focusMin / 25) * 5 + reviews * 2 + challenges * 20 + notes * 2 + mastered * 5
-    + puzzles * 5 + battlesWon * 10 + feynman * 3 + interviews * 5;
-  return { puzzles, battlesWon, feynman, interviews, done, quizzes, perfect, practice, tests: tests.length, testsPassed, coding, projects, focusMin, reviews, challenges, notes, mastered, streak, xp, activeDays: days.size };
+    + puzzles * 5 + battlesWon * 10 + feynman * 3 + interviews * 5 + weeksWon * 50;
+  return { weeksWon, puzzles, battlesWon, feynman, interviews, done, quizzes, perfect, practice, tests: tests.length, testsPassed, coding, projects, focusMin, reviews, challenges, notes, mastered, streak, xp, activeDays: days.size };
 }
 // Level n needs 100 * n * (n + 1) / 2 XP in total (100, 300, 600, 1000 …).
 export function levelOf(xp) {
@@ -252,6 +253,8 @@ export const BADGES = [
   ['battle-5', '⚔️', 'Battle Winner', 'Win 5 quiz battles', (s) => s.battlesWon >= 5],
   ['feynman-5', '🧠', 'Teacher Mode', 'Explain 5 concepts back (Feynman)', (s) => s.feynman >= 5],
   ['video-3', '🎥', 'Camera Ready', 'Record 3 video mock interviews', (s) => s.interviews >= 3],
+  ['week-1', '🗓️', 'Weekly Winner', 'Complete a weekly challenge', (s) => s.weeksWon >= 1],
+  ['week-4', '🏅', 'Consistency King', 'Complete 4 weekly challenges', (s) => s.weeksWon >= 4],
 ];
 
 // ---------- course completion ----------

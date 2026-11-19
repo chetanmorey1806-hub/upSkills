@@ -7,8 +7,12 @@ import {
 import Logo from './Logo.jsx';
 import { useAuth, logout, firstName } from '../auth.js';
 import FocusPill from './FocusTimer.jsx';
-import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard } from 'lucide-react';
+import { CommandPalette, DisplayMenu, openPalette } from './GlobalTools.jsx';
+import Onboarding, { startTour, openOnboarding } from './Onboarding.jsx';
+import { checkReminder } from '../reminders.js';
+import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard, Sunrise, Briefcase, KanbanSquare, Scale, BookUser } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
+import { Avatar } from './MediaBits.jsx';
 import { tracks, trackGroups } from '../data/index.js';
 
 const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
@@ -28,6 +32,7 @@ const groupsWith = (build) => trackGroups
 function buildMenu() {
   return [
     { to: '/home', label: 'Home', icon: Home },
+    { to: '/today', label: 'Today', icon: Sunrise },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     {
       key: 'study', label: 'Study', icon: NotebookPen,
@@ -112,6 +117,16 @@ function buildMenu() {
         { to: '/tools/soft-skills', label: 'Soft Skills', icon: MessageCircle },
         { to: '/tools/quiz', label: 'Quiz Arena', icon: ListChecks },
         { to: '/tools/flashcards', label: 'Flashcards', icon: Brain },
+      ],
+    },
+    {
+      key: 'career', label: 'Career', icon: Briefcase,
+      items: [
+        { to: '/career/applications', label: 'Application Tracker', icon: KanbanSquare },
+        { to: '/career/offers', label: 'Offer Comparison', icon: Scale },
+        { to: '/career/experiences', label: 'Interview Journal', icon: BookUser },
+        { to: '/study/resume', label: 'Resume Builder', icon: FileUser },
+        { to: '/study/portfolio', label: 'Portfolio Website', icon: Globe2 },
       ],
     },
     {
@@ -313,13 +328,16 @@ function UserMenu({ user, onLogout }) {
   return (
     <div className="um" ref={ref}>
       <button className="um-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Account menu">
-        <span className="um-ava">{first.charAt(0).toUpperCase()}</span>
+        <Avatar size={30} className="um-ava" />
         <span className="um-name">{first}</span>
       </button>
       {open && (
         <div className="um-drop">
-          <div className="um-head"><span className="um-ava big">{first.charAt(0).toUpperCase()}</span><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
+          <div className="um-head"><Avatar size={44} className="um-ava big" /><div><b>{user.name}</b><div className="muted small">@{user.username} · {user.role === 'admin' ? 'Admin' : 'Student'}</div></div></div>
           <Link to="/dashboard" onClick={() => setOpen(false)}>My dashboard</Link>
+          <Link to="/profile" onClick={() => setOpen(false)}>👤 My profile</Link>
+          <button className="um-link" onClick={() => { setOpen(false); startTour(); }}>Take the app tour</button>
+          <button className="um-link" onClick={() => { setOpen(false); openOnboarding(); }}>Change my goals &amp; plan</button>
           {user.role === 'admin' && <Link to="/admin" onClick={() => setOpen(false)}>🛡️ Admin panel</Link>}
           <Link to="/" onClick={() => setOpen(false)}>Home page</Link>
           <button className="um-out" onClick={() => { setOpen(false); onLogout(); }}>Logout</button>
@@ -331,6 +349,7 @@ function UserMenu({ user, onLogout }) {
 
 export default function Layout({ children }) {
   const user = useAuth();
+  useEffect(() => { checkReminder(); const t = setInterval(checkReminder, 5 * 60 * 1000); return () => clearInterval(t); }, [user?.username]);
   const doLogout = () => { logout(); window.location.hash = '#/'; };
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
@@ -395,8 +414,9 @@ export default function Layout({ children }) {
           </Link>
           <form onSubmit={submit} className="search-form top-search">
             <span className="search-ic"><Search size={14} /></span>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={(e) => { e.target.blur(); setOpen(false); openPalette(); }} readOnly placeholder="Search everything…  Ctrl K" />
           </form>
+          <DisplayMenu />
           <UserMenu user={user} onLogout={doLogout} />
           <button
             className={`menu-btn ${open ? 'is-open' : ''}`}
@@ -416,7 +436,7 @@ export default function Layout({ children }) {
           </div>
           <form onSubmit={submit} className="search-form">
             <span className="search-ic"><Search size={14} /></span>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search topics…" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={(e) => { e.target.blur(); setOpen(false); openPalette(); }} readOnly placeholder="Search everything…  Ctrl K" />
           </form>
           <DrawerMenu key={pathname} menu={menu} cur={cur} />
           {user && <button className="btn drawer-logout" onClick={doLogout}>Logout ({user.username})</button>}
@@ -449,6 +469,8 @@ export default function Layout({ children }) {
       </footer>
 
       <FocusPill />
+      <CommandPalette />
+      <Onboarding />
       <button
         className={`to-top ${scrolled && progress > 0.15 ? 'show' : ''}`}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

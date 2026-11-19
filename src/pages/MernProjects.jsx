@@ -7,6 +7,7 @@ import { useProjectState, readProject, projectProgress, projectScore } from '../
 import { API_LOAD_KEY } from './ApiLab.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { Inline } from '../components/RichText.jsx';
+import { CertPhoto, CertName } from '../components/MediaBits.jsx';
 
 const sid = (id) => `mern-${id}`;
 const ICON = { PASS: '✅', FAIL: '❌', ERROR: '💥', TODO: '⏳' };
@@ -202,8 +203,8 @@ function Workspace({ project }) {
           </div>
           {st.submission && (
             <div className="certificate" id="certificate"><div className="cert-inner">
-              <div className="cert-brand">UpSkillr</div><div className="cert-title">Certificate of Project Completion</div>
-              <p>This certifies that</p><div className="cert-name">{st.name || 'Student'}</div><p>built the MERN project</p>
+              <div className="cert-brand">UpSkillr</div><CertPhoto /><div className="cert-title">Certificate of Project Completion</div>
+              <p>This certifies that</p><div className="cert-name"><CertName fallback={st.name} /></div><p>built the MERN project</p>
               <div className="cert-project">{project.title}</div>
               <p>with a final score of <b>{st.submission.score}/100</b> ({st.submission.passed}/{st.submission.total} automated API tests passing)</p>
               {(st.github || st.live) && <p className="small">{st.github}{st.github && st.live ? ' · ' : ''}{st.live}</p>}

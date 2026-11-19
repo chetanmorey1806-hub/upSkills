@@ -3,9 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { allUsers } from '../auth.js';
 import { tracks, trackOrder } from '../data/index.js';
 import { DEFAULT_PACKAGES } from '../data/packages.js';
+import AdminMedia from './AdminMedia.jsx';
 import { usePerms, writePerms, readPerms, permissionGroups, getPackages, packageTracks } from '../permissions.js';
 
-const TABS = [['users', '👥 Users'], ['roles', '🔐 Student permissions'], ['student', '👤 Per-student access'], ['packages', '📦 Packages'], ['settings', '⚙️ Publish & settings']];
+const TABS = [['users', '👥 Users'], ['roles', '🔐 Student permissions'], ['student', '👤 Per-student access'], ['packages', '📦 Packages'], ['media', '🎬 Videos & images'], ['settings', '⚙️ Publish & settings']];
 const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 // Matrix like bk-steels: groups → modules (rows) × actions (columns). rules: { key: { action: false } }
@@ -218,6 +219,8 @@ export default function Admin() {
           <p className="muted small">Default prices are examples. Set your real prices here before publishing.</p>
         </div>
       )}
+
+      {tab === 'media' && <AdminMedia />}
 
       {tab === 'settings' && (
         <div className="grid2">

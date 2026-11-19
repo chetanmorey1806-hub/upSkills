@@ -12,6 +12,7 @@ import { codingProblems } from '../data/javaCareer.js';
 import RichText, { Inline } from '../components/RichText.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { FocusControls } from '../components/FocusTimer.jsx';
+import ReminderCard from '../components/ReminderCard.jsx';
 import { downloadFile, esc } from '../components/careerUtils.js';
 
 const shuffleIdx = (n) => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -390,6 +391,7 @@ export function PlannerPage() {
           ))}</ul>
         )}
       </div>
+      <ReminderCard tasks={tasks} days={days} />
     </div>
   );
 }
@@ -402,7 +404,7 @@ export function AchievementsPage() {
   const rows = [
     ['Lessons completed', s.done, 10], ['Lesson quizzes taken', s.quizzes, 5], ['Perfect 5/5 quizzes', s.perfect, 10], ['Practice exercises solved', s.practice, 5],
     ['Test series attempts', s.tests, 5], ['Tests passed (60%+)', s.testsPassed, 50], ['Coding problems solved', s.coding, 15], ['Final projects submitted', s.projects, 100],
-    ['Focus sessions (per 25 min)', Math.floor(s.focusMin / 25), 5], ['Revision cards reviewed', s.reviews, 2], ['Cards mastered', s.mastered, 5], ['Daily challenges solved', s.challenges, 20], ['Lessons with notes', s.notes, 2], ['Code puzzles solved', s.puzzles, 5], ['Quiz battles won', s.battlesWon, 10], ['Feynman explanations', s.feynman, 3], ['Video mock interviews', s.interviews, 5],
+    ['Focus sessions (per 25 min)', Math.floor(s.focusMin / 25), 5], ['Revision cards reviewed', s.reviews, 2], ['Cards mastered', s.mastered, 5], ['Daily challenges solved', s.challenges, 20], ['Lessons with notes', s.notes, 2], ['Code puzzles solved', s.puzzles, 5], ['Quiz battles won', s.battlesWon, 10], ['Feynman explanations', s.feynman, 3], ['Video mock interviews', s.interviews, 5], ['Weekly challenges won', s.weeksWon, 50],
   ];
   const got = BADGES.filter((b) => b[4](s)).length;
   return (

@@ -61,6 +61,8 @@ export function readPerms() {
   m.users = { ...(base.users || {}), ...((local && local.users) || {}) };
   m.settings = { ...empty().settings, ...(base.settings || {}), ...((local && local.settings) || {}) };
   m.packages = (local && local.packages) || base.packages || null;
+  const bm = base.media || {}, lm = (local && local.media) || {};
+  m.media = { videos: { ...(bm.videos || {}), ...(lm.videos || {}) }, covers: { ...(bm.covers || {}), ...(lm.covers || {}) } };
   return m;
 }
 export function writePerms(next) {

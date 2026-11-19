@@ -128,7 +128,7 @@ export function AptitudeTopic() {
 
 /* ============================== Company-wise kits ============================== */
 // Approximate patterns from recent public information. Companies change patterns often.
-const COMPANIES = [
+export const COMPANIES = [
   { id: 'tcs-nqt', name: 'TCS NQT', color: '#1e40af', about: 'National Qualifier Test used for Ninja / Digital / Prime roles. Foundation section first, then an Advanced section for higher roles.',
     sections: [['Numerical Ability', 'apt:Quantitative Aptitude', 20, 25], ['Verbal Ability', 'apt:Verbal Ability', 25, 25], ['Reasoning Ability', 'apt:Logical Reasoning', 20, 25], ['Advanced Coding', 'code', 2, 90]],
     rounds: ['Online NQT (foundation + advanced)', 'Technical interview (OOP, DBMS, projects, coding)', 'Managerial round', 'HR round'],
