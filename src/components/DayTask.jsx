@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadDayTask, hasDayTask } from '../data/dayTasks.js';
-import { gradeTask, correctAnswer, NEEDS_PYTHON, pyLock } from '../engine/dayTaskGrader.js';
+import { gradeTask, correctAnswer, NEEDS_PYTHON, pyLock, preloadPython } from '../engine/dayTaskGrader.js';
 import { buildWebDoc, buildReactDoc } from './playgroundRuntime.js';
 import { ensurePython, runPython } from './pyodideRunner.js';
 import RichText, { Inline } from './RichText.jsx';
@@ -59,6 +59,7 @@ function RunBox({ task, code }) {
     } else {
       let text = '';
       await ensurePython();
+      await preloadPython(code);
       await pyLock(() => runPython({ files: { 'main.py': code }, stdin: task.stdin || '' }, (m) => { if (m.type === 'out' || m.type === 'err') text += m.text; if (m.type === 'done' && m.error) text += `\n${m.error}`; }));
       setOut(text.trim() || '(no output)');
     }

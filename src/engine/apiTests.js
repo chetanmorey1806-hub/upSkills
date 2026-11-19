@@ -30,6 +30,11 @@ function checkExpect(res, expect) {
   if (expect.status != null && res.status !== expect.status) return `expected status ${expect.status}, got ${res.status}${body && body.error ? ` (${body.error})` : typeof body === 'string' && body ? ` (${(body.match(/Cannot \w+ [^<\s]+/) || [body.slice(0, 80)])[0]})` : ''}`;
   if (expect.length != null && (!Array.isArray(body) || body.length !== expect.length)) return `expected an array of ${expect.length}, got ${Array.isArray(body) ? `${body.length} item(s)` : show(body)?.slice(0, 120)}`;
   if (expect.json !== undefined) { const e = partialMatch(body, expect.json); if (e) return e; }
+  for (const [h, want] of Object.entries(expect.headers || {})) {
+    const got = (res.headers || {})[h.toLowerCase()];
+    if (got == null) return `response header "${h}" is missing`;
+    if (want !== '' && !String(got).toLowerCase().includes(String(want).toLowerCase())) return `response header "${h}" is "${got}", expected it to contain "${want}"`;
+  }
   for (const k of expect.has || []) if (!body || body[k] == null) return `response should contain "${k}"`;
   for (const k of expect.absent || []) if (body && k in body) return `response must NOT contain "${k}"`;
   for (const [parent, keys] of Object.entries(expect.absentIn || {})) for (const k of keys) if (body?.[parent] && k in body[parent]) return `response.${parent} must NOT contain "${k}"`;

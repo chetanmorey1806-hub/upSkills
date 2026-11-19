@@ -48,7 +48,7 @@ hands-on task so students see how to approach it, but do not give away the exact
 - `excel` — `grid: { A1: 'Item', B1: 'Price', A2: 'Pen', B2: '10', ... }` (all values as strings), `solution: '=SUM(B2:B5)'`; the student's formula value is compared. Check the function is supported: `src/engine/excel.js` (`SUPPORTED`).
 - `dax` — `solution: 'SUM(Sales[Quantity])'` over the DAX Lab model (`src/engine/daxModel.js`: Sales, Product, Customer, Date) and compared in many filter contexts; optional `measures: { 'Total Sales': '...' }` the student may reference.
 - `express` — Express 5 app (API Lab simulator, `require('express')` only), `tests` in the MERN project format:
-  `[{ name, steps: [{ method, url, body?, headers?, expect: { status, json (partial), length } }] }]`.
+  `[{ name, steps: [{ method, url, body?, headers?, expect: { status, json (partial), length, headers: { name: "substring" } } }] }]`.
 - Java, C#, Spring, Hibernate, Power Query (M), Next.js server code, Docker, Git etc. cannot run in the browser:
   use `mcq`, `multi`, `fill` (e.g. "complete the missing line" with all valid variants) and `output` (predict the output) for those.
 

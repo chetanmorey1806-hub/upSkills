@@ -1,0 +1,97 @@
+const COLLEGE = `CREATE TABLE departments (dept_id INT PRIMARY KEY, dept_name VARCHAR(50) NOT NULL);
+CREATE TABLE students (
+  student_id     INT PRIMARY KEY,
+  first_name     VARCHAR(30) NOT NULL,
+  email          VARCHAR(80),
+  city           VARCHAR(30),
+  dept_id        INT,
+  marks          INT,
+  fees           DECIMAL(10,2),
+  admission_date DATE
+);
+INSERT INTO departments VALUES (1, 'Computer Science'), (2, 'Mechanical'), (3, 'Commerce');
+INSERT INTO students VALUES
+ (1, 'Aarav',  'aarav@college.edu',  'Pune',      1, 88, 65000, '2022-07-15'),
+ (2, 'Diya',   'diya@college.edu',   'Mumbai',    1, 92, 65000, '2022-07-18'),
+ (3, 'Kabir',  'kabir@college.edu',  'Delhi',     2, 64, 55000, '2021-07-20'),
+ (4, 'Meera',  'meera@college.edu',  'Pune',      3, 75, 45000, '2023-07-10'),
+ (5, 'Rohan',  'rohan@college.edu',  'Nashik',    2, 58, 55000, '2023-07-12'),
+ (6, 'Vikram', 'vikram@college.edu', 'Delhi',     3, 97, 45000, '2021-08-02'),
+ (7, 'Neha',   'neha@college.edu',   'Delhi',     1, 61, 65000, '2022-07-03'),
+ (8, 'Sneha',  'sneha@college.edu',  'Kochi',     2, 69, 55000, '2024-07-05');`;
+
+export default {
+  lesson: 'mysql-day-09',
+  minutes: 30,
+  intro: 'Change and remove data safely with UPDATE and DELETE, understand Safe Updates mode (Error 1175) and always target exactly the right rows.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'In Workbench, `UPDATE students SET city = \'Pune\' WHERE first_name = \'Neha\';` fails with **Error 1175: You are using safe update mode...**. Why?',
+      options: [
+        'The table has no rows',
+        'Safe Updates mode rejects UPDATE/DELETE whose WHERE does not use a KEY column (or has no LIMIT)',
+        'Text values cannot be updated',
+        'The user has no password',
+      ],
+      answer: 1,
+      explain: 'Safe Updates protects you from changing a whole table by mistake: the WHERE must use a **key column** (e.g. `student_id = 7`) or the statement must have a LIMIT. Fixes: filter by the primary key, add LIMIT, run `SET SQL_SAFE_UPDATES = 0;` for the session, or untick the option in Preferences (and reconnect).',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Write the statement that turns **off** Safe Updates mode for your current session only.',
+      accept: ['SET SQL_SAFE_UPDATES = 0;', 'SET SQL_SAFE_UPDATES = 0', 'SET SQL_SAFE_UPDATES=OFF', 'SET SQL_SAFE_UPDATES = OFF;', 'SET SESSION SQL_SAFE_UPDATES = 0', 'SET SESSION SQL_SAFE_UPDATES = 0;', 'SET @@SQL_SAFE_UPDATES = 0', 'SET @@SQL_SAFE_UPDATES = 0;'],
+      explain: '`SET SQL_SAFE_UPDATES = 0;` disables the check for this connection; `= 1` turns it back on. Good practice: switch it off, run your carefully tested statement, and switch it on again.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 3,
+      q: "Sneha (student_id **8**) moved. Change her email to `sneha.k@college.edu` **and** her city to `Pune` in ONE UPDATE.",
+      example: { title: 'update two columns of one row', code: "UPDATE courses\nSET fee = 12000, credits = 4\nWHERE course_id = 3;" },
+      setup: COLLEGE,
+      starter: '-- UPDATE students SET ... WHERE ...;\n',
+      solution: "UPDATE students\nSET email = 'sneha.k@college.edu', city = 'Pune'\nWHERE student_id = 8;",
+      check: 'SELECT student_id, email, city FROM students ORDER BY student_id;',
+      explain: 'Separate several assignments with **commas** (not AND: `SET a = 1 AND b = 2` is a different, wrong expression). Filter by the primary key so exactly one row changes. Forgetting WHERE updates **every** student.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 4,
+      q: 'Give **5 bonus marks** to every student who scored **90 or more**. Marks must **never go above 100** (a student with 97 ends at 100).',
+      example: { title: 'update using the old value', code: 'UPDATE products\nSET stock = stock - 1\nWHERE product_id = 7 AND stock > 0;' },
+      setup: COLLEGE,
+      starter: '-- UPDATE students SET marks = ... WHERE ...;\n',
+      solution: 'UPDATE students\nSET marks = LEAST(marks + 5, 100)\nWHERE marks >= 90;',
+      check: 'SELECT student_id, marks FROM students ORDER BY student_id;',
+      explain: 'The right side of SET can use the **old value** (`marks + 5`). `LEAST(x, 100)` caps the result (a CASE or `IF()` also works). Run `SELECT ... WHERE marks >= 90` first to preview which rows will change.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 4,
+      q: 'Delete the students who are **from Delhi** and were **admitted in 2021**. Other Delhi students must stay.',
+      example: { title: 'DELETE with a precise WHERE', code: "DELETE FROM orders\nWHERE status = 'CANCELLED'\n  AND order_date < '2023-01-01';" },
+      setup: COLLEGE,
+      starter: '-- DELETE FROM students WHERE ...;\n',
+      solution: "DELETE FROM students\nWHERE city = 'Delhi'\n  AND admission_date BETWEEN '2021-01-01' AND '2021-12-31';",
+      check: 'SELECT student_id, first_name FROM students ORDER BY student_id;',
+      explain: 'Both conditions must be true, so use AND. `YEAR(admission_date) = 2021` also works but cannot use an index; a date range can. Neha (Delhi, 2022) must survive. Always run the same WHERE with SELECT first.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 5,
+      q: 'Give a **10% fee discount** to all students of the **Computer Science** department. Find the department **by its name** using a subquery (do not type dept_id 1).',
+      example: { title: 'UPDATE driven by another table', code: "UPDATE products\nSET price = price * 0.9\nWHERE category_id = (SELECT category_id FROM categories WHERE name = 'Toys');" },
+      setup: COLLEGE,
+      starter: '-- UPDATE students SET fees = ... WHERE dept_id = (SELECT ...);\n',
+      solution: "UPDATE students\nSET fees = fees * 0.9\nWHERE dept_id = (SELECT dept_id FROM departments WHERE dept_name = 'Computer Science');",
+      check: 'SELECT student_id, fees FROM students ORDER BY student_id;',
+      explain: 'The subquery returns the id of Computer Science, so the UPDATE does not depend on knowing the number. `fees * 0.9` = 10% less. In real MySQL you can also write `UPDATE students s JOIN departments d ON ... SET ...`.',
+    },
+  ],
+};

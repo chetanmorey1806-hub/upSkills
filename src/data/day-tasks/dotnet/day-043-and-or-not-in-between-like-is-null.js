@@ -1,0 +1,88 @@
+const CUST = `CREATE TABLE Customers (
+    CustId INT PRIMARY KEY,
+    Name NVARCHAR(50),
+    City NVARCHAR(30),
+    Age INT,
+    Email NVARCHAR(60)
+);
+INSERT INTO Customers VALUES
+(1, 'Amit Shah', 'Mumbai', 34, 'amit@mail.com'),
+(2, 'Priya Nair', 'Kochi', 27, NULL),
+(3, 'Rahul Verma', 'Delhi', 45, 'rahul@mail.com'),
+(4, 'Anita Desai', 'Pune', 22, 'anita@mail.com'),
+(5, 'Sameer Khan', 'Mumbai', 51, NULL),
+(6, 'Neha Joshi', 'Pune', 30, 'neha@mail.com'),
+(7, 'Arun Pillai', 'Chennai', 38, 'arun@mail.com');`;
+
+export default {
+  lesson: 'day-043-and-or-not-in-between-like-is-null',
+  minutes: 22,
+  intro: 'Practise filtering rows with AND, OR, NOT, IN, BETWEEN, LIKE wildcards and IS NULL.',
+  tasks: [
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 3,
+      q: 'Show all customers from **Mumbai** who are **older than 40**.',
+      example: { title: 'AND', code: "SELECT * FROM Products WHERE Category = 'Books' AND Price < 300;" },
+      setup: CUST,
+      starter: '-- WHERE ... AND ...\n',
+      solution: "SELECT * FROM Customers WHERE City = 'Mumbai' AND Age > 40;",
+      explain: '`AND` keeps a row only if **both** conditions are true. Only Sameer (Mumbai, 51) qualifies.',
+    },
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 3,
+      q: 'Show the `Name` and `City` of customers who live in **Pune, Kochi or Chennai** (use IN).',
+      example: { title: 'IN instead of many ORs', code: "SELECT * FROM Orders WHERE Status IN ('Shipped', 'Delivered');" },
+      setup: CUST,
+      starter: '-- WHERE City IN (...)\n',
+      solution: "SELECT Name, City FROM Customers WHERE City IN ('Pune', 'Kochi', 'Chennai');",
+      explain: '`City IN (\'Pune\', \'Kochi\', \'Chennai\')` is a short, readable form of `City = \'Pune\' OR City = \'Kochi\' OR City = \'Chennai\'`.',
+    },
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 3,
+      q: 'Show customers aged **25 to 35 inclusive** whose name starts with the letter **A**.',
+      example: { title: 'BETWEEN and LIKE', code: "SELECT * FROM Students WHERE Marks BETWEEN 60 AND 80 AND Name LIKE 'S%';" },
+      setup: CUST,
+      starter: '-- BETWEEN ... LIKE ...\n',
+      solution: "SELECT * FROM Customers WHERE Age BETWEEN 25 AND 35 AND Name LIKE 'A%';",
+      explain: '`BETWEEN 25 AND 35` includes both ends. `LIKE \'A%\'` means "starts with A" (`%` = any number of characters). Amit (34) matches; Anita is 22 and Arun is 38, so they do not.',
+    },
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 3,
+      q: 'Find customers who have **not given an email** (the Email column is NULL). Show `Name` only.',
+      example: { title: 'testing for NULL', code: 'SELECT * FROM Employees WHERE ManagerId IS NULL;' },
+      setup: CUST,
+      starter: '-- WHERE Email ...\n',
+      solution: 'SELECT Name FROM Customers WHERE Email IS NULL;',
+      explain: 'NULL means "unknown", so `Email = NULL` is never true (it returns no rows). Always use **IS NULL** / **IS NOT NULL**.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which LIKE patterns match the name **\'Neha Joshi\'**? (choose all that apply)',
+      options: ["'N%'", "'%Joshi'", "'_eha%'", "'%a J%'", "'Neha'", "'[A-M]%'"],
+      answers: [0, 1, 2, 3],
+      explain: '`%` = any characters (including none), `_` = exactly one character, `[A-M]` = one character in that range (N is outside). `\'Neha\'` without wildcards must match the **whole** value, so it fails.',
+    },
+    {
+      type: 'mcq',
+      mins: 2,
+      q: 'What does `WHERE City = \'Pune\' OR City = \'Mumbai\' AND Age > 40` return?',
+      options: [
+        'Customers from Pune or Mumbai, all older than 40',
+        'All Pune customers (any age) plus Mumbai customers older than 40',
+        'Only Mumbai customers older than 40',
+        'A syntax error',
+      ],
+      answer: 1,
+      explain: '**AND is evaluated before OR**, so it means `City = \'Pune\' OR (City = \'Mumbai\' AND Age > 40)`. Use parentheses for the other meaning: `(City = \'Pune\' OR City = \'Mumbai\') AND Age > 40`.',
+    },
+  ],
+};

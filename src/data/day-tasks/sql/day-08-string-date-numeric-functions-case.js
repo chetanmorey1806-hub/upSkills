@@ -1,0 +1,72 @@
+export default {
+  lesson: 'day-08-string-date-numeric-functions-case',
+  minutes: 35,
+  intro: 'Clean and format text, calculate with dates and numbers, and add if-else logic with CASE. Tasks run in SQLite; the MySQL equivalents are mentioned in each explanation.',
+  tasks: [
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which pairs of **MySQL** functions and their purpose are correct? (choose all that apply)',
+      options: ['CONCAT(first, \' \', last) – join strings', 'UPPER(name) – convert to capitals', 'DATEDIFF(\'2024-03-10\', \'2024-03-01\') – returns 9 (days)', 'ROUND(12.345, 1) – returns 12.3', 'LENGTH(\'Pune\') – returns 3'],
+      answers: [0, 1, 2, 3],
+      explain: '`LENGTH(\'Pune\')` is 4. In MySQL, LENGTH counts **bytes** and CHAR_LENGTH counts characters – they differ for Hindi/Marathi text in UTF-8. SQLite uses `||` for concatenation and `julianday()` for date differences.',
+    },
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 6,
+      q: 'Messy contact data: show `id`, `full_name` = first and last name joined with one space and written in **UPPER CASE**, and `email` **trimmed and lower-cased**. (SQLite: `||` concatenates; `UPPER`, `LOWER`, `TRIM` work as in MySQL.)',
+      example: { title: 'string functions', code: "SELECT UPPER(city), TRIM(LOWER(code)), first || ' ' || last AS name FROM people;\n-- MySQL: CONCAT(first, ' ', last)" },
+      setup: `CREATE TABLE contacts (id INTEGER PRIMARY KEY, first TEXT, last TEXT, email TEXT);
+INSERT INTO contacts VALUES (1, 'asha', 'patil', '  Asha.Patil@Mail.IN '), (2, 'Ravi', 'Kumar', 'RAVI@corp.in'), (3, 'neha', 'Shah', ' neha@MAIL.in');`,
+      starter: '-- SELECT ...\n',
+      solution: "SELECT id, UPPER(first || ' ' || last) AS full_name, LOWER(TRIM(email)) AS email FROM contacts;",
+      explain: 'Normalising text (trim + one case) before comparing or joining avoids "duplicate" customers like \' Asha@x.in\' vs \'asha@x.in\'. In MySQL write `UPPER(CONCAT(first, \' \', last))`.',
+    },
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 7,
+      q: 'For each employee show `name`, `days_employed` = whole days from `joined_on` to **\'2024-12-31\'** (integer), and `probation_end` = `joined_on` + 90 days as \'YYYY-MM-DD\'.\n\nSQLite: `CAST(julianday(\'2024-12-31\') - julianday(joined_on) AS INTEGER)` and `date(joined_on, \'+90 days\')`.',
+      example: { title: 'date arithmetic in SQLite', code: "SELECT date('2024-01-31', '+1 month'),\n       julianday('2024-03-01') - julianday('2024-02-01');   -- 29.0\n-- MySQL: DATEDIFF(a, b), DATE_ADD(d, INTERVAL 90 DAY)" },
+      setup: `CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, joined_on TEXT);
+INSERT INTO employees VALUES (1, 'Asha', '2024-01-15'), (2, 'Ravi', '2023-11-01'), (3, 'Neha', '2024-10-20');`,
+      starter: '-- SELECT ...\n',
+      solution: "SELECT name, CAST(julianday('2024-12-31') - julianday(joined_on) AS INTEGER) AS days_employed, date(joined_on, '+90 days') AS probation_end FROM employees;",
+      explain: 'Store dates as DATE (MySQL) or ISO text \'YYYY-MM-DD\' (SQLite) so that date functions and sorting work. MySQL equivalents: `DATEDIFF(\'2024-12-31\', joined_on)` and `DATE_ADD(joined_on, INTERVAL 90 DAY)`.',
+    },
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 6,
+      q: 'Show `name`, `salary` and `band`: **\'High\'** if salary ≥ 80000, **\'Medium\'** if salary ≥ 50000, otherwise **\'Low\'**. Sort by salary highest first.',
+      example: { title: 'searched CASE', code: "SELECT name,\n  CASE WHEN marks >= 75 THEN 'Distinction'\n       WHEN marks >= 40 THEN 'Pass'\n       ELSE 'Fail' END AS result\nFROM students;" },
+      setup: `CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT, salary INTEGER);
+INSERT INTO employees VALUES (1, 'Asha', 'IT', 92000), (2, 'Ravi', 'IT', 50000), (3, 'Neha', 'HR', 49999), (4, 'Karan', 'Sales', 80000), (5, 'Meera', 'Sales', 31000);`,
+      starter: '-- SELECT ...\n',
+      solution: "SELECT name, salary, CASE WHEN salary >= 80000 THEN 'High' WHEN salary >= 50000 THEN 'Medium' ELSE 'Low' END AS band FROM employees ORDER BY salary DESC;",
+      ordered: true,
+      explain: 'CASE checks the WHEN conditions **top to bottom** and returns the first match, so put the strictest condition first. The boundary values (80000, 50000, 49999) are where off-by-one mistakes (`>` vs `>=`) show up.',
+    },
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 7,
+      q: '**Pivot with CASE inside SUM.** Show one row per `dept` with columns `pune`, `delhi` = total salary of that department\'s employees in each city (0 if none).',
+      example: { title: 'conditional aggregation', code: "SELECT class,\n  SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS girls,\n  SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS boys\nFROM students GROUP BY class;" },
+      setup: `CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT, city TEXT, salary INTEGER);
+INSERT INTO employees VALUES (1, 'Asha', 'IT', 'Pune', 70000), (2, 'Ravi', 'IT', 'Delhi', 65000), (3, 'Neha', 'HR', 'Pune', 45000),
+(4, 'Karan', 'IT', 'Pune', 52000), (5, 'Meera', 'Sales', 'Delhi', 40000);`,
+      starter: '-- SELECT ...\n',
+      solution: "SELECT dept, SUM(CASE WHEN city = 'Pune' THEN salary ELSE 0 END) AS pune, SUM(CASE WHEN city = 'Delhi' THEN salary ELSE 0 END) AS delhi FROM employees GROUP BY dept;",
+      explain: 'CASE turns each row\'s salary into "this city or 0", and SUM adds them up per department – a cross-tab report without any PIVOT keyword (MySQL has none). Without `ELSE 0` the missing combinations become NULL instead of 0.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Complete the MySQL expression that returns **₹1,180** for price 1000 with 18% GST, rounded to **0 decimals**:\n\n`____(price * 1.18, 0)`',
+      accept: ['ROUND', 'round'],
+      explain: '`ROUND(x, d)` rounds to d decimals; `CEIL`/`FLOOR` round up/down to whole numbers and `TRUNCATE(x, d)` (MySQL) cuts digits without rounding. Store money in DECIMAL so these calculations are exact.',
+    },
+  ],
+};

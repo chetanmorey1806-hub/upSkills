@@ -1,0 +1,75 @@
+export default {
+  lesson: 'day-29-deploying-java-apps-on-aws',
+  minutes: 24,
+  intro: 'Deploy a Spring Boot + MySQL + React app on AWS safely: IAM, security groups, EC2, RDS, S3, Elastic Beanstalk and cost control.',
+  tasks: [
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which are good **IAM** practices? (choose all that apply)',
+      options: [
+        'Enable MFA on the root account and do not use root for daily work',
+        'Give each person/app only the permissions it needs (least privilege)',
+        'Attach an IAM role to the EC2 instance to access S3 instead of storing access keys in application.properties',
+        'Share one admin user and password with the whole team',
+        'Push AWS access keys to GitHub so CI can use them',
+      ],
+      answers: [0, 1, 2],
+      explain: 'Root + MFA locked away, individual users/roles, least privilege, and **roles instead of keys** on EC2. Leaked keys on GitHub are found by bots within minutes and used to run crypto miners on your bill.',
+    },
+    {
+      type: 'output',
+      mins: 4,
+      q: 'The EC2 security group has these **inbound** rules (everything else is denied). For each request, type `allowed` or `blocked`, one per line:\n1. SSH (22) from your laptop 203.0.113.10\n2. SSH (22) from 198.51.100.7\n3. HTTP (80) from any user on the internet\n4. Direct call to port 8080 from the internet',
+      example: { title: 'CIDR', text: '/32 = exactly one IP address; 0.0.0.0/0 = any IPv4 address.' },
+      code: `Type   Port   Source
+SSH    22     203.0.113.10/32
+HTTP   80     0.0.0.0/0`,
+      expected: 'allowed\nblocked\nallowed\nblocked',
+      explain: 'Security groups are allow-lists: SSH only from your one IP (/32), HTTP from everyone. Port 8080 has no rule, so it is blocked - put nginx on 80 in front of Spring Boot (or a load balancer). The RDS security group should allow 3306 **only from the EC2 security group**.',
+    },
+    {
+      type: 'fill',
+      mins: 2,
+      q: 'Your RDS endpoint is `college-db.abc123.ap-south-1.rds.amazonaws.com` and the database is `college`. Write the full JDBC URL (default MySQL port).',
+      example: { title: 'passing it at runtime', code: 'export SPRING_DATASOURCE_URL=jdbc:mysql://...\njava -jar app.jar' },
+      accept: ['jdbc:mysql://college-db.abc123.ap-south-1.rds.amazonaws.com:3306/college'],
+      explain: 'Same format as local MySQL, just with the RDS endpoint as host: `jdbc:mysql://<endpoint>:3306/college`. Pass it (and the password) as environment variables, not in the JAR. `ap-south-1` is the Mumbai region.',
+    },
+    {
+      type: 'fill',
+      mins: 2,
+      q: 'You created `/etc/systemd/system/student-api.service` on EC2 to run the JAR. Write the command that **starts it now and also on every reboot**.',
+      example: { title: 'checking it', code: 'sudo systemctl status student-api\njournalctl -u student-api -f' },
+      accept: ['sudo systemctl enable --now student-api', 'sudo systemctl enable --now student-api.service', 'systemctl enable --now student-api'],
+      explain: '`systemctl enable --now` = enable at boot + start immediately. Running `java -jar` in an SSH session stops the app when you log out; a systemd service restarts it automatically (`Restart=always`).',
+    },
+    {
+      type: 'mcq',
+      mins: 2,
+      q: 'Where is the **React production build** (static files) best hosted on AWS in this setup?',
+      options: [
+        'Inside the RDS database',
+        'An S3 bucket configured for static website hosting (optionally behind CloudFront)',
+        'In an IAM role',
+        'It cannot be hosted on AWS',
+      ],
+      answer: 1,
+      explain: '`npm run build` produces static files that **S3** can serve cheaply; CloudFront adds HTTPS and caching worldwide. The Spring Boot API runs on EC2/Elastic Beanstalk, and the database on RDS.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which habits protect a student from a surprise AWS bill? (choose all that apply)',
+      options: [
+        'Create an AWS Budget with an email alert at a small amount',
+        'Stay inside Free Tier sizes (e.g. t2.micro/t3.micro, db.t3.micro/db.t4g.micro)',
+        'Stop or terminate EC2/RDS and release Elastic IPs when you finish practising',
+        'Leave a NAT Gateway and large instances running "just in case"',
+        'Check the Billing dashboard regularly',
+      ],
+      answers: [0, 1, 2, 4],
+      explain: 'Budgets + alerts, Free Tier sizes, cleaning up resources and checking billing. NAT Gateways, unused Elastic IPs and forgotten big instances are classic sources of bills.',
+    },
+  ],
+};

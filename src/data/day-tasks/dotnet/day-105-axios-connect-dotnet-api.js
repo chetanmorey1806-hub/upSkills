@@ -1,0 +1,83 @@
+export default {
+  lesson: 'day-105-axios-connect-dotnet-api',
+  minutes: 35,
+  intro: 'Call the ASP.NET Core Web API from React with Axios: a shared instance with baseURL, GET/POST/PUT/PATCH/DELETE, response.data and error handling.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'The API returns **404** for `axios.get("/api/students/99")`. What happens?',
+      options: ['The promise resolves with response.status 404', 'The promise rejects; error.response.status is 404', 'Axios retries automatically', 'Nothing - Axios ignores 404'],
+      answer: 1,
+      explain: 'Unlike `fetch`, **Axios rejects for any status outside 2xx**, so `try/catch` handles HTTP errors. `error.response` holds status and data; if there is no `error.response` the request never got an answer (network/CORS).',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'Axios already parsed the JSON. Complete the line that gets the array of students:\n```\nconst response = await api.get("/students");\nconst students = response.______;\n```',
+      example: { title: 'other response fields', code: 'response.status   // 200\nresponse.headers  // { "content-type": ... }' },
+      accept: ['data'],
+      caseSensitive: true,
+      explain: 'The body is in `response.data`, already converted from JSON - no `.json()` call as with fetch. A common bug is `setStudents(response)`, which stores the whole response object.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Match Axios calls to the .NET endpoints. Which are correct? (choose all that apply)',
+      options: [
+        'api.post("/students", form) → [HttpPost] Create([FromBody] dto)',
+        'api.put(`/students/${id}`, form) → [HttpPut("{id}")] Update(int id, dto)',
+        'api.patch(`/students/${id}`, { city }) → [HttpPatch("{id}")]',
+        'api.delete(`/students/${id}`) → [HttpDelete("{id}")]',
+        'api.get("/students", form) sends form as the JSON body',
+      ],
+      answers: [0, 1, 2, 3],
+      explain: 'The second argument of post/put/patch is the **body** (serialized to JSON). `get(url, config)` takes a config object - query values go in `{ params: { city: "Pune" } }`, not a body.',
+    },
+    {
+      type: 'output',
+      mins: 4,
+      q: 'What does this code log? (Axios combines `baseURL` with the path and serializes `params` into the query string.)',
+      example: { title: 'creating an instance', code: 'const api = axios.create({ baseURL: "https://localhost:7001/api" });' },
+      code: `const api = axios.create({ baseURL: "https://localhost:7001/api" });
+const req = { url: "/students", params: { city: "Pune", page: 2 } };
+// the final URL Axios requests:
+console.log(api.getUri(req));`,
+      expected: 'https://localhost:7001/api/students?city=Pune&page=2',
+      explain: 'One `axios.create` instance holds the base URL (from `import.meta.env.VITE_API_URL` in real apps), so components only write `/students`. `params` become `?city=Pune&page=2`, which bind to `[FromQuery]` parameters in the controller.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 8,
+      q: '**Turn Axios errors into messages.** Write `getErrorMessage(error)`:\n- no `error.response` → `"Cannot reach the server"`\n- status 400 with `response.data.errors` → join the first message of every field with `", "`\n- status 401 → `"Please log in again"`\n- status 404 → `"Not found"`\n- anything else → `"Something went wrong"`',
+      example: { title: 'reading an Axios error', code: 'catch (err) {\n  if (err.response?.status === 409) alert("Duplicate");\n}' },
+      starter: 'function getErrorMessage(error) {\n  // TODO\n}\n',
+      solution: 'function getErrorMessage(error) {\n  const r = error.response;\n  if (!r) return "Cannot reach the server";\n  if (r.status === 400 && r.data && r.data.errors) return Object.values(r.data.errors).map((v) => v[0]).join(", ");\n  if (r.status === 401) return "Please log in again";\n  if (r.status === 404) return "Not found";\n  return "Something went wrong";\n}\n',
+      tests: [
+        { call: 'getErrorMessage({ message: "Network Error" })', expect: 'Cannot reach the server' },
+        { call: 'getErrorMessage({ response: { status: 400, data: { errors: { Name: ["The Name field is required."], Age: ["Age must be 18-60", "x"] } } } })', expect: 'The Name field is required., Age must be 18-60' },
+        { call: 'getErrorMessage({ response: { status: 401, data: {} } })', expect: 'Please log in again' },
+        { call: 'getErrorMessage({ response: { status: 404 } })', expect: 'Not found' },
+        { call: 'getErrorMessage({ response: { status: 500, data: { title: "boom" } } })', expect: 'Something went wrong' },
+      ],
+      explain: 'Centralising error handling (often in an Axios **response interceptor**) keeps components clean. A missing `error.response` usually means the API is down or **CORS** blocked the call.',
+    },
+    {
+      type: 'code',
+      lang: 'jsx',
+      mins: 12,
+      q: '**CRUD calls from a component.** A fake Axios-like `api` is given (`get`, `post`, `delete` return `{ data }` after 50 ms). In `App`:\n- on mount `api.get("/students")` → store `response.data` in `students`\n- a controlled `<input id="name">` + `<button id="add">`: `api.post("/students", { name })`, then append the returned student (it has the new id) and clear the input\n- each `<li>` has `<button className="del">` → `api.delete("/students/" + id)`, then remove it from state\n\n(The grader adds "Kiran" and deletes Asha.)',
+      example: { title: 'post then update state', code: 'const { data } = await api.post("/courses", { title });\nsetCourses((c) => [...c, data]);' },
+      starter: 'const { useState, useEffect } = React;\nlet db = [{ id: 1, name: "Asha" }, { id: 2, name: "Ravi" }];\nconst wait = (v) => new Promise((r) => setTimeout(() => r(v), 50));\nconst api = {\n  get: () => wait({ data: db.slice() }),\n  post: (url, body) => { const s = { id: db.length + 10, ...body }; db.push(s); return wait({ data: s }); },\n  delete: (url) => { const id = Number(url.split("/").pop()); db = db.filter((s) => s.id !== id); return wait({ data: null }); },\n};\n\nfunction App() {\n  // TODO\n  return <ul id="students"></ul>;\n}\n',
+      solution: 'const { useState, useEffect } = React;\nlet db = [{ id: 1, name: "Asha" }, { id: 2, name: "Ravi" }];\nconst wait = (v) => new Promise((r) => setTimeout(() => r(v), 50));\nconst api = {\n  get: () => wait({ data: db.slice() }),\n  post: (url, body) => { const s = { id: db.length + 10, ...body }; db.push(s); return wait({ data: s }); },\n  delete: (url) => { const id = Number(url.split("/").pop()); db = db.filter((s) => s.id !== id); return wait({ data: null }); },\n};\n\nfunction App() {\n  const [students, setStudents] = useState([]);\n  const [name, setName] = useState("");\n  useEffect(() => {\n    api.get("/students").then((res) => setStudents(res.data));\n  }, []);\n  async function add() {\n    if (!name.trim()) return;\n    const { data } = await api.post("/students", { name: name.trim() });\n    setStudents((list) => [...list, data]);\n    setName("");\n  }\n  async function remove(id) {\n    await api.delete("/students/" + id);\n    setStudents((list) => list.filter((s) => s.id !== id));\n  }\n  return (\n    <div>\n      <input id="name" value={name} onChange={(e) => setName(e.target.value)} />\n      <button id="add" onClick={add}>Add</button>\n      <ul id="students">\n        {students.map((s) => (\n          <li key={s.id}>{s.name} <button className="del" onClick={() => remove(s.id)}>Delete</button></li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n',
+      actions: [{ wait: 200 }, { input: ['#name', 'Kiran'] }, { click: '#add', wait: 200 }, { click: '#students li:first-child .del', wait: 200 }],
+      checks: [
+        { sel: '#students li', count: 2, msg: 'After adding Kiran and deleting Asha, 2 students must remain' },
+        { sel: '#students li', index: 0, text: 'Ravi', msg: 'Ravi must now be first' },
+        { sel: '#students li', index: 1, text: 'Kiran', msg: 'Kiran must be added at the end' },
+      ],
+      explain: 'Update the UI **after** the API confirms: use the object returned by POST (it has the database id) and filter out the deleted id. With the real API you would create the instance once with `axios.create({ baseURL })`.',
+    },
+  ],
+};

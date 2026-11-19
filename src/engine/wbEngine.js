@@ -224,7 +224,7 @@ UDFS = {
     'DAYNAME': (f_dayname, 1), 'MONTHNAME': (f_monthname, 1), 'DAYOFWEEK': (f_dayofweek, 1), 'QUARTER': (f_quarter, 1), 'WEEK': (f_week, 1), 'DAYOFYEAR': (f_dayofyear, 1),
     'DATE_ONLY': (f_date, 1), 'LAST_DAY': (f_last_day, 1), 'DATEDIFF': (f_datediff, 2), 'DATE_ADD': (f_date_add, 3), 'DATE_SUB': (f_date_sub, 3),
     'ADDDATE': (f_date_add, 3), 'SUBDATE': (f_date_sub, 3), 'TIMESTAMPDIFF': (f_timestampdiff, 3), 'DATE_FORMAT': (f_date_format, 2), 'STR_TO_DATE': (f_str_to_date, 2),
-    'IIF_MY': (f_if, 3), 'LPAD': (f_lpad, 3), 'RPAD': (f_rpad, 3), 'LEFT': (f_left, 2), 'RIGHT': (f_right, 2), 'REVERSE': (f_reverse, 1),
+    'IIF_MY': (f_if, 3), 'LPAD': (f_lpad, 3), 'RPAD': (f_rpad, 3), 'LEFT': (f_left, 2), 'RIGHT': (f_right, 2), 'WB_LEFT': (f_left, 2), 'WB_RIGHT': (f_right, 2), 'REVERSE': (f_reverse, 1),
     'LOCATE': (f_locate, -1), 'POSITION_FN': (f_locate, 2), 'REPEAT': (f_repeat, 2), 'SPACE': (f_space, 1), 'CHAR_LENGTH': (f_char_length, 1), 'CHARACTER_LENGTH': (f_char_length, 1),
     'SUBSTRING_INDEX': (f_substring_index, 3), 'FIELD': (f_field, -1), 'UCASE': (lambda s: None if s is None else str(s).upper(), 1), 'LCASE': (lambda s: None if s is None else str(s).lower(), 1),
     'CEIL': (f_ceil, 1), 'CEILING': (f_ceil, 1), 'FLOOR': (f_floor, 1), 'POW': (f_pow, 2), 'POWER': (f_pow, 2), 'SQRT': (f_sqrt, 1), 'MOD': (f_mod, 2),
@@ -395,6 +395,9 @@ def translate(sql):
     s = re.sub(r'\bDOUBLE\s+PRECISION\b', 'DOUBLE', s, flags=re.I)
     # functions needing rewrite
     s = re.sub(r'\bIF\s*\(', 'IIF_MY(', s, flags=re.I) if not re.match(r'\s*(CREATE|DROP)\b', s, re.I) else re.sub(r'(?<!EXISTS\s)(?<!NOT\s)\bIF\s*\((?!\s*NOT|\s*EXISTS)', 'IIF_MY(', s, flags=re.I)
+    # newer SQLite (Pyodide) parses LEFT/RIGHT as join keywords, so LEFT(x, n) / RIGHT(x, n) are a syntax error:
+    # call our own functions instead (LEFT JOIN / RIGHT JOIN are untouched because they are not followed by '(')
+    s = re.sub(r'\b(LEFT|RIGHT)\s*\(', lambda m: 'WB_' + m.group(1).upper() + '(', s, flags=re.I)
     s = re.sub(r'\bCURRENT_TIMESTAMP\s*\(\s*\)', 'NOW()', s, flags=re.I)
     s = re.sub(r'\bCURRENT_DATE\s*\(\s*\)', 'CURDATE()', s, flags=re.I)
     s = re.sub(r'\bCURRENT_USER\s*\(\s*\)', 'CURRENT_USER_FN()', s, flags=re.I)

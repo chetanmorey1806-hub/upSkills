@@ -1,0 +1,96 @@
+export default {
+  lesson: 'day-02-arrays-list-internals-two-pointers',
+  minutes: 35,
+  intro: 'Understand how Python lists work and solve array problems in O(n) with opposite-direction and same-direction two pointers.',
+  tasks: [
+    {
+      type: 'output',
+      mins: 3,
+      q: 'The 2D list trap. What is printed?',
+      code: `grid = [[0] * 3] * 2
+grid[0][0] = 9
+print(grid)
+good = [[0] * 3 for _ in range(2)]
+good[0][0] = 9
+print(good)`,
+      expected: '[[9, 0, 0], [9, 0, 0]]\n[[9, 0, 0], [0, 0, 0]]',
+      explain: '`[row] * 2` copies the **reference**, so both rows are the same list object and a change appears twice. A list comprehension creates a new inner list for each row.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Why is `list.append(x)` **amortized** O(1)?',
+      options: ['Python lists are linked lists', 'When the array is full, CPython allocates extra room, so most appends need no copying', 'append never copies anything', 'append sorts the list'],
+      answer: 1,
+      explain: 'A list is a dynamic array. When it is full, CPython grows it with extra spare capacity and copies the references once; the many cheap appends that follow pay for that rare expensive one, giving O(1) on average.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 6,
+      q: '**Pair with target sum (sorted array).** Write `pair_sum(nums, target)` for a SORTED list. Return the indexes `[i, j]` (i < j) of two numbers that add up to `target`, or `[]` if none. Use two pointers from both ends: O(n) time, O(1) space.',
+      example: { title: 'opposite-direction pointers', code: 'left, right = 0, len(s) - 1\nwhile left < right:\n    # compare s[left] and s[right], then move one pointer\n    left += 1\n    right -= 1' },
+      starter: 'def pair_sum(nums, target):\n    # TODO\n    return []\n',
+      solution: 'def pair_sum(nums, target):\n    left, right = 0, len(nums) - 1\n    while left < right:\n        s = nums[left] + nums[right]\n        if s == target:\n            return [left, right]\n        if s < target:\n            left += 1\n        else:\n            right -= 1\n    return []\n',
+      tests: [
+        { call: 'pair_sum([1, 3, 4, 6, 8, 11], 10)', expect: [2, 3] },
+        { call: 'pair_sum([2, 7, 11, 15], 9)', expect: [0, 1] },
+        { call: 'pair_sum([-5, -1, 0, 3, 9], 4)', expect: [0, 4] },
+        { call: 'pair_sum([1, 2, 3], 100)', expect: [] },
+        { call: 'pair_sum([5], 10)', expect: [], msg: 'One element cannot form a pair' },
+        { call: 'pair_sum([], 0)', expect: [] },
+      ],
+      explain: 'Because the list is sorted, a sum that is too small can only grow by moving `left` right, and a sum too big can only shrink by moving `right` left. Each step discards one element for good, so it is O(n). Use `left < right`, not `<=`, so one element is not used twice.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 7,
+      q: '**Remove duplicates in place.** `nums` is sorted. Write `remove_duplicates(nums)` that moves the unique values to the front of the SAME list (O(1) extra space) and returns `k`, the number of unique values. The tests check `k` and `nums[:k]`.',
+      example: { title: 'slow / fast pointers', code: 'slow = 0\nfor fast in range(len(a)):\n    if keep(a[fast]):\n        a[slow] = a[fast]\n        slow += 1' },
+      starter: 'def remove_duplicates(nums):\n    # TODO\n    return len(nums)\n',
+      solution: 'def remove_duplicates(nums):\n    if not nums:\n        return 0\n    slow = 1\n    for fast in range(1, len(nums)):\n        if nums[fast] != nums[slow - 1]:\n            nums[slow] = nums[fast]\n            slow += 1\n    return slow\n',
+      tests: [
+        { call: '(lambda a: (k := remove_duplicates(a), a[:k]))([1, 1, 2, 3, 3, 3, 4])', expect: [4, [1, 2, 3, 4]] },
+        { call: '(lambda a: (k := remove_duplicates(a), a[:k]))([0, 0, 0])', expect: [1, [0]] },
+        { call: '(lambda a: (k := remove_duplicates(a), a[:k]))([1, 2, 3])', expect: [3, [1, 2, 3]] },
+        { call: 'remove_duplicates([])', expect: 0 },
+      ],
+      explain: '`slow` marks where the next unique value goes and `fast` scans every element. Since the list is sorted, a value is new exactly when it differs from the last value written. Creating `list(set(nums))` would use O(n) extra space and lose the order.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 6,
+      q: '**Move zeros.** Write `move_zeros(nums)` that moves all 0s to the END of the list **in place**, keeping the order of the non-zero values, and returns the list.',
+      example: { title: 'write pointer', code: 'write = 0\nfor x in nums:\n    if x != 0:\n        nums[write] = x\n        write += 1' },
+      starter: 'def move_zeros(nums):\n    # TODO\n    return nums\n',
+      solution: 'def move_zeros(nums):\n    write = 0\n    for read in range(len(nums)):\n        if nums[read] != 0:\n            nums[write], nums[read] = nums[read], nums[write]\n            write += 1\n    return nums\n',
+      tests: [
+        { call: 'move_zeros([0, 1, 0, 3, 12])', expect: [1, 3, 12, 0, 0] },
+        { call: 'move_zeros([0, 0, 1])', expect: [1, 0, 0] },
+        { call: 'move_zeros([4, 5])', expect: [4, 5] },
+        { call: 'move_zeros([0])', expect: [0] },
+        { call: '(lambda a: move_zeros(a) is a)([0, 2])', expect: true, msg: 'Modify the same list (in place)' },
+      ],
+      explain: 'Swapping each non-zero value into the `write` position keeps their relative order and pushes zeros back. Calling `nums.remove(0)` in a loop is O(n^2) because each removal shifts the list.',
+    },
+    {
+      type: 'code',
+      lang: 'python',
+      mins: 8,
+      q: '**Container With Most Water.** `heights[i]` is the height of a wall at position i. Pick two walls; the water held is `min(h[i], h[j]) * (j - i)`. Write `max_area(heights)` that returns the maximum water in **O(n)** using two pointers.',
+      example: { title: 'which pointer to move?', code: '# area is limited by the SHORTER wall,\n# so moving the taller wall inward can never help.\nif h[left] < h[right]:\n    left += 1\nelse:\n    right -= 1' },
+      starter: 'def max_area(heights):\n    best = 0\n    # TODO\n    return best\n',
+      solution: 'def max_area(heights):\n    left, right = 0, len(heights) - 1\n    best = 0\n    while left < right:\n        area = min(heights[left], heights[right]) * (right - left)\n        best = max(best, area)\n        if heights[left] < heights[right]:\n            left += 1\n        else:\n            right -= 1\n    return best\n',
+      tests: [
+        { call: 'max_area([1, 8, 6, 2, 5, 4, 8, 3, 7])', expect: 49 },
+        { call: 'max_area([1, 1])', expect: 1 },
+        { call: 'max_area([4, 3, 2, 1, 4])', expect: 16 },
+        { call: 'max_area([1, 2, 1])', expect: 2 },
+        { call: 'max_area([5])', expect: 0 },
+      ],
+      explain: 'Start with the widest container. The width can only shrink, so the only hope of a bigger area is a taller short wall: always move the pointer at the **shorter** wall. Checking all pairs is O(n^2).',
+    },
+  ],
+};

@@ -1,0 +1,73 @@
+export default {
+  lesson: 'day-066-aspnet-core-mvc-architecture-routing',
+  minutes: 28,
+  intro: 'Understand the Model-View-Controller roles and how conventional routing maps a URL like /Products/Details/5 to a controller action.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'In ASP.NET Core MVC, which part receives the HTTP request, talks to the model/services and chooses the view?',
+      options: ['Model', 'View', 'Controller', 'Layout'],
+      answer: 2,
+      explain: 'The **Controller** handles input and coordinates. The **Model** holds data and business rules, the **View** (Razor .cshtml) only displays what the controller gives it. Putting database code inside views is the classic mistake.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which statements about MVC conventions are TRUE? (choose all that apply)',
+      options: [
+        'A controller class name ends with "Controller", e.g. StudentsController',
+        'return View() in StudentsController.Index looks for Views/Students/Index.cshtml',
+        'The URL segment for StudentsController is /Students (without "Controller")',
+        'Every public method in a controller must be decorated with [HttpGet] to be reachable',
+        'Views/Shared is searched when a view is not found in the controller folder',
+      ],
+      answers: [0, 1, 2, 4],
+      explain: 'MVC is **convention over configuration**: the suffix "Controller" is dropped in URLs, views are found in Views/{Controller}/{Action}.cshtml and then Views/Shared. Public action methods are routable by default; `[HttpGet]` only restricts the verb.',
+    },
+    {
+      type: 'fill',
+      mins: 2,
+      q: 'Complete the default conventional route pattern (Home controller, Index action, optional id):\n```\napp.MapControllerRoute(\n    name: "default",\n    pattern: "______");\n```',
+      example: { title: 'a custom route with a fixed prefix', code: 'pattern: "shop/{action=List}/{category?}"' },
+      accept: ['{controller=Home}/{action=Index}/{id?}', '"{controller=Home}/{action=Index}/{id?}"'],
+      acceptRegex: ['^"?\\{controller=Home\\}/\\{action=Index\\}/\\{id\\?\\}"?$'],
+      explain: '`{controller=Home}` and `{action=Index}` have **defaults**, so `/` runs HomeController.Index. `{id?}` is **optional**, so both /Students/Details and /Students/Details/5 match.',
+    },
+    {
+      type: 'output',
+      mins: 4,
+      q: 'With the default route `{controller=Home}/{action=Index}/{id?}`, which **Controller.Action(id)** handles each URL? Type one per line in the form `Controller.Action(id)` (use `-` when there is no id).\n1. `/`\n2. `/Products`\n3. `/Products/Details/5`',
+      example: { title: 'reading a URL', code: '/Orders/Edit/12  →  OrdersController.Edit(12)  → Orders.Edit(12)' },
+      code: '{controller=Home}/{action=Index}/{id?}',
+      expected: `Home.Index(-)
+Products.Index(-)
+Products.Details(5)`,
+      explain: 'Missing segments fall back to their defaults: `/` → Home/Index, `/Products` → Products/Index. The third segment fills the optional `id`, which model binding passes to `Details(int id)`.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Which line must be in Program.cs so that MVC controllers and views can be used at all?',
+      options: ['builder.Services.AddControllersWithViews();', 'app.UseStaticFiles();', 'builder.Services.AddDbContext();', 'app.MapRazorPages();'],
+      answer: 0,
+      explain: '`AddControllersWithViews()` registers the MVC services (controllers, Razor view engine, model binding, validation). Without it `MapControllerRoute` fails at startup. `AddControllers()` alone is for Web APIs without views.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 8,
+      q: '**Build the router yourself.** Write `matchRoute(url)` for the pattern `{controller=Home}/{action=Index}/{id?}`. Return `{ controller, action, id }` where `id` is a **number** or `null`. Ignore leading/trailing slashes.',
+      example: { title: 'splitting a path', code: '"/a/b/".split("/").filter(Boolean) // ["a", "b"]' },
+      starter: 'function matchRoute(url) {\n  // TODO\n}\n',
+      solution: 'function matchRoute(url) {\n  const [controller = "Home", action = "Index", id] = url.split("/").filter(Boolean);\n  return { controller, action, id: id === undefined ? null : Number(id) };\n}\n',
+      tests: [
+        { call: 'matchRoute("/")', expect: { controller: 'Home', action: 'Index', id: null } },
+        { call: 'matchRoute("/Products")', expect: { controller: 'Products', action: 'Index', id: null } },
+        { call: 'matchRoute("/Products/Details/5")', expect: { controller: 'Products', action: 'Details', id: 5 } },
+        { call: 'matchRoute("/Students/Edit/12/")', expect: { controller: 'Students', action: 'Edit', id: 12 } },
+      ],
+      explain: 'This is the heart of conventional routing: split the path into segments and fall back to the route defaults when a segment is missing. ASP.NET Core then converts `id` to the action parameter type (model binding).',
+    },
+  ],
+};

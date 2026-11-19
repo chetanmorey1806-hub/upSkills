@@ -1,0 +1,117 @@
+const COLLEGE = `CREATE TABLE students (
+  student_id     INT PRIMARY KEY,
+  first_name     VARCHAR(30),
+  gender         CHAR(1),
+  city           VARCHAR(30),
+  dept_id        INT,
+  marks          INT,
+  fees           DECIMAL(10,2),
+  admission_date DATE
+);
+INSERT INTO students VALUES
+ (1, 'Aarav',  'M', 'Pune',      1, 88,   65000, '2022-07-15'),
+ (2, 'Diya',   'F', 'Mumbai',    1, 92,   65000, '2022-07-18'),
+ (3, 'Kabir',  'M', 'Nagpur',    2, 64,   55000, '2021-07-20'),
+ (4, 'Meera',  'F', 'Pune',      3, 75,   45000, '2023-07-10'),
+ (5, 'Rohan',  'M', 'Pune',      2, 58,   55000, '2023-07-12'),
+ (6, 'Sneha',  'F', NULL,        1, NULL, 65000, '2024-07-01'),
+ (7, 'Vikram', 'M', 'Mumbai',    3, 81,   45000, '2022-08-02'),
+ (8, 'Ananya', 'F', 'Nagpur',    2, 69,   50000, '2024-07-05'),
+ (9, 'Ishaan', 'M', 'Pune',      1, 77,   65000, '2023-07-03');`;
+
+const SHOP = `CREATE TABLE order_items (
+  order_id   INT,
+  product    VARCHAR(30),
+  category   VARCHAR(20),
+  qty        INT,
+  price      DECIMAL(10,2)
+);
+INSERT INTO order_items VALUES
+ (1, 'Notebook',     'Stationery',  5, 60),
+ (1, 'Pen Pack',     'Stationery',  3, 120),
+ (2, 'Earphones',    'Electronics', 1, 999),
+ (3, 'Notebook',     'Stationery',  2, 60),
+ (3, 'Power Bank',   'Electronics', 1, 1499),
+ (4, 'Water Bottle', 'Home',        2, 349),
+ (5, 'Earphones',    'Electronics', 2, 999);`;
+
+export default {
+  lesson: 'mysql-day-13',
+  minutes: 32,
+  intro: 'Summarise data with COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING and GROUP_CONCAT.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 2,
+      q: 'The students table has 9 rows and one student has `marks = NULL`. What do `COUNT(*)` and `COUNT(marks)` return?',
+      options: ['9 and 9', '9 and 8', '8 and 8', '8 and 9'],
+      answer: 1,
+      explain: '`COUNT(*)` counts **rows**; `COUNT(column)` counts **non-NULL values**. All aggregates except COUNT(*) ignore NULLs, so `AVG(marks)` divides by 8, not 9. Use `COUNT(DISTINCT col)` to count unique values.',
+    },
+    {
+      type: 'mcq',
+      mins: 2,
+      q: 'You want departments whose **average marks is above 75**. Where does the condition `AVG(marks) > 75` go?',
+      options: ['In WHERE', 'In HAVING, after GROUP BY', 'In ORDER BY', 'In SELECT only'],
+      answer: 1,
+      explain: '**WHERE filters rows before grouping** and cannot use aggregates. **HAVING filters groups after GROUP BY**. Logical order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. Writing `WHERE AVG(marks) > 75` gives Error 1111 (invalid use of group function).',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 4,
+      q: 'Count the students in each city (`city`, `total`). Include the group of students with **no city** (NULL). Sort by total (highest first), then by city.',
+      example: { title: 'count per group', code: 'SELECT category, COUNT(*) AS products\nFROM products\nGROUP BY category\nORDER BY products DESC;' },
+      setup: COLLEGE,
+      starter: '-- GROUP BY city\n',
+      solution: 'SELECT city, COUNT(*) AS total\nFROM students\nGROUP BY city\nORDER BY total DESC, city;',
+      ordered: true,
+      explain: 'GROUP BY makes one row per distinct city; NULL cities form their own group automatically. Use `COUNT(*)` (not `COUNT(city)`), otherwise the NULL group would show 0. In MySQL, NULL sorts first in ascending order.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 5,
+      q: 'For each department show `dept_id`, `students` (count), `avg_marks` (rounded to 1 decimal) and `top_marks` (highest marks). Only show departments whose **average marks is above 70**.',
+      example: { title: 'aggregates with HAVING', code: 'SELECT category, COUNT(*) AS items, ROUND(AVG(price), 2) AS avg_price\nFROM products\nGROUP BY category\nHAVING AVG(price) > 500;' },
+      setup: COLLEGE,
+      starter: '-- GROUP BY dept_id HAVING ...\n',
+      solution: 'SELECT dept_id,\n       COUNT(*) AS students,\n       ROUND(AVG(marks), 1) AS avg_marks,\n       MAX(marks) AS top_marks\nFROM students\nGROUP BY dept_id\nHAVING AVG(marks) > 70;',
+      explain: 'Several aggregates can be computed per group. AVG ignores Sneha\'s NULL marks, so department 1 averages 3 students. HAVING runs after grouping, so it can use `AVG(marks)`. Department 2 (avg 63.7) is filtered out.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 5,
+      q: 'Count admissions per **year** and **gender**: show `adm_year`, `gender`, `total`. Sort by year, then gender.',
+      example: { title: 'group by two columns', code: 'SELECT YEAR(order_date) AS yr, status, COUNT(*) AS n\nFROM orders\nGROUP BY YEAR(order_date), status\nORDER BY yr, status;' },
+      setup: COLLEGE,
+      starter: '-- GROUP BY YEAR(admission_date), gender\n',
+      solution: 'SELECT YEAR(admission_date) AS adm_year, gender, COUNT(*) AS total\nFROM students\nGROUP BY YEAR(admission_date), gender\nORDER BY adm_year, gender;',
+      ordered: true,
+      explain: 'Grouping by two columns gives one row per **combination** (2022-F, 2022-M ...). With ONLY_FULL_GROUP_BY every non-aggregated column in SELECT must be in GROUP BY. MySQL also lets you group by the alias: `GROUP BY adm_year, gender`.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 5,
+      q: 'Shop report: for each `category` show `revenue` = total of qty × price and `products` = the number of **different** products sold. Show only categories with revenue **above 700**.',
+      example: { title: 'SUM of an expression, COUNT DISTINCT, HAVING', code: 'SELECT city, SUM(amount * qty) AS sales, COUNT(DISTINCT customer_id) AS buyers\nFROM orders\nGROUP BY city\nHAVING SUM(amount * qty) > 50000;' },
+      setup: SHOP,
+      starter: '-- SUM(qty * price), COUNT(DISTINCT ...), HAVING\n',
+      solution: 'SELECT category,\n       SUM(qty * price) AS revenue,\n       COUNT(DISTINCT product) AS products\nFROM order_items\nGROUP BY category\nHAVING SUM(qty * price) > 700;',
+      explain: '`SUM(qty * price)` adds the line totals of each group. `COUNT(DISTINCT product)` counts Notebook and Earphones only once even though they were sold twice. Home (698) is removed by HAVING because the filter uses an aggregate.',
+    },
+    {
+      type: 'code',
+      lang: 'mysql',
+      mins: 4,
+      q: 'For each `order_id` show `items` = the product names of that order in **one cell**, alphabetical, separated by `, ` (comma + space). Example: order 1 → `Notebook, Pen Pack`.',
+      example: { title: 'GROUP_CONCAT', code: "SELECT dept_id, GROUP_CONCAT(first_name ORDER BY first_name SEPARATOR ', ') AS names\nFROM students\nGROUP BY dept_id;" },
+      setup: SHOP,
+      starter: '-- GROUP_CONCAT(... SEPARATOR ...)\n',
+      solution: "SELECT order_id,\n       GROUP_CONCAT(product ORDER BY product SEPARATOR ', ') AS items\nFROM order_items\nGROUP BY order_id;",
+      explain: '`GROUP_CONCAT` joins the values of a group into one string. `ORDER BY` inside it sorts the values and `SEPARATOR` sets the text between them; the default separator is a comma **without** a space. The result is cut at `group_concat_max_len` (1024 characters by default).',
+    },
+  ],
+};

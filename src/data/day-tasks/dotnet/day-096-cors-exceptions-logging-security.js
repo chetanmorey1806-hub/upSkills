@@ -1,0 +1,81 @@
+export default {
+  lesson: 'day-096-cors-exceptions-logging-security',
+  minutes: 32,
+  intro: 'Allow your React app to call the API with a CORS policy, return consistent errors from a global exception handler, log safely and apply basic API security.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'React runs on `http://localhost:5173`, the API on `https://localhost:7001`. The browser console says "blocked by CORS policy". Where must the fix go?',
+      options: ['In the React code (add a header)', 'In the API: allow the origin http://localhost:5173 with a CORS policy', 'In the browser settings', 'In SQL Server'],
+      answer: 1,
+      explain: 'CORS is enforced by the **browser** but decided by the **server**: the API must answer with `Access-Control-Allow-Origin` for that origin. Different port = different origin. Postman ignores CORS, which is why it "works in Postman".',
+    },
+    {
+      type: 'fill',
+      mins: 2,
+      q: 'Complete the CORS policy that allows only the React dev server:\n```\nbuilder.Services.AddCors(o => o.AddPolicy("ReactApp", p => p\n    .______("http://localhost:5173")\n    .AllowAnyHeader()\n    .AllowAnyMethod()));\n...\napp.UseCors("ReactApp");\n```',
+      example: { title: 'production origins from config', code: 'p.WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>()!)' },
+      accept: ['WithOrigins'],
+      caseSensitive: true,
+      explain: '`WithOrigins` lists exact allowed origins (scheme + host + port, no trailing slash). `AllowAnyOrigin()` is risky and cannot be combined with `AllowCredentials()`. `UseCors` must come before `UseAuthorization` and the endpoints.',
+    },
+    {
+      type: 'output',
+      mins: 4,
+      q: 'The policy uses `WithOrigins("http://localhost:5173", "https://upskillr.in")`. For each page origin, is the cross-origin request allowed? Type `allowed` or `blocked` one per line:\n1. `http://localhost:5173`\n2. `http://localhost:3000`\n3. `https://upskillr.in`\n4. `http://upskillr.in`',
+      example: { title: 'what makes an origin', code: 'scheme://host:port → https://shop.in:443' },
+      code: 'WithOrigins("http://localhost:5173", "https://upskillr.in")',
+      expected: `allowed
+blocked
+allowed
+blocked`,
+      explain: 'An origin must match **exactly**: a different port (3000) or a different scheme (http vs https) is a different origin. That is why production and development origins are both listed.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which are good API security practices? (choose all that apply)',
+      options: [
+        'Use HTTPS everywhere (app.UseHttpsRedirection, HSTS in production)',
+        'Return ProblemDetails with a generic message for 500 errors and log the details server-side',
+        'Validate all input and use parameterised queries / EF Core',
+        'Send the full exception stack trace to the client to help them debug',
+        'Apply rate limiting to login endpoints (AddRateLimiter in .NET 7+)',
+      ],
+      answers: [0, 1, 2, 4],
+      explain: 'Stack traces reveal internals (paths, SQL, library versions) to attackers. Keep details in logs, send a generic message with a trace id. HTTPS, validation, parameterised SQL and rate limiting are basic hygiene.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 7,
+      q: '**Write the CORS decision.** `corsHeaders(requestOrigin, allowedOrigins)` returns `{ "Access-Control-Allow-Origin": requestOrigin, "Vary": "Origin" }` when the origin is allowed (exact match, ignore a trailing `/` in the allowed list), otherwise `{}`.',
+      example: { title: 'removing a trailing slash', code: '"https://site.in/".replace(/\\/$/, "") // "https://site.in"' },
+      starter: 'function corsHeaders(requestOrigin, allowedOrigins) {\n  // TODO\n}\n',
+      solution: 'function corsHeaders(requestOrigin, allowedOrigins) {\n  const allowed = allowedOrigins.map((o) => o.replace(/\\/$/, ""));\n  if (requestOrigin && allowed.includes(requestOrigin)) {\n    return { "Access-Control-Allow-Origin": requestOrigin, Vary: "Origin" };\n  }\n  return {};\n}\n',
+      tests: [
+        { call: 'corsHeaders("http://localhost:5173", ["http://localhost:5173", "https://upskillr.in"])', expect: { 'Access-Control-Allow-Origin': 'http://localhost:5173', Vary: 'Origin' } },
+        { call: 'corsHeaders("http://localhost:3000", ["http://localhost:5173"])', expect: {} },
+        { call: 'corsHeaders("https://upskillr.in", ["https://upskillr.in/"])', expect: { 'Access-Control-Allow-Origin': 'https://upskillr.in', Vary: 'Origin' } },
+        { call: 'corsHeaders("http://upskillr.in", ["https://upskillr.in"])', expect: {} },
+      ],
+      explain: 'The CORS middleware compares the request\'s `Origin` header with the policy and echoes it back only when allowed. `Vary: Origin` tells caches that the response differs per origin.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 9,
+      q: '**Global exception handling in Express (ProblemDetails style).**\n- `GET /api/orders/:id`: id `1` → `200` `{ id: 1, total: 499 }`; other ids → throw an error with `status = 404`, message `"Order not found"`\n- `GET /api/report` → throws `new Error("SQL timeout at server db01")`\n- error handler: respond with `{ "title": <message>, "status": <code> }`; for 500 the title must be `"An unexpected error occurred"` (never the internal message), and log the real error with `console.error`',
+      example: { title: 'ProblemDetails shape', code: '{ "title": "Not Found", "status": 404, "traceId": "00-..." }' },
+      starter: 'const express = require("express");\nconst app = express();\n\n// TODO\n\napp.listen(3000);\n',
+      solution: 'const express = require("express");\nconst app = express();\n\napp.get("/api/orders/:id", (req, res) => {\n  if (req.params.id !== "1") {\n    const err = new Error("Order not found");\n    err.status = 404;\n    throw err;\n  }\n  res.json({ id: 1, total: 499 });\n});\n\napp.get("/api/report", () => {\n  throw new Error("SQL timeout at server db01");\n});\n\napp.use((err, req, res, next) => {\n  const status = err.status || 500;\n  if (status === 500) console.error(err.message);\n  res.status(status).json({ title: status === 500 ? "An unexpected error occurred" : err.message, status });\n});\n\napp.listen(3000);\n',
+      tests: [
+        { name: 'order found', steps: [{ method: 'GET', url: '/api/orders/1', expect: { status: 200, json: { id: 1, total: 499 } } }] },
+        { name: 'order missing → 404 problem', steps: [{ method: 'GET', url: '/api/orders/5', expect: { status: 404, json: { title: 'Order not found', status: 404 } } }] },
+        { name: 'crash → safe 500', steps: [{ method: 'GET', url: '/api/report', expect: { status: 500, json: { title: 'An unexpected error occurred', status: 500 } } }] },
+      ],
+      explain: 'In ASP.NET Core the same job is done by `app.UseExceptionHandler()` + `AddProblemDetails()` (or an `IExceptionHandler` in .NET 8): one consistent error shape, internal details only in the logs.',
+    },
+  ],
+};

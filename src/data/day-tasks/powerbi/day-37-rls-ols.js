@@ -1,0 +1,53 @@
+export default {
+  lesson: 'day-37-rls-ols',
+  minutes: 25,
+  intro: 'Build static and dynamic row-level security, test it, and know what object-level security hides.',
+  tasks: [
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'In **Modeling > Manage roles**, role "Pune Manager" has a DAX filter on the Customer table. Complete it so the role sees only Pune customers:\n`[City] = ______`',
+      accept: ['"Pune"'],
+      explain: 'A role filter is a **boolean DAX expression** evaluated for each row of the table: `[City] = "Pune"`. Text values need double quotes. The filter flows from Customer to Sales through the relationship.',
+    },
+    {
+      type: 'output',
+      mins: 2,
+      q: 'Sales by city: Pune 9,10,332 · Mumbai 8,01,109 · Nagpur 11,73,782 · Nashik 2,09,730. A user in the role with filter `Customer[City] = "Pune"` opens a card showing `[Total Sales]` with **no slicers**. What number does she see? (without commas)',
+      code: 'Role filter (table Customer): [City] = "Pune"\nCard: [Total Sales] = SUM(Sales[SalesAmount])',
+      expected: '910332',
+      explain: 'RLS filters the model **before** any measure runs, so even the grand total is only Pune: **910332**. Measures using ALL(Customer) still cannot see other cities\' rows: RLS cannot be bypassed by DAX.',
+    },
+    {
+      type: 'fill',
+      mins: 1,
+      q: 'In **dynamic RLS**, which DAX function returns the signed-in user\'s email/UPN, used like `[Email] = ______()`?',
+      accept: ['USERPRINCIPALNAME', 'USERPRINCIPALNAME()'],
+      explain: '`USERPRINCIPALNAME()` returns the user\'s login (e.g. asha@company.com) in the Service. A UserAccess table maps emails to cities/regions, so one role serves everybody.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'How do you **test** a role in Power BI Desktop before publishing?',
+      options: ['Modeling > **View as** > select the role (and optionally Other user)', 'File > Export', 'Performance Analyzer', 'Publish to web'],
+      answer: 0,
+      explain: '**View as** shows the report as the role sees it; "Other user" lets you type an email to test dynamic RLS. In the Service use the semantic model\'s **Security > Test as role**.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Ravi is a **Member** of the workspace and is also added to the "Pune Manager" role. What does he see?',
+      options: ['Only Pune data', 'All data: RLS applies only to users with **Viewer** role (or app/shared access)', 'Nothing', 'Only Mumbai data'],
+      answer: 1,
+      explain: 'RLS is enforced only for **Viewers** (and people who access via app or sharing with Read). Admins, Members and Contributors can edit the model, so RLS does not restrict them. Give restricted users Viewer or app access.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Sales reps must not see the **Cost** column at all (not even its name in the field list). What do you use?',
+      options: ['Row-level security', 'Object-level security (OLS), set up with Tabular Editor', 'Hide the column in Report view', 'A bookmark'],
+      answer: 1,
+      explain: '**OLS** secures whole tables or columns for a role (configured with Tabular Editor). Hiding a column only removes it from the field list; users with Build permission can still query it.',
+    },
+  ],
+};

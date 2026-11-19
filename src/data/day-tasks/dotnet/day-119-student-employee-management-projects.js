@@ -1,0 +1,93 @@
+export default {
+  lesson: 'day-119-student-employee-management-projects',
+  minutes: 40,
+  intro: 'Practise the core pieces of the Student and Employee Management projects: report queries in SQL Server, business rules (results, payroll, leave) and a REST endpoint.',
+  tasks: [
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'In the layered project (React → Web API → Services → EF Core → SQL Server), where does the rule "net salary = basic + HRA + DA - PF - tax" belong?',
+      options: ['In the React page', 'In a PayrollService class (testable with xUnit)', 'In the controller action', 'In a SQL trigger only'],
+      answer: 1,
+      explain: 'Business rules live in services: they are reused by several endpoints and reports, and can be unit-tested without HTTP or a database. Controllers stay thin and React only displays the result.',
+    },
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 8,
+      q: '**Student result report.** Tables `Students` and `Marks` (one row per subject) are given. For each student show `Name`, `Total` (sum of marks), `Percentage` (`AVG(Score)`) and `Result` = `PASS` if **every** subject is >= 35, else `FAIL`. Order by `Total` descending.',
+      example: { title: 'CASE with an aggregate', code: "SELECT OrderId,\n  CASE WHEN MIN(Qty) > 0 THEN 'OK' ELSE 'CHECK' END AS Status\nFROM OrderLines\nGROUP BY OrderId;" },
+      setup: `CREATE TABLE Students (Id INT PRIMARY KEY, Name NVARCHAR(50));
+CREATE TABLE Marks (StudentId INT, Subject NVARCHAR(30), Score INT);
+INSERT INTO Students VALUES (1, 'Asha'), (2, 'Ravi'), (3, 'Meera');
+INSERT INTO Marks VALUES
+(1, 'C#', 88), (1, 'SQL', 92), (1, 'React', 80),
+(2, 'C#', 70), (2, 'SQL', 30), (2, 'React', 90),
+(3, 'C#', 60), (3, 'SQL', 65), (3, 'React', 55);`,
+      starter: '-- TODO\nSELECT Name FROM Students;\n',
+      solution: "SELECT s.Name,\n       SUM(m.Score) AS Total,\n       AVG(m.Score) AS Percentage,\n       CASE WHEN MIN(m.Score) >= 35 THEN 'PASS' ELSE 'FAIL' END AS Result\nFROM Students s\nJOIN Marks m ON m.StudentId = s.Id\nGROUP BY s.Name\nORDER BY Total DESC;\n",
+      ordered: true,
+      explain: '`MIN(Score) >= 35` is a neat way to say "every subject passed". Ravi has a high total (190) but fails SQL, so his result is FAIL - totals alone are misleading. The same logic should live in a `ResultService` for the API.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 8,
+      q: '**Payroll rule.** Write `netSalary(basic)` returning `{ gross, pf, tax, net }`:\n- HRA = 20% of basic, DA = 10% of basic → `gross = basic + HRA + DA`\n- PF = 12% of basic\n- tax = 10% of the part of gross **above 50000** (0 if gross <= 50000)\n- `net = gross - pf - tax`; round every value to whole rupees (Math.round)',
+      example: { title: 'tax only on the excess', code: 'const taxable = Math.max(0, amount - limit);' },
+      starter: 'function netSalary(basic) {\n  // TODO\n}\n',
+      solution: 'function netSalary(basic) {\n  const gross = Math.round(basic * 1.3);\n  const pf = Math.round(basic * 0.12);\n  const tax = Math.round(Math.max(0, gross - 50000) * 0.1);\n  return { gross, pf, tax, net: gross - pf - tax };\n}\n',
+      tests: [
+        { call: 'netSalary(30000)', expect: { gross: 39000, pf: 3600, tax: 0, net: 35400 } },
+        { call: 'netSalary(50000)', expect: { gross: 65000, pf: 6000, tax: 1500, net: 57500 } },
+        { call: 'netSalary(38462)', expect: { gross: 50001, pf: 4615, tax: 0, net: 45386 } },
+      ],
+      explain: 'Putting the payroll formula in one pure function (a C# `PayrollService.Calculate`) makes it easy to test edge cases such as a gross just above the tax limit. Rounding at the end of each component avoids paise differences in payslips.',
+    },
+    {
+      type: 'code',
+      lang: 'js',
+      mins: 8,
+      q: '**Leave approval rule.** Write `canApproveLeave(balance, request, existing)` where dates are `"YYYY-MM-DD"` strings:\n- `request = { from, to }`; days = inclusive day count\n- return `"Insufficient balance"` if days > balance\n- return `"Overlaps existing leave"` if it overlaps any `{ from, to }` in `existing`\n- else return `"Approved"`',
+      example: { title: 'days between two dates', code: 'const days = (new Date(to) - new Date(from)) / 86400000 + 1;' },
+      starter: 'function canApproveLeave(balance, request, existing) {\n  // TODO\n}\n',
+      solution: 'function canApproveLeave(balance, request, existing) {\n  const days = (new Date(request.to) - new Date(request.from)) / 86400000 + 1;\n  if (days > balance) return "Insufficient balance";\n  const overlaps = existing.some((e) => request.from <= e.to && e.from <= request.to);\n  if (overlaps) return "Overlaps existing leave";\n  return "Approved";\n}\n',
+      tests: [
+        { call: 'canApproveLeave(5, { from: "2025-03-10", to: "2025-03-12" }, [])', expect: 'Approved' },
+        { call: 'canApproveLeave(2, { from: "2025-03-10", to: "2025-03-12" }, [])', expect: 'Insufficient balance', msg: '3 days requested with balance 2' },
+        { call: 'canApproveLeave(10, { from: "2025-03-10", to: "2025-03-12" }, [{ from: "2025-03-12", to: "2025-03-14" }])', expect: 'Overlaps existing leave', msg: 'Sharing even one day is an overlap' },
+        { call: 'canApproveLeave(10, { from: "2025-03-10", to: "2025-03-12" }, [{ from: "2025-03-13", to: "2025-03-14" }])', expect: 'Approved' },
+      ],
+      explain: 'Two ranges overlap when `startA <= endB && startB <= endA` - a classic interview question. ISO date strings compare correctly as text. In the project this is `LeaveService.Apply`, returning 400 with the message.',
+    },
+    {
+      type: 'code',
+      lang: 'express',
+      mins: 10,
+      q: '**Employees endpoint (the same API in Express).**\n- `GET /api/employees?dept=IT` → employees of that department (all if no dept), each as `{ id, name, dept }` (never `salary`)\n- `GET /api/departments/summary` → `[{ dept, count, totalSalary }]` sorted by `dept`',
+      example: { title: 'grouping with reduce', code: 'const byCity = list.reduce((acc, x) => { (acc[x.city] ||= []).push(x); return acc; }, {});' },
+      starter: 'const express = require("express");\nconst app = express();\n\nconst employees = [\n  { id: 1, name: "Asha", dept: "IT", salary: 60000 },\n  { id: 2, name: "Ravi", dept: "HR", salary: 40000 },\n  { id: 3, name: "Meera", dept: "IT", salary: 75000 },\n  { id: 4, name: "Kiran", dept: "Sales", salary: 45000 },\n];\n\n// TODO\n\napp.listen(3000);\n',
+      solution: 'const express = require("express");\nconst app = express();\n\nconst employees = [\n  { id: 1, name: "Asha", dept: "IT", salary: 60000 },\n  { id: 2, name: "Ravi", dept: "HR", salary: 40000 },\n  { id: 3, name: "Meera", dept: "IT", salary: 75000 },\n  { id: 4, name: "Kiran", dept: "Sales", salary: 45000 },\n];\n\napp.get("/api/employees", (req, res) => {\n  const list = req.query.dept ? employees.filter((e) => e.dept === req.query.dept) : employees;\n  res.json(list.map(({ id, name, dept }) => ({ id, name, dept })));\n});\n\napp.get("/api/departments/summary", (req, res) => {\n  const map = {};\n  for (const e of employees) {\n    map[e.dept] = map[e.dept] || { dept: e.dept, count: 0, totalSalary: 0 };\n    map[e.dept].count++;\n    map[e.dept].totalSalary += e.salary;\n  }\n  res.json(Object.values(map).sort((a, b) => a.dept.localeCompare(b.dept)));\n});\n\napp.listen(3000);\n',
+      tests: [
+        { name: 'filter by dept, no salary', steps: [{ method: 'GET', url: '/api/employees?dept=IT', expect: { status: 200, json: [{ id: 1, name: 'Asha', dept: 'IT' }, { id: 3, name: 'Meera', dept: 'IT' }] } }] },
+        { name: 'salary hidden', steps: [{ method: 'GET', url: '/api/employees', expect: { status: 200, length: 4 } }] },
+        { name: 'summary', steps: [{ method: 'GET', url: '/api/departments/summary', expect: { status: 200, json: [{ dept: 'HR', count: 1, totalSalary: 40000 }, { dept: 'IT', count: 2, totalSalary: 135000 }, { dept: 'Sales', count: 1, totalSalary: 45000 }] } }] },
+      ],
+      explain: 'The list endpoint returns a DTO without the sensitive salary; the summary endpoint does the grouping that a dashboard needs (in .NET: `GroupBy` in a service, or a SQL view). One clear endpoint per screen keeps React simple.',
+    },
+    {
+      type: 'multi',
+      mins: 2,
+      q: 'Which belong in the build plan of a final project? (choose all that apply)',
+      options: [
+        'Requirements: roles, features (must-have vs nice-to-have), business rules',
+        'ER diagram and SQL schema with keys and constraints',
+        'API endpoint table and React page list',
+        'Build vertical slices: one feature end-to-end (table → API → page → test) at a time',
+        'Write all the code first and design the database at the end',
+      ],
+      answers: [0, 1, 2, 3],
+      explain: 'Design first, then build feature by feature with Git commits and tests along the way. Designing the database last leads to rewrites of entities, DTOs and pages.',
+    },
+  ],
+};

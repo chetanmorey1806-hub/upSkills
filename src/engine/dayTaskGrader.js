@@ -71,7 +71,7 @@ function gradeWritten(t, a) {
 async function renderFrame(html, { react = false, timeout = 12000 } = {}) {
   const f = document.createElement('iframe');
   f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals');
-  f.style.cssText = 'position:fixed;left:-10000px;top:0;width:1024px;height:768px;border:0;visibility:hidden';
+  f.style.cssText = 'position:fixed;left:-10000px;top:0;width:1024px;height:768px;max-width:none;max-height:none;border:0;visibility:hidden';
   const errors = [];
   const onMsg = (e) => { if (e.source === f.contentWindow && e.data && e.data.__pg && e.data.level === 'error') errors.push(e.data.text); };
   window.addEventListener('message', onMsg);
@@ -119,6 +119,7 @@ export function runDomChecks(win, doc, checks = []) {
     if (c.count != null && els.length !== c.count) return fail(`expected ${c.count} × "${c.sel}", found ${els.length}`);
     if (c.min != null && els.length < c.min) return fail(`expected at least ${c.min} × "${c.sel}", found ${els.length}`);
     if (c.max != null && els.length > c.max) return fail(`expected at most ${c.max} × "${c.sel}", found ${els.length}`);
+    if (c.count === 0 || c.max === 0) return { ok: true, msg: c.msg }; // "there must be none" and there are none
     if (!els.length) return fail(`no element matches "${c.sel}"`);
     const el = els[c.index || 0];
     if (c.nonEmpty && !(el.textContent || '').trim()) return fail(`"${c.sel}" is empty`);
@@ -217,11 +218,18 @@ const PY_HARNESS = (tests, stdin) => `
 import json, io, sys, contextlib, traceback
 TESTS = json.loads(${JSON.stringify(JSON.stringify(tests))})
 def _canon(v):
+    # numpy arrays / numpy scalars -> plain Python values
+    if not isinstance(v, (str, bytes, bool, int, float, list, tuple, dict, set, frozenset)) and hasattr(v, 'tolist'):
+        try: v = v.tolist()
+        except Exception: pass
+    if isinstance(v, bool): return v
+    if isinstance(v, float):
+        r = round(v, 9)
+        return int(r) if r.is_integer() else r
     if isinstance(v, (set, frozenset)): return sorted(_canon(x) for x in v)
     if isinstance(v, tuple): return [_canon(x) for x in v]
     if isinstance(v, list): return [_canon(x) for x in v]
     if isinstance(v, dict): return {str(k): _canon(x) for k, x in v.items()}
-    if isinstance(v, float): return round(v, 9)
     return v
 src = open('student.py').read()
 ns = {'__name__': 'student'}
@@ -231,7 +239,7 @@ try:
     with contextlib.redirect_stdout(buf):
         exec(compile(src, 'student.py', 'exec'), ns)
     load_err = None
-except Exception as e:
+except BaseException as e:  # incl. SystemExit from sys.exit()/argparse
     load_err = type(e).__name__ + ': ' + str(e)
 out = buf.getvalue()
 res = []
@@ -247,15 +255,26 @@ for t in TESTS:
             v = eval(t['call'], ns)
         g = _canon(v)
         res.append({'ok': json.dumps(g, sort_keys=True, default=str) == json.dumps(_canon(t['expect']), sort_keys=True, default=str), 'got': json.dumps(g, default=str)})
-    except Exception as e:
+    except BaseException as e:  # incl. SystemExit from sys.exit()/argparse
         res.append({'ok': False, 'error': type(e).__name__ + ': ' + str(e)})
 print('##RES ' + json.dumps(res))
 `;
+// Big libraries (numpy, pandas, scikit-learn…) are downloaded the first time they are imported. Load them BEFORE the
+// timed run with a generous limit, so a slow phone/network can never make a correct answer time out.
+const PY_PKGS = [[/\b(import|from)\s+numpy\b/, 'numpy'], [/\b(import|from)\s+pandas\b/, 'pandas'], [/\b(import|from)\s+sklearn\b/, 'scikit-learn'], [/\b(import|from)\s+scipy\b/, 'scipy'], [/\b(import|from)\s+matplotlib\b/, 'matplotlib']];
+const loadedPkgs = new Set();
+export async function preloadPython(src) {
+  const need = PY_PKGS.filter(([re, pkg]) => re.test(src) && !loadedPkgs.has(pkg)).map(([, pkg]) => pkg);
+  if (!need.length) return;
+  try { await pyLock(() => runPyExec({ code: '1', packages: need }, 240000)); need.forEach((p) => loadedPkgs.add(p)); } catch { /* the run itself will report any problem */ }
+}
+
 async function gradePython(t, code) {
   let text = '', err = '';
+  await preloadPython(`${code}\n${(t.tests || []).map((x) => x.call || '').join('\n')}\n${t.solution || ''}`);
   await pyLock(() => runPython({ files: { 'main.py': PY_HARNESS(t.tests, t.stdin), 'student.py': code } }, (m) => {
     if (m.type === 'out') text += m.text; if (m.type === 'err') err += m.text; if (m.type === 'done' && m.error) err += m.error;
-  }, 20000));
+  }, 30000));
   const line = text.split('\n').find((l) => l.startsWith('##RES '));
   if (!line) return res(false, [{ ok: false, msg: `Your code could not run: ${(err || 'unknown error').trim().split('\n').slice(-1)[0]}` }]);
   const results = JSON.parse(line.slice(6));
@@ -337,20 +356,31 @@ function gradeExcel(t, formula) {
   if (mine.error) return res(false, [{ ok: false, msg: `Formula error: ${mine.error}` }]);
   const a = mine.value, b = ref.value;
   const num = (v) => (typeof v === 'number' ? Math.round(v * 1e6) / 1e6 : v);
-  const ok = !isErr(a) && (Array.isArray(a) || Array.isArray(b) ? same(a, b) : typeof a === 'string' && typeof b === 'string' ? a.toLowerCase() === b.toLowerCase() : num(a) === num(b));
+  const ok = !isErr(a) && (Array.isArray(a) || Array.isArray(b) ? same(a, b) : typeof a === 'string' && typeof b === 'string' ? a === b : num(a) === num(b));
   return res(ok, ok ? [] : [{ ok: false, msg: isErr(a) ? `Your formula returns ${display(a)}.` : `Your formula returns ${display(a)}, expected ${display(b)}.` }], { got: `=${f} → ${display(a)}`, expected: `${t.solution} → ${display(b)}` });
 }
 function gradeDax(t, expr) {
-  // accept both "Total Sales = SUM(...)" and just "SUM(...)"
-  const m = s(expr).match(/^\s*([^=(]+?)\s*=\s*([\s\S]+)$/);
-  const e = (m && !/[()]/.test(m[1]) ? m[2] : s(expr)).trim();
+  // Accept "Total Sales = SUM(...)", "Sales (LY) = ...", "[Profit %] := ..." and a bare expression.
+  // The text before the first "=" is a measure NAME only if it contains no function call like IF( / SUM(
+  // and does not start with VAR (a bare "VAR x = ... RETURN x" answer).
+  const raw = s(expr);
+  const m = raw.match(/^\s*([^=]+?)\s*:?=(?!=)\s*([\s\S]+)$/);
+  const nm = m ? m[1].trim() : '';
+  const isName = !!m && !/\n/.test(nm) && !/^\(/.test(nm) && !/\bVAR\b/i.test(nm) && !/[A-Za-z_]\(/.test(nm) && !/\(\s*\(/.test(nm) && !/[<>!]$/.test(nm) && !/"/.test(nm);
+  const e = (isName ? m[2] : raw).trim();
   if (!e) return res(false, [{ ok: false, msg: 'No DAX expression written.' }]);
   let eng;
   try { eng = makeEngine({ ...(t.measures || {}), __you: e, __ref: t.solution }); eng.evaluateMeasure('__you', [], []); } catch (err) { return res(false, [{ ok: false, msg: `DAX error: ${err.message}` }]); }
   const ctxs = [[]];
-  [['Product', 'Category'], ['Customer', 'City'], ['Date', 'Year']].forEach(([tb, col]) => {
-    [...new Set(MODEL.tables[tb].map((r) => r[col]))].slice(0, 6).forEach((v) => ctxs.push(filtersFor([{ table: tb, col, value: v }])));
+  // many slicer contexts, so a wrong measure cannot pass by matching a few totals
+  [['Product', 'Category'], ['Product', 'Product'], ['Customer', 'City'], ['Customer', 'Segment'], ['Date', 'Year'], ['Date', 'Quarter'], ['Date', 'Month']].forEach(([tb, col]) => {
+    if (!MODEL.tables[tb] || !(col in (MODEL.tables[tb][0] || {}))) return;
+    [...new Set(MODEL.tables[tb].map((r) => r[col]))].slice(0, 8).forEach((v) => ctxs.push(filtersFor([{ table: tb, col, value: v }])));
   });
+  // a few combined filters (Category + Year)
+  const cats = [...new Set(MODEL.tables.Product.map((r) => r.Category))];
+  const years = [...new Set(MODEL.tables.Date.map((r) => r.Year))];
+  cats.slice(0, 3).forEach((c) => years.slice(0, 2).forEach((y) => ctxs.push(filtersFor([{ table: 'Product', col: 'Category', value: c }, { table: 'Date', col: 'Year', value: y }]))));
   for (const f of ctxs) {
     let a, b;
     try { a = eng.evaluateMeasure('__you', f, []); } catch (err) { return res(false, [{ ok: false, msg: `DAX error: ${err.message}` }]); }
@@ -360,12 +390,14 @@ function gradeDax(t, expr) {
   }
   return res(true, [{ ok: true, msg: 'Correct in every filter context.' }]);
 }
-let apiExec = null;
 async function gradeExpress(t, code) {
-  if (!apiExec) apiExec = createBrowserExec();
-  const r = await runApiTests(code, t.tests, apiExec);
-  const checks = r.map((x) => ({ ok: x.status === 'PASS', msg: x.status === 'PASS' ? `${x.name} ✓` : `${x.name} → ${x.msg.replace(/\n/g, ' ')}` }));
-  return res(checks.every((c) => c.ok), checks);
+  // a fresh worker per task: no state (ids, arrays, timers) can leak from a previous task
+  const exec = createBrowserExec();
+  try {
+    const r = await runApiTests(code, t.tests, exec);
+    const checks = r.map((x) => ({ ok: x.status === 'PASS', msg: x.status === 'PASS' ? `${x.name} ✓` : `${x.name} → ${x.msg.replace(/\n/g, ' ')}` }));
+    return res(checks.every((c) => c.ok), checks);
+  } finally { exec.close(); }
 }
 
 /* --------------------------------- dispatch --------------------------------- */

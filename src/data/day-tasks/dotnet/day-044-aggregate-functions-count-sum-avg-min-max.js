@@ -1,0 +1,85 @@
+const ORDERS = `CREATE TABLE Orders (
+    OrderId INT PRIMARY KEY,
+    Customer NVARCHAR(50),
+    City NVARCHAR(30),
+    Amount DECIMAL(10, 2),
+    CouponCode NVARCHAR(10)
+);
+INSERT INTO Orders VALUES
+(1, 'Asha', 'Pune', 1200.00, 'NEW10'),
+(2, 'Ravi', 'Delhi', 800.00, NULL),
+(3, 'Asha', 'Pune', 2500.00, NULL),
+(4, 'Meena', 'Chennai', 400.00, 'FEST'),
+(5, 'Kiran', 'Pune', 1900.00, 'NEW10'),
+(6, 'Ravi', 'Delhi', 1200.00, NULL);`;
+
+export default {
+  lesson: 'day-044-aggregate-functions-count-sum-avg-min-max',
+  minutes: 20,
+  intro: 'Practise the aggregate functions COUNT, SUM, AVG, MIN and MAX, including how they treat NULL values.',
+  tasks: [
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 3,
+      q: 'Return one row with: `TotalOrders` (number of orders), `Revenue` (sum of Amount) and `AvgOrder` (average Amount).',
+      example: { title: 'several aggregates at once', code: 'SELECT COUNT(*) AS Students, AVG(Marks) AS AvgMarks FROM Results;' },
+      setup: ORDERS,
+      starter: '-- SELECT COUNT(*) AS ..., SUM(...) AS ..., AVG(...) AS ...\n',
+      solution: 'SELECT COUNT(*) AS TotalOrders, SUM(Amount) AS Revenue, AVG(Amount) AS AvgOrder FROM Orders;',
+      explain: 'Aggregates turn many rows into one summary row: 6 orders, total 8000 and average 1333.33. Give each aggregate an alias, otherwise the column is called "(No column name)".',
+    },
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 3,
+      q: 'Find the **smallest** and **largest** order amount for customers in **Pune**. Columns: `MinAmount`, `MaxAmount`.',
+      example: { title: 'MIN / MAX with WHERE', code: "SELECT MIN(Price) AS Cheapest, MAX(Price) AS Costliest FROM Products WHERE Category = 'Mobiles';" },
+      setup: ORDERS,
+      starter: '-- MIN, MAX for Pune\n',
+      solution: "SELECT MIN(Amount) AS MinAmount, MAX(Amount) AS MaxAmount FROM Orders WHERE City = 'Pune';",
+      explain: '`WHERE` filters rows **before** aggregation, so MIN and MAX see only Pune orders (1200, 2500, 1900).',
+    },
+    {
+      type: 'code',
+      lang: 'tsql',
+      mins: 4,
+      q: 'Return one row with three counts:\n- `AllOrders` = number of rows\n- `WithCoupon` = number of orders that used a coupon (count the CouponCode column)\n- `Customers` = number of **different** customers',
+      example: { title: 'COUNT variants', code: 'SELECT COUNT(*) AS Rows_, COUNT(Phone) AS HasPhone, COUNT(DISTINCT City) AS Cities FROM Students;' },
+      setup: ORDERS,
+      starter: '-- COUNT(*), COUNT(column), COUNT(DISTINCT column)\n',
+      solution: 'SELECT COUNT(*) AS AllOrders, COUNT(CouponCode) AS WithCoupon, COUNT(DISTINCT Customer) AS Customers FROM Orders;',
+      explain: '`COUNT(*)` counts rows (6). `COUNT(column)` **ignores NULLs** (3 coupons). `COUNT(DISTINCT column)` counts unique values (Asha, Ravi, Meena, Kiran = 4).',
+    },
+    {
+      type: 'mcq',
+      mins: 2,
+      q: 'A table has `Marks INT` values 70, 75 and 80, plus one row where Marks is NULL. What does `SELECT AVG(Marks)` return in SQL Server?',
+      options: ['56 (NULL counted as 0)', '75', 'NULL', 'An error'],
+      answer: 1,
+      explain: 'Aggregates **ignore NULL**: AVG = (70 + 75 + 80) / 3 = 75. If you want NULL to count as 0, use `AVG(ISNULL(Marks, 0))`. Also note: AVG of an INT column returns an INT in SQL Server (decimals are truncated), so use `AVG(Marks * 1.0)` for exact averages.',
+    },
+    {
+      type: 'fill',
+      mins: 2,
+      q: 'Complete the query that returns the **total revenue from orders above 1000** as `BigRevenue`:\n`SELECT ________________ FROM Orders WHERE Amount > 1000;`',
+      example: { title: 'SUM with alias', code: 'SELECT SUM(Qty) AS TotalQty FROM OrderItems;' },
+      accept: ['SUM(Amount) AS BigRevenue', 'BigRevenue = SUM(Amount)'],
+      acceptRegex: ['^SUM\\s*\\(\\s*Amount\\s*\\)\\s+(AS\\s+)?\\[?BigRevenue\\]?$'],
+      explain: '`SUM(Amount)` adds the Amount of the filtered rows (1200 + 2500 + 1900 + 1200 = 6800). SUM, AVG work only on numbers; COUNT, MIN, MAX also work on text and dates.',
+    },
+    {
+      type: 'mcq',
+      mins: 1,
+      q: 'Why does `SELECT Customer, SUM(Amount) FROM Orders;` give an error?',
+      options: [
+        'SUM cannot be used on DECIMAL',
+        'Customer is neither aggregated nor in a GROUP BY, so SQL Server does not know which customer to show for the single summary row',
+        'The table needs an alias',
+        'It does not give an error',
+      ],
+      answer: 1,
+      explain: 'Mixing a plain column with an aggregate requires **GROUP BY** (next lesson): `SELECT Customer, SUM(Amount) FROM Orders GROUP BY Customer;`. SQL Server reports Msg 8120 "column is invalid in the select list".',
+    },
+  ],
+};
