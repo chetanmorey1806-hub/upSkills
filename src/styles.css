@@ -2371,23 +2371,3 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
 }
 .mat-missing { display: grid; place-items: center; padding: 1rem; text-align: center; font-size: .85rem; color: var(--muted); background: var(--surface2); min-height: 120px; }
 
-/* ===== Landing: students section ===== */
-#students .ld-head { margin-bottom: 1.4rem; }
-.ld-eyebrow svg { vertical-align: -2px; }
-.st-stack { display: flex; justify-content: center; align-items: center; margin-bottom: 2rem; }
-.st-stack .st-photo { width: 52px; height: 52px; border: 3px solid var(--surface); margin-left: -14px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
-.st-stack .st-photo:first-child { margin-left: 0; }
-.st-more { margin-left: .7rem; font-weight: 700; color: var(--primary); }
-.st-row { overflow: hidden; padding: .5rem 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.st-track { display: flex; gap: 1rem; width: max-content; animation: st-scroll 45s linear infinite; }
-.st-row.rev .st-track { animation-direction: reverse; animation-duration: 55s; }
-.st-row:hover .st-track { animation-play-state: paused; }
-@keyframes st-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.st-card { margin: 0; display: flex; align-items: center; gap: .75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: .7rem 1.1rem .7rem .7rem; box-shadow: var(--shadow); min-width: 230px; transition: transform .2s; }
-.st-card:hover { transform: translateY(-3px); }
-.st-photo { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; flex: none; background: var(--surface2); }
-.st-initials { display: inline-grid; place-items: center; font-weight: 800; font-size: 1.3rem; color: #fff; background: linear-gradient(135deg, #4f46e5, #06b6d4); }
-.st-card figcaption { display: flex; flex-direction: column; line-height: 1.25; }
-.st-card figcaption span { font-size: .85rem; color: var(--primary); font-weight: 600; }
-.st-card figcaption small { color: var(--muted); font-size: .78rem; }
-@media (prefers-reduced-motion: reduce) { .st-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; } .st-row { -webkit-mask-image: none; mask-image: none; } }

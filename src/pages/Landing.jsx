@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import StudentsSection from '../components/StudentsSection.jsx';
 import { Link } from 'react-router-dom';
 import { useAuth, logout, firstName } from '../auth.js';
 import {
@@ -308,8 +307,6 @@ export default function Landing() {
           </ol>
         </div>
       </section>
-
-      <StudentsSection />
 
       {/* FINAL CTA */}
       <section className="ld-section">

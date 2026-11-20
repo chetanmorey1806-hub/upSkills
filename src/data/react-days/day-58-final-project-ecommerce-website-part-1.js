@@ -564,7 +564,7 @@ h2 { margin: 4px 0; }
 .toast { background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 8px; }
 .skel { height: 300px; border-radius: 12px; background: #e2e8f0; }`,
       },
-      result: 'An iPhone 13 Pro details page (product #121): large image with clickable thumbnails, brand, title, rating badge, ₹ price with MRP and % off, stock status, description, warranty/shipping/return facts, a quantity picker limited to the stock, Add to cart (shows a green confirmation) and the customer reviews. Product #9999 shows "Product not found".',
+      result: 'An Apple iPhone 5s details page (product #121): large image with clickable thumbnails, brand, title, rating badge, ₹ price with MRP and % off, stock status, description, warranty/shipping/return facts, a quantity picker limited to the stock, Add to cart (shows a green confirmation) and the customer reviews. Product #9999 shows "Product not found".',
       explanation:
         "In the real app the id comes from useParams(); here buttons change it to show the same component with different data. useProduct turns a 404 into a friendly error message. Resetting the gallery index and quantity when the id changes prevents showing image 4 of a product that has only 1 image. The quantity buttons are bounded by stock and have aria-labels, the quantity is announced with aria-live, and Add to cart is disabled when out of stock, all common interview follow-up points.",
     },
