@@ -4,8 +4,10 @@ import { HashRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './styles.css';
 import { applyPrefs } from './uiPrefs.js';
+import { installProtection } from './protect.js';
 
 applyPrefs();
+installProtection();
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyPrefs());
 
 ReactDOM.createRoot(document.getElementById('root')).render(

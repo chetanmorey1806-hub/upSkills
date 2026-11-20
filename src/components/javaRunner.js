@@ -7,6 +7,8 @@ const LOADER = 'https://cjrtnc.leaningtech.com/5.0/loader.js';
 const JAVA_VERSION = 17;
 
 let ready = null;
+let javac = null; // com.sun.tools.javac.Main, kept loaded so later compiles are fast (a few seconds)
+const FAIL = '##JRUN_FAILED##';
 let runCount = 0;
 let busy = false;
 
@@ -41,6 +43,8 @@ export function ensureJava() {
     ready = (async () => {
       await loadScript();
       await window.cheerpjInit({ version: JAVA_VERSION, status: 'none' });
+      const lib = await window.cheerpjRunLibrary('');
+      javac = await lib.com.sun.tools.javac.Main;
     })();
     ready.catch(() => { ready = null; });
   }
@@ -89,13 +93,13 @@ export async function runJava(files, stdin = '', onStatus) {
     const wrapper = `JRun${id}`;
     window.cheerpjAddStringFile(`${src}/stdin${id}.txt`, enc.encode(stdin.endsWith('\n') || !stdin ? stdin : `${stdin}\n`));
     window.cheerpjAddStringFile(`${src}/${wrapper}.java`, enc.encode(
-      `public class ${wrapper} {\n  public static void main(String[] a) throws Throwable {\n    System.setIn(new java.io.FileInputStream("${src}/stdin${id}.txt"));\n    try { ${main}.main(a); } finally { System.out.flush(); System.err.flush(); }\n  }\n}\n`,
+      `public class ${wrapper} {\n  public static void main(String[] a) throws Throwable {\n    System.setIn(new java.io.FileInputStream("${src}/stdin${id}.txt"));\n    try { ${main}.main(a); }\n    catch (Throwable e) {\n      System.out.flush();\n      System.err.println("Exception in thread \\"main\\" " + e);\n      for (StackTraceElement s : e.getStackTrace()) { if (s.getClassName().equals("${wrapper}")) break; System.err.println("\\tat " + s); }\n      System.err.println("${FAIL}");\n    }\n    finally { System.out.flush(); System.err.flush(); }\n  }\n}\n`,
     ));
 
     const con = consoleEl();
     con.textContent = '';
     onStatus?.(first ? 'Compiling… (the first compile takes a little longer)' : 'Compiling…');
-    const code = await window.cheerpjRunMain('com.sun.tools.javac.Main', out, ...paths, `${src}/${wrapper}.java`, '-d', out, '-encoding', 'UTF-8');
+    const code = await javac.compile([...paths, `${src}/${wrapper}.java`, '-d', out, '-encoding', 'UTF-8']);
     await settle();
     const compileOut = con.textContent.replaceAll(`${src}/`, '');
     if (code !== 0) return { phase: 'compile', ok: false, out: compileOut || 'Compilation failed.' };
@@ -105,8 +109,10 @@ export async function runJava(files, stdin = '', onStatus) {
     const t = performance.now();
     const exit = await window.cheerpjRunMain(wrapper, out);
     await settle();
-    const text = con.textContent.replace(new RegExp(`\\s*at ${wrapper}\\.main\\(${wrapper}\\.java:\\d+\\)`, 'g'), '');
-    return { phase: 'run', ok: exit === 0, out: text, ms: Math.round(performance.now() - t), exit };
+    const raw = con.textContent;
+    const failed = raw.includes(FAIL) || (exit != null && exit !== 0);
+    const text = raw.replace(`${FAIL}\n`, '').replace(FAIL, '');
+    return { phase: 'run', ok: !failed, out: text, ms: Math.round(performance.now() - t), exit: failed ? (exit || 1) : 0 };
   } finally {
     busy = false;
   }

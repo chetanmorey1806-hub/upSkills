@@ -104,6 +104,15 @@ export default function Chat() {
 
   const scrollDown = () => requestAnimationFrame(() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; });
   const add = useCallback((m) => setMsgs((l) => (l.some((x) => x.id === m.id) ? l : [...l, m])), []);
+  // photos / videos load after the text and push the list down: stay at the newest message while the reader is at the bottom
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return undefined;
+    const onLoad = (e) => { if (stick.current && /^(IMG|VIDEO)$/.test(e.target.tagName)) el.scrollTop = el.scrollHeight; };
+    el.addEventListener('load', onLoad, true);
+    el.addEventListener('loadedmetadata', onLoad, true);
+    return () => { el.removeEventListener('load', onLoad, true); el.removeEventListener('loadedmetadata', onLoad, true); };
+  });
 
   const myId = me?.id || me?.username;
 
@@ -274,7 +283,8 @@ export default function Chat() {
             className="input ch-input"
             rows={1}
             value={text}
-            placeholder="Type a message…  (Enter to send, Shift+Enter for a new line)"
+            placeholder="Type a message…"
+            title="Enter to send, Shift+Enter for a new line"
             onChange={(e) => { setText(e.target.value); sockRef.current?.emit('chat:typing'); }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             onPaste={(e) => { if (e.clipboardData.files.length) { e.preventDefault(); pick(e.clipboardData.files); } }}
