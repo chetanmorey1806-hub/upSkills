@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Paperclip, FolderUp, Image as ImageIcon, Send, Trash2, Download, FileText, File as FileIcon, Folder, Users, X, Film } from 'lucide-react';
 import { api, connectSocket, fileUrl, fmtSize, serverMode } from '../serverApi.js';
 import { useAuth } from '../auth.js';
-import { ServerNeeded } from '../components/MaterialBits.jsx';
+import { useResolvedSrc } from '../media.js';
+import { listLocalChat, sendLocalChat, deleteLocalChat, subscribeLocalChat } from '../localChat.js';
 
 import Ico from '../components/Ico.jsx';
 const URL_RE = /(https?:\/\/[^\s<>"']+)/g;
@@ -21,15 +22,33 @@ const dayOf = (d) => new Date(d).toDateString();
 const initials = (n) => String(n || '?').trim().split(/\s+/).filter((w) => !/^(er|dr|mr|mrs|ms)\.?$/i.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 const hue = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 
+// A file is either on the server or (no server) in this browser's IndexedDB ("idb:..." id).
+function useFileUrl(f, download = false) {
+  const local = !!f.id?.startsWith('idb:');
+  const { url } = useResolvedSrc(local ? f.id : null);
+  return local ? url : fileUrl(f.id, { download });
+}
+function Photo({ f }) {
+  const src = useFileUrl(f);
+  return <a href={src || undefined} target="_blank" rel="noreferrer"><img src={src || undefined} alt={f.name} loading="lazy" /></a>;
+}
+function Vid({ f }) {
+  const src = useFileUrl(f);
+  return <video className="ch-video" src={src || undefined} controls preload="metadata" />;
+}
+
 function FileChip({ f }) {
+  const local = !!f.id?.startsWith('idb:');
   const I = /^video\//.test(f.mime) ? Film : f.mime === 'application/pdf' ? FileText : FileIcon;
   const viewable = /^(application\/pdf|video\/|image\/|text\/plain)/.test(f.mime);
+  const open = useFileUrl(f, !viewable);
+  const dl = useFileUrl(f, true);
   return (
     <div className="ch-file">
       <I size={18} />
-      <a className="ch-file-name" href={fileUrl(f.id, { download: !viewable })} target="_blank" rel="noreferrer" title={f.relPath || f.name}>{f.name}</a>
+      <a className="ch-file-name" href={open || undefined} target="_blank" rel="noreferrer" title={f.relPath || f.name}>{f.name}</a>
       <span className="muted small">{fmtSize(f.size)}</span>
-      <a className="ch-icon-btn" href={fileUrl(f.id, { download: true })} title="Download"><Download size={15} /></a>
+      <a className="ch-icon-btn" href={dl || undefined} download={local ? f.name : undefined} title="Download"><Download size={15} /></a>
     </div>
   );
 }
@@ -48,11 +67,11 @@ function Attachments({ files }) {
     <div className="ch-atts">
       {photos.length > 0 && (
         <div className={`ch-photos n${Math.min(photos.length, 4)}`}>
-          {photos.slice(0, 8).map((f) => <a key={f.id} href={fileUrl(f.id)} target="_blank" rel="noreferrer"><img src={fileUrl(f.id)} alt={f.name} loading="lazy" /></a>)}
+          {photos.slice(0, 8).map((f) => <Photo key={f.id} f={f} />)}
           {photos.length > 8 && <span className="muted small">+{photos.length - 8} more photos</span>}
         </div>
       )}
-      {videos.map((f) => <video key={f.id} className="ch-video" src={fileUrl(f.id)} controls preload="metadata" />)}
+      {videos.map((f) => <Vid key={f.id} f={f} />)}
       {loose.map((f) => <FileChip key={f.id} f={f} />)}
       {folders.map(([name, list]) => (
         <details key={name} className="ch-folder">
@@ -85,6 +104,24 @@ export default function Chat() {
 
   const scrollDown = () => requestAnimationFrame(() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; });
   const add = useCallback((m) => setMsgs((l) => (l.some((x) => x.id === m.id) ? l : [...l, m])), []);
+
+  const myId = me?.id || me?.username;
+
+  // No server: the chat room lives in this browser (shared by every account on this computer).
+  useEffect(() => {
+    if (serverMode || !me) return undefined;
+    setMsgs(listLocalChat()); setStatus('online'); scrollDown();
+    const sub = subscribeLocalChat(me, {
+      onMessage: (m) => { add(m); if (stick.current) scrollDown(); },
+      onDeleted: (id) => setMsgs((l) => l.map((x) => (x.id === id ? { ...x, deleted: true, text: '', files: [] } : x))),
+      onTyping: (u) => { setTyping(u); clearTimeout(sub.timer); sub.timer = setTimeout(() => setTyping(null), 3000); },
+      onOnline: setOnline,
+    });
+    sockRef.current = { emit: () => sub.typing() };
+    const onStore = (e) => { if (e.key === 'upskillr-auth-chat') setMsgs(listLocalChat()); };
+    window.addEventListener('storage', onStore);
+    return () => { sub.close(); sockRef.current = null; window.removeEventListener('storage', onStore); };
+  }, [me?.username, add]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!serverMode || !me?.server) return undefined;
@@ -131,8 +168,10 @@ export default function Chat() {
     setProgress(files.length ? 0 : null);
     setError('');
     try {
-      const d = await api('/api/chat/messages', { method: 'POST', form: fd, onProgress: files.length ? setProgress : undefined });
-      add(d.message);
+      const msg = serverMode
+        ? (await api('/api/chat/messages', { method: 'POST', form: fd, onProgress: files.length ? setProgress : undefined })).message
+        : await sendLocalChat(me, t, files, files.length ? setProgress : undefined);
+      add(msg);
       setText(''); setFiles([]);
       stick.current = true; scrollDown();
     } catch (e) { setError(e.message); }
@@ -141,11 +180,11 @@ export default function Chat() {
 
   const remove = async (m) => {
     if (!window.confirm('Delete this message for everyone?')) return;
-    try { await api(`/api/chat/messages/${m.id}`, { method: 'DELETE' }); setMsgs((l) => l.map((x) => (x.id === m.id ? { ...x, deleted: true, text: '', files: [] } : x))); } catch (e) { setError(e.message); }
+    try { if (serverMode) await api(`/api/chat/messages/${m.id}`, { method: 'DELETE' }); else await deleteLocalChat(m.id); setMsgs((l) => l.map((x) => (x.id === m.id ? { ...x, deleted: true, text: '', files: [] } : x))); } catch (e) { setError(e.message); }
   };
 
-  if (!serverMode) return <div><div className="page-head"><h1><Ico e="💬" /> Class Chat</h1></div><ServerNeeded what="Chat" /></div>;
-  if (!me?.server) return <div className="card">Please sign out and sign in again to use the chat.</div>;
+  if (!me) return null;
+  if (serverMode && !me?.server) return <div className="card">Please sign out and sign in again to use the chat.</div>;
 
   const folderCount = new Set(files.filter((f) => f.path).map((f) => f.path.split('/')[0])).size;
   const looseCount = files.filter((f) => !f.path).length;
@@ -155,6 +194,7 @@ export default function Chat() {
       <div className="ch-head card">
         <div>
           <h2><Ico e="💬" /> Class Chat</h2>
+          {!serverMode && <span className="muted small ch-local-note">Saved on this computer only: everyone who signs in here sees these messages.</span>}
           <span className={`ch-status ${status}`}>{status === 'online' ? `● ${online.length} online` : status === 'connecting' ? 'Connecting…' : '○ Offline, reconnecting…'}</span>
         </div>
         <button className="btn small" onClick={() => setShowPeople(!showPeople)}><Users size={15} /> People</button>
@@ -171,7 +211,7 @@ export default function Chat() {
           {hasMore && <div className="center"><button className="btn small" onClick={older}>Load older messages</button></div>}
           {!msgs.length && !error && <p className="muted center">No messages yet. Say hello to your classmates <Ico e="👋" /></p>}
           {msgs.map((m, i) => {
-            const mine = m.user.id === me.id;
+            const mine = m.user.id === myId;
             const newDay = !i || dayOf(msgs[i - 1].createdAt) !== dayOf(m.createdAt);
             const grouped = !newDay && i > 0 && msgs[i - 1].user.id === m.user.id && new Date(m.createdAt) - new Date(msgs[i - 1].createdAt) < 5 * 60000;
             return (
@@ -208,7 +248,7 @@ export default function Chat() {
         )}
       </div>
 
-      <div className="ch-typing small muted">{typing && typing.id !== me.id ? `${typing.name} is typing…` : ''}</div>
+      <div className="ch-typing small muted">{typing && typing.id !== myId ? `${typing.name} is typing…` : ''}</div>
       {error && <div className="ch-error small"><Ico e="⚠" /> {error}</div>}
 
       <div className="ch-compose card">

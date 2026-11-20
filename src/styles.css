@@ -2417,3 +2417,4 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
   .hb-slide, .hb-slide.on { transition: none; }
   .hb-slide.on .hb-img, .hb-slide.on .hb-text > * { animation: none; transform: none; }
 }
+.ch-local-note { display: block; margin: .15rem 0; }
