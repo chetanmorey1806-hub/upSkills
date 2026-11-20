@@ -93,9 +93,9 @@ const RN_IMPORTS = {
   'react-dom/client': 'https://esm.sh/react-dom@18.3.1/client?external=react',
   'react-native': 'https://esm.sh/react-native-web@0.19.13?external=react,react-dom',
   // small stand-ins for common Expo packages so typical Expo snippets run unchanged
-  'expo-status-bar': 'data:text/javascript,export const StatusBar = () => null; export default StatusBar;',
-  'react-native-safe-area-context': "data:text/javascript,import { View } from 'react-native'; export const SafeAreaView = View; export const SafeAreaProvider = ({ children }) => children; export const useSafeAreaInsets = () => ({ top: 0, bottom: 0, left: 0, right: 0 });",
-  '@expo/vector-icons': "data:text/javascript,import { createElement } from 'react'; import { Text } from 'react-native'; const map = { home: '🏠', cart: '🛒', heart: '❤', star: '★', search: '🔍', person: '👤', settings: '⚙', add: '+', remove: '−', close: '✕', trash: '🗑', sunny: '☀', cloud: '☁', rainy: '🌧', thermometer: '🌡', location: '📍', checkmark: '✓', menu: '☰', 'arrow-back': '←', 'arrow-forward': '→' }; const Icon = ({ name = '', size = 20, color = '#111', style }) => createElement(Text, { style: [{ fontSize: size, color }, style] }, map[String(name).replace(/-outline$/, '')] || '•'); export const Ionicons = Icon; export const MaterialIcons = Icon; export const FontAwesome = Icon; export const Feather = Icon; export const AntDesign = Icon; export default Icon;",
+  'expo-status-bar': 'data:text/javascript,' + encodeURIComponent('export const StatusBar = () => null; export default StatusBar;'),
+  'react-native-safe-area-context': 'data:text/javascript,' + encodeURIComponent("import { View } from 'react-native'; export const SafeAreaView = View; export const SafeAreaProvider = ({ children }) => children; export const useSafeAreaInsets = () => ({ top: 0, bottom: 0, left: 0, right: 0 });"),
+  '@expo/vector-icons': 'data:text/javascript,' + encodeURIComponent("import { createElement } from 'react'; import { Text } from 'react-native'; const map = { home: '🏠', cart: '🛒', heart: '❤', star: '★', search: '🔍', person: '👤', settings: '⚙', add: '+', remove: '−', close: '✕', trash: '🗑', sunny: '☀', cloud: '☁', rainy: '🌧', thermometer: '🌡', location: '📍', checkmark: '✓', menu: '☰', 'arrow-back': '←', 'arrow-forward': '→' }; const Icon = ({ name = '', size = 20, color = '#111', style }) => createElement(Text, { style: [{ fontSize: size, color }, style] }, map[String(name).replace(/-outline$/, '')] || '•'); export const Ionicons = Icon; export const MaterialIcons = Icon; export const FontAwesome = Icon; export const Feather = Icon; export const AntDesign = Icon; export default Icon;"),
 };
 
 export function buildNativeDoc({ rn = '', device = 'android' }) {
@@ -107,7 +107,7 @@ export function buildNativeDoc({ rn = '', device = 'android' }) {
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"><\/script>
 <style>
   html, body { margin: 0; height: 100%; background: #e5e7eb; font-family: system-ui, -apple-system, Roboto, sans-serif; }
-  .wrap { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+  .wrap { height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
   .phone { width: 360px; height: 720px; background: #fff; border: 12px solid #111827; border-radius: ${ios ? 48 : 34}px; box-shadow: 0 20px 50px rgba(0,0,0,.35); overflow: hidden; display: flex; flex-direction: column; position: relative; transform-origin: center center; }
   .status { height: 30px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 12px; font-weight: 600; color: #111; background: #f8fafc; }
   .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: ${ios ? 120 : 14}px; height: ${ios ? 26 : 14}px; background: #111827; border-radius: 0 0 16px 16px; ${ios ? '' : 'top: 8px; border-radius: 50%;'} }
