@@ -24,7 +24,7 @@ const hue = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 
 
 // A file is either on the server or (no server) in this browser's IndexedDB ("idb:..." id).
 function useFileUrl(f, download = false) {
-  const local = !!f.id?.startsWith('idb:');
+  const local = String(f.id ?? '').startsWith('idb:');
   const { url } = useResolvedSrc(local ? f.id : null);
   return local ? url : fileUrl(f.id, { download });
 }
@@ -38,7 +38,7 @@ function Vid({ f }) {
 }
 
 function FileChip({ f }) {
-  const local = !!f.id?.startsWith('idb:');
+  const local = String(f.id ?? '').startsWith('idb:');
   const I = /^video\//.test(f.mime) ? Film : f.mime === 'application/pdf' ? FileText : FileIcon;
   const viewable = /^(application\/pdf|video\/|image\/|text\/plain)/.test(f.mime);
   const open = useFileUrl(f, !viewable);

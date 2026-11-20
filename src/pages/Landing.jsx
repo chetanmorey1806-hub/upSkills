@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import HeroBanner from '../components/HeroBanner.jsx';
+import CareerTracks from '../components/CareerTracks.jsx';
 import { Link } from 'react-router-dom';
 import { useAuth, logout, firstName } from '../auth.js';
 import {
@@ -8,8 +9,7 @@ import {
 } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import PackagesSection from '../components/PackagesSection.jsx';
-import { TrackIcon } from '../components/Icons.jsx';
-import { allTopics, trackGroups, tracks, trackOrder } from '../data/index.js';
+import { allTopics, trackOrder } from '../data/index.js';
 import { codingProblems, javaProjects } from '../data/javaCareer.js';
 
 const WORDS = ['Java Full Stack', 'Python', 'Power BI', 'Artificial Intelligence', '.NET', 'React', 'Excel', 'MySQL'];
@@ -248,24 +248,7 @@ export default function Landing() {
       </section>
 
       {/* COURSES */}
-      <section id="courses" className="ld-section ld-alt">
-        <div className="ld-wrap">
-          <div className="ld-head ld-rv"><span className="ld-eyebrow">Courses</span><h2>Career tracks that companies hire for</h2><p>Each track is a day-wise plan from basics to advanced with interview preparation built in.</p></div>
-          <div className="ld-groups">
-            {trackGroups.map((g, gi) => {
-              const ts = g.tracks.map((k) => tracks[k]).filter(Boolean);
-              const n = ts.reduce((s, t) => s + t.topics.length, 0);
-              return (
-                <Link key={g.key} to="/home" className="ld-group ld-rv" style={{ '--d': `${gi * 60}ms` }}>
-                  <div className="ld-group-top"><h3>{g.name}</h3><span>{n} lessons</span></div>
-                  <div className="ld-chips">{ts.map((t) => <span key={t.key} style={{ '--c': t.color }}><TrackIcon track={t.key} size={14} /> {t.short}</span>)}</div>
-                  <span className="ld-more">Explore <ArrowRight size={14} /></span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <CareerTracks />
 
       <PackagesSection />
 

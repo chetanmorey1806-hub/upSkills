@@ -39,7 +39,7 @@ export function useMaterials(query = '') {
 
 export function MaterialCard({ m, onDelete, showCourse = true }) {
   const K = KIND[m.kind] || KIND.file;
-  const isLocal = !!m.file?.id?.startsWith('idb:');
+  const isLocal = String(m.file?.id ?? '').startsWith('idb:');
   const { url: localUrl, missing } = useResolvedSrc(isLocal ? m.file.id : null);
   const src = m.file ? (isLocal ? localUrl : fileUrl(m.file.id)) : null;
   const dl = m.file ? (isLocal ? localUrl : fileUrl(m.file.id, { download: true })) : null;

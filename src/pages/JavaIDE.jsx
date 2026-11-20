@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
 
 import Ico from '../components/Ico.jsx';
+import { runJava, javaStarted } from '../components/javaRunner.js';
 export const JAVA_LOAD_KEY = 'xlpbi-java-load';
 const STORE = 'xlpbi-java-ide-v1';
 
@@ -47,9 +48,24 @@ export default function JavaIDE() {
   const [title, setTitle] = useState(initial.title);
   const [active, setActive] = useState(Object.keys(initial.files)[0]);
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('xlpbi-java-theme') || 'intellij'; } catch { return 'intellij'; } });
-  const [panel, setPanel] = useState('expected');
+  const [panel, setPanel] = useState('output');
   const [fallback, setFallback] = useState(false);
   const [copied, setCopied] = useState('');
+  const [run, setRun] = useState(null); // { status } while running, then { phase, ok, out, ms } or { error }
+  const running = !!run?.status;
+
+  const runRef = useRef(null);
+  const runCode = async () => {
+    if (running) return;
+    setPanel('output');
+    try {
+      const r = await runJava(files, stdin, (status) => setRun({ status }));
+      setRun(r);
+    } catch (e) { setRun({ error: e.message || String(e) }); }
+  };
+  runRef.current = runCode;
+  const norm = (t) => String(t || '').replace(/\r/g, '').split('\n').map((l) => l.trimEnd()).join('\n').trim();
+  const matches = run?.phase === 'run' && run.ok && expected ? norm(run.out) === norm(expected) : null;
 
   useEffect(() => { loader.init().catch(() => setFallback(true)); }, []);
   useEffect(() => { try { localStorage.setItem(STORE, JSON.stringify({ files, stdin, expected })); } catch { /* ignore */ } }, [files, stdin, expected]);
@@ -76,7 +92,7 @@ export default function JavaIDE() {
   const loadTemplate = (name) => {
     if (!name) return;
     const t = TEMPLATES[name];
-    setFiles({ ...t.files }); setStdin(t.stdin || ''); setExpected(t.expected || ''); setActive(Object.keys(t.files)[0]); setTitle(name); setPanel('expected');
+    setFiles({ ...t.files }); setStdin(t.stdin || ''); setExpected(t.expected || ''); setActive(Object.keys(t.files)[0]); setTitle(name); setPanel('output'); setRun(null);
   };
   const copy = async (text, label) => {
     try { await navigator.clipboard.writeText(text); setCopied(label); setTimeout(() => setCopied(''), 1500); } catch { /* ignore */ }
@@ -107,7 +123,7 @@ export default function JavaIDE() {
             <option value="">Load example…</option>
             {Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
           </select>
-          <button className="btn small primary jide-run" disabled title="Running Java needs a JDK on this computer. See the Run panel.">▶ Run 'Main'</button>
+          <button className="btn small primary jide-run" onClick={runCode} disabled={running} title="Compile and run in this page (Ctrl+Enter)">{running ? 'Running…' : "▶ Run 'Main'"}</button>
           <button className="btn small" onClick={() => copy(files[cur], 'file')}>{copied === 'file' ? 'Copied ✓' : '⧉ Copy file'}</button>
           <button className="btn small" onClick={downloadAll}><Ico e="⬇" /> Download .java files</button>
         </div>
@@ -145,6 +161,7 @@ export default function JavaIDE() {
                 value={files[cur]}
                 onChange={(v) => setFiles((f) => ({ ...f, [cur]: v ?? '' }))}
                 loading={<div className="pg-loading">Loading editor…</div>}
+                onMount={(ed, monaco) => ed.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current())}
                 options={{ fontSize: 14, minimap: { enabled: false }, tabSize: 4, automaticLayout: true, scrollBeyondLastLine: false, bracketPairColorization: { enabled: true }, renderLineHighlight: 'all' }}
               />
             )}
@@ -153,11 +170,34 @@ export default function JavaIDE() {
 
         <section className="jide-bottom">
           <div className="jide-ptabs">
-            {[['expected', 'Expected Output'], ['input', '⌨ Program Input (stdin)'], ['run', '▶ Run in Eclipse / IntelliJ']].map(([k, l]) => (
+            {[['output', '▶ Output'], ['expected', 'Expected Output'], ['input', '⌨ Program Input (stdin)'], ['run', 'Run in Eclipse / IntelliJ']].map(([k, l]) => (
               <button key={k} className={panel === k ? 'on' : ''} onClick={() => setPanel(k)}>{l}</button>
             ))}
           </div>
           <div className="jide-pbody">
+            {panel === 'output' && (
+              <div className="jide-result">
+                {!run && <div className="pg-muted">Click <b>▶ Run 'Main'</b> (or press Ctrl+Enter in the editor) to compile and run your program right here. No JDK needed. {!javaStarted() && 'The first run downloads the Java engine (about 30 MB) and takes 20–40 seconds; after that it is quick.'} Put the values your program reads with Scanner in <b>Program Input</b>.</div>}
+                {run?.status && <div className="jide-status"><span className="jide-spin" /> {run.status}</div>}
+                {run?.error && <div className="jide-err">{run.error}</div>}
+                {run?.phase === 'compile' && (
+                  <>
+                    <div className="jide-err">Compilation failed. Fix the errors below and run again.</div>
+                    <pre className="jide-out jide-errout">{run.out}</pre>
+                  </>
+                )}
+                {run?.phase === 'run' && (
+                  <>
+                    <pre className={`jide-out ${run.ok ? '' : 'jide-errout'}`}>{run.out || '(no output)'}</pre>
+                    <div className="jide-meta">
+                      {run.ok ? `Process finished with exit code 0 · ${(run.ms / 1000).toFixed(1)} s` : `Process finished with exit code ${run.exit ?? 1}`}
+                      {matches === true && <span className="jide-ok"> · Output matches the expected output ✓</span>}
+                      {matches === false && <span className="jide-warn"> · Output is different from the expected output</span>}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             {panel === 'expected' && (
               expected ? <pre className="jide-out">{expected}</pre>
                 : <div className="pg-muted">Open an example from a lesson (▶ Open in Java IDE) to see its expected output here.</div>
@@ -173,7 +213,7 @@ export default function JavaIDE() {
                 <p><b>IntelliJ IDEA:</b> File › New › Project › Java → right-click <code>src</code> › New › Java Class → paste each file → click the green ▶ next to <code>main</code> (Shift+F10).</p>
                 <p><b>Eclipse:</b> File › New › Java Project → right-click <code>src</code> › New › Class → paste each file → Run As › Java Application (Ctrl+F11).</p>
                 <p><b>Terminal:</b> save the files in one folder, then <code>javac *.java</code> and <code>java Main</code>.</p>
-                <p className="pg-muted">Running Java directly inside this page needs a JDK on this computer and is not enabled yet.</p>
+                <p className="pg-muted">Or simply click ▶ Run 'Main' to run it right here in the browser (Java 17).</p>
               </div>
             )}
           </div>
