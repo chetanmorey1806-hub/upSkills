@@ -55,6 +55,7 @@ const softDays = load(import.meta.glob('./softskills-days/*.js', { eager: true }
 Object.values(pyGlob).forEach((l) => l.sort(byDay));
 const dotnetDays = load(import.meta.glob('./dotnet-days/*.js', { eager: true })).sort(byDay);
 const dotnetExtra = load(import.meta.glob('./dotnet-extra/*.js', { eager: true })).sort(byExtra);
+const dotnetPro = load(import.meta.glob('./dotnetpro-days/*.js', { eager: true })).sort(byDay);
 const aiDays = load(import.meta.glob('./ai-days/*.js', { eager: true })).sort(byDay);
 const mysqlDays = load(import.meta.glob('./mysql-days/*.js', { eager: true })).sort(byDay);
 const powerbiExtra = load(import.meta.glob('./powerbi-extra/*.js', { eager: true })).sort((a, b) => (a.extraNo || 0) - (b.extraNo || 0));
@@ -298,6 +299,11 @@ export const tracks = {
     tagline: 'OOP concepts (association → SOLID & design patterns), advanced C#, advanced SQL Server, and advanced ASP.NET Core / EF Core / Web API.',
     topics: dotnetExtra,
   },
+  dotnetpro: {
+    key: 'dotnetpro', name: '.NET Advanced: Enterprise Stack (30 Days)', short: '.NET Advanced', icon: '🏢', color: '#3b2fc9', unit: 'Day', lang: 'dotnet', group: 'dotnet',
+    tagline: '7 modules, 30 days: ADO.NET & Dapper, Clean Architecture, CQRS & MediatR, Blazor, Redis caching, background jobs, RabbitMQ, microservices, API gateway, gRPC, Polly, TypeScript, Angular with Web API, Docker, Kubernetes and Azure CI/CD.',
+    topics: dotnetPro,
+  },
   ai: {
     key: 'ai', name: 'Artificial Intelligence (45 Days)', short: 'AI', icon: '🤖', color: '#9333ea', unit: 'Day', lang: 'ai', group: 'ai',
     tagline: '7 modules, 45 days: AI & ML foundations, generative AI & LLMs, prompt engineering, 40+ AI tools, AI APIs, RAG & agents, hands-on ML, careers and a final AI app project.',
@@ -315,7 +321,7 @@ export const tracks = {
   },
 };
 
-export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'reactpro', 'ts', 'mongodb', 'mern', 'merninterview', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech', 'python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools', 'mysql', 'dotnet', 'dotnetextra', 'ai', 'softskills', 'bootstrap', 'node', 'nextjs', 'vue'];
+export const trackOrder = ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides', 'html', 'htmlextra', 'css', 'js', 'react', 'reactpro', 'ts', 'mongodb', 'mern', 'merninterview', 'corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech', 'python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools', 'mysql', 'dotnet', 'dotnetextra', 'dotnetpro', 'ai', 'softskills', 'bootstrap', 'node', 'nextjs', 'vue'];
 export const trackGroups = [
   { key: 'ai', name: 'Artificial Intelligence', tracks: ['ai'] },
   { key: 'data', name: 'Data Analytics', tracks: ['excel', 'extra', 'powerbi', 'pbiextra', 'guides', 'pbiguides'] },
@@ -323,7 +329,7 @@ export const trackGroups = [
   { key: 'web', name: 'Web Development', tracks: ['html', 'htmlextra', 'css', 'bootstrap', 'js', 'react', 'node', 'nextjs', 'vue'] },
   { key: 'java', name: 'Java Full Stack', tracks: ['corejava', 'collections', 'advjava', 'hibernate', 'spring', 'springboot', 'javatech'] },
   { key: 'python', name: 'Python Full Stack', tracks: ['python', 'pyextra', 'pydsa', 'pydata', 'pyml', 'sql', 'flask', 'django', 'drf', 'fastapi', 'pyauto', 'pytools'] },
-  { key: 'dotnet', name: '.NET Full Stack', tracks: ['dotnet', 'dotnetextra'] },
+  { key: 'dotnet', name: '.NET Full Stack', tracks: ['dotnet', 'dotnetextra', 'dotnetpro'] },
   { key: 'db', name: 'Databases', tracks: ['mysql', 'sql'] },
   { key: 'career', name: 'Career & Soft Skills', tracks: ['softskills'] },
 ];

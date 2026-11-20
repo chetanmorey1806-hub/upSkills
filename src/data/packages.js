@@ -53,8 +53,8 @@ export const DEFAULT_PACKAGES = [
   },
   {
     id: 'dotnet-fs', name: '.NET Full Stack', icon: '🟣', color: '#68217a',
-    tagline: 'C#, OOP, LINQ, SQL Server, ASP.NET Core MVC & Web API, EF Core and React.',
-    tracks: ['dotnet', 'dotnetextra'],
+    tagline: 'C#, OOP, LINQ, SQL Server, ADO.NET & Dapper, ASP.NET Core MVC & Web API, EF Core, Blazor, Clean Architecture & CQRS, microservices, React & Angular, Docker and Azure.',
+    tracks: ['dotnet', 'dotnetextra', 'dotnetpro'],
     price: 29999, offerPrice: 19999, months: 8, mode: 'Self-paced + C# IDE + SSMS lab',
     roles: ['.NET Developer', 'ASP.NET Core Developer', 'Full Stack .NET Developer'],
     tools: ['C# IDE (Visual Studio style)', 'SSMS Lab (SQL Server)', 'Web Playground'],

@@ -1,7 +1,7 @@
 import {
   Sheet, Rocket, BarChart3, Settings2, BookOpenCheck, LibraryBig, FileCode2, Puzzle, Palette, Braces, Atom,
   Coffee, Layers, Server, Database, Leaf, Zap, Code2, Table2, FlaskConical, Globe, Plug, Cpu, Boxes, Bot, BrainCircuit,
-  GraduationCap, Wrench, LayoutTemplate, Hexagon, FileType, MessagesSquare, Triangle, Component, Network, ChartLine, Cog, Speech,
+  GraduationCap, Wrench, LayoutTemplate, Hexagon, FileType, MessagesSquare, Triangle, Component, Network, ChartLine, Cog, Speech, Building2,
 } from 'lucide-react';
 
 // Professional icon per course (falls back to a generic book icon)
@@ -10,7 +10,7 @@ export const TRACK_ICONS = {
   html: FileCode2, htmlextra: Puzzle, css: Palette, js: Braces, react: Atom,
   corejava: Coffee, collections: Layers, advjava: Server, hibernate: Database, spring: Leaf, springboot: Zap, javatech: Wrench,
   python: Code2, sql: Table2, flask: FlaskConical, django: Globe, drf: Plug,
-  mysql: Database, dotnet: Cpu, dotnetextra: Boxes, ai: BrainCircuit,
+  mysql: Database, dotnet: Cpu, dotnetextra: Boxes, dotnetpro: Building2, ai: BrainCircuit,
   bootstrap: LayoutTemplate, node: Hexagon, mongodb: Leaf, reactpro: Atom, ts: FileType, mern: Layers, merninterview: MessagesSquare,
   nextjs: Triangle, vue: Component, pyextra: Puzzle, pydsa: Network, pydata: ChartLine, pyml: Bot, fastapi: Zap, pyauto: Cog,
   pytools: Wrench, softskills: Speech,
