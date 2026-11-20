@@ -84,6 +84,80 @@ export function buildReactDoc({ jsx = '', css = '' }) {
 <\/script></body></html>`;
 }
 
+// React Native (Expo-style App.js) rendered in a phone frame through react-native-web.
+// Students write normal RN code: import { View, Text, StyleSheet } from 'react-native'; export default function App() {...}
+const RN_IMPORTS = {
+  react: 'https://esm.sh/react@18.3.1',
+  'react/jsx-runtime': 'https://esm.sh/react@18.3.1/jsx-runtime',
+  'react-dom': 'https://esm.sh/react-dom@18.3.1?external=react',
+  'react-dom/client': 'https://esm.sh/react-dom@18.3.1/client?external=react',
+  'react-native': 'https://esm.sh/react-native-web@0.19.13?external=react,react-dom',
+  // small stand-ins for common Expo packages so typical Expo snippets run unchanged
+  'expo-status-bar': 'data:text/javascript,export const StatusBar = () => null; export default StatusBar;',
+  'react-native-safe-area-context': "data:text/javascript,import { View } from 'react-native'; export const SafeAreaView = View; export const SafeAreaProvider = ({ children }) => children; export const useSafeAreaInsets = () => ({ top: 0, bottom: 0, left: 0, right: 0 });",
+  '@expo/vector-icons': "data:text/javascript,import { createElement } from 'react'; import { Text } from 'react-native'; const map = { home: '🏠', cart: '🛒', heart: '❤', star: '★', search: '🔍', person: '👤', settings: '⚙', add: '+', remove: '−', close: '✕', trash: '🗑', sunny: '☀', cloud: '☁', rainy: '🌧', thermometer: '🌡', location: '📍', checkmark: '✓', menu: '☰', 'arrow-back': '←', 'arrow-forward': '→' }; const Icon = ({ name = '', size = 20, color = '#111', style }) => createElement(Text, { style: [{ fontSize: size, color }, style] }, map[String(name).replace(/-outline$/, '')] || '•'); export const Ionicons = Icon; export const MaterialIcons = Icon; export const FontAwesome = Icon; export const Feather = Icon; export const AntDesign = Icon; export default Icon;",
+};
+
+export function buildNativeDoc({ rn = '', device = 'android' }) {
+  const code = JSON.stringify(rn);
+  const importMap = JSON.stringify({ imports: RN_IMPORTS });
+  const ios = device === 'ios';
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">${CONSOLE_HOOK}
+<script type="importmap">${importMap}<\/script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"><\/script>
+<style>
+  html, body { margin: 0; height: 100%; background: #e5e7eb; font-family: system-ui, -apple-system, Roboto, sans-serif; }
+  .wrap { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+  .phone { width: 360px; height: 720px; background: #fff; border: 12px solid #111827; border-radius: ${ios ? 48 : 34}px; box-shadow: 0 20px 50px rgba(0,0,0,.35); overflow: hidden; display: flex; flex-direction: column; position: relative; transform-origin: center center; }
+  .status { height: 30px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 12px; font-weight: 600; color: #111; background: #f8fafc; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: ${ios ? 120 : 14}px; height: ${ios ? 26 : 14}px; background: #111827; border-radius: 0 0 16px 16px; ${ios ? '' : 'top: 8px; border-radius: 50%;'} }
+  #root { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #root > div { flex: 1; }
+  .navbar { height: 34px; flex: none; display: flex; align-items: center; justify-content: center; background: #f8fafc; }
+  .navbar span { width: ${ios ? '120px; height: 5px; border-radius: 3px' : '18px; height: 18px; border-radius: 50%; border: 2px solid #94a3b8; background: none'}; background: #111827; display: block; }
+  .load { margin: auto; color: #64748b; font-size: 14px; }
+</style>
+</head><body><div class="wrap"><div class="phone" id="phone"><div class="notch"></div>
+<div class="status"><span>9:41</span><span>${ios ? '▮▮▮ 🔋' : '▼ ◢ 🔋 100%'}</span></div>
+<div id="root"><p class="load">Loading React Native…</p></div>
+<div class="navbar"><span></span></div></div></div>
+<script>
+(function fit(){
+  var p = document.getElementById('phone');
+  function f(){ var s = Math.min(1, (window.innerHeight - 24) / 744, (window.innerWidth - 24) / 384); p.style.transform = 'scale(' + s + ')'; }
+  window.addEventListener('resize', f); f();
+})();
+<\/script>
+<script type="module">
+  const src = ${code};
+  if (!window.Babel) { console.error('Could not load Babel from the CDN. Check your internet connection.'); }
+  else {
+    let out;
+    try {
+      out = Babel.transform(src, { presets: [['react', { runtime: 'automatic' }]], sourceType: 'module', filename: 'App.js' }).code;
+    } catch (e) { console.error(e.message); }
+    if (out) {
+      try {
+        const url = URL.createObjectURL(new Blob([out], { type: 'text/javascript' }));
+        const [{ AppRegistry }, mod] = await Promise.all([import('react-native'), import(url)]);
+        const App = mod.default || mod.App;
+        if (!App) console.error('Export your root component: export default function App() { ... }');
+        else {
+          AppRegistry.registerComponent('main', () => App);
+          document.getElementById('root').innerHTML = '';
+          AppRegistry.runApplication('main', { rootTag: document.getElementById('root') });
+        }
+      } catch (e) {
+        const msg = String(e && e.message || e);
+        console.error(/Failed to resolve module specifier "([^"]+)"/.test(msg)
+          ? msg + ' — the playground supports react, react-native, expo-status-bar, @expo/vector-icons and react-native-safe-area-context.'
+          : msg);
+      }
+    }
+  }
+<\/script></body></html>`;
+}
+
 export const PLAYGROUND_LOAD_KEY = 'xlpbi-playground-load';
 
 export function openInPlayground(navigate, pg, title) {

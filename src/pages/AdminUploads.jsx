@@ -1,9 +1,10 @@
 // Admin: upload recorded videos, photos, PDFs and other files (or paste a video link) for students, stored on the server.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Upload, Link2 } from 'lucide-react';
 import { tracks, trackOrder } from '../data/index.js';
 import { api, serverMode, fmtSize } from '../serverApi.js';
-import { useMaterials, MaterialCard, ServerNeeded } from '../components/MaterialBits.jsx';
+import { useMaterials, MaterialCard } from '../components/MaterialBits.jsx';
+import { addLocalMaterials, removeLocalMaterial, storageInfo } from '../localMaterials.js';
 
 import Ico from '../components/Ico.jsx';
 export default function AdminUploads() {
@@ -19,8 +20,8 @@ export default function AdminUploads() {
   const [filter, setFilter] = useState('');
   const fileRef = useRef(null);
   const { list, loading, error, reload } = useMaterials('');
-
-  if (!serverMode) return <ServerNeeded what="Uploading study material" />;
+  const [space, setSpace] = useState(null);
+  useEffect(() => { if (!serverMode) storageInfo().then(setSpace); }, [list.length]);
 
   const lessons = course ? tracks[course]?.topics || [] : [];
   const pick = (fl) => { setFiles([...files, ...Array.from(fl || [])]); setMsg(''); };
@@ -29,6 +30,16 @@ export default function AdminUploads() {
   const send = async () => {
     setMsg('');
     if (!files.length && !link.trim()) { setMsg('Choose a file (video, photo, PDF…) or paste a video link.'); return; }
+    if (!serverMode) {
+      setProgress(0);
+      try {
+        const added = await addLocalMaterials({ title, note, course, lesson, url: link, files }, setProgress);
+        setMsg(`Saved ${added.length} item${added.length > 1 ? 's' : ''} on this computer. Anyone who signs in on this computer can see ${added.length > 1 ? 'them' : 'it'} under Study Material${course ? ` and on the ${tracks[course]?.short || 'course'} page` : ''}.`);
+        reset();
+      } catch (e) { setMsg(e.message); }
+      setProgress(null);
+      return;
+    }
     const fd = new FormData();
     fd.append('title', title.trim());
     fd.append('note', note.trim());
@@ -48,6 +59,7 @@ export default function AdminUploads() {
 
   const remove = async (m) => {
     if (!window.confirm(`Delete "${m.title}"? Students will no longer see it.`)) return;
+    if (!serverMode) { await removeLocalMaterial(m.id); return; }
     try { await api(`/api/materials/${m.id}`, { method: 'DELETE' }); reload(); } catch (e) { window.alert(e.message); }
   };
 
@@ -58,6 +70,12 @@ export default function AdminUploads() {
     <div className="admin-uploads">
       <div className="card">
         <h3><Ico e="📤" /> Upload for students</h3>
+        {!serverMode && (
+          <div className="tip">
+            <b>Saved on this computer only.</b> Files are stored in this browser, so students see them when they sign in <b>on this computer</b> — not on other computers or phones. Clearing the browser's site data deletes them.
+            {space && space.quota > 0 && <> Space used: {fmtSize(space.used)} of about {fmtSize(space.quota)}.</>}
+          </div>
+        )}
         <p className="muted small">Recorded class videos (mp4/webm), photos, PDF notes or any document. Students see them under <b>Study Material</b>, and on the course / lesson page you choose.</p>
         <div className="grid2">
           <label className="field">Course

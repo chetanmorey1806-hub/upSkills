@@ -255,7 +255,7 @@ export default function TopicPage() {
               )}
               {ex.playground && (
                 <button className="btn small primary try-btn" onClick={() => openInPlayground(navigate, ex.playground, `${t.title}: ${ex.title}`)}>
-                  ▶ Try it in Code Playground
+                  {ex.playground.rn ? <><Ico e="📱" /> Run on phone (React Native Playground)</> : '▶ Try it in Code Playground'}
                 </button>
               )}
               {ex.result && <div className="result"><b>Result:</b> <Inline text={ex.result} /></div>}

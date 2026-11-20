@@ -29,7 +29,7 @@ const GROUPS = [
     ['/tools/soft-skills', MessageCircle, 'Soft Skills Lab', 'Practise self-introduction, HR answers, STAR stories, group discussion and email writing. Pair it with the 15-day Soft Skills & HR Interview course.'],
   ]],
   ['Code editors & IDEs', [
-    ['/tools/playground', Code2, 'Web Code Editor (VS Code style)', 'HTML / CSS / JavaScript, Bootstrap 5, Vue 3 and React with live preview and console.'],
+    ['/tools/playground', Code2, 'Web Code Editor (VS Code style)', 'HTML / CSS / JavaScript, Bootstrap 5, Vue 3, React and React Native (phone preview) with live preview and console.'],
     ['/tools/api-lab', Server, 'API Lab (Node.js + Express)', 'Write Express code and test it with a Postman-style panel: methods, URL, headers, JSON body, status, response, history and server logs.'],
     ['/tools/python-ide', Terminal, 'Python IDE (PyCharm style)', 'Runs real Python 3.12 in your browser: input(), multiple files, numpy, pandas, scikit-learn.'],
     ['/tools/java-ide', Coffee, 'Java IDE (IntelliJ / Eclipse style)', 'Project tree, multiple classes, expected output, copy/download to your IDE.'],

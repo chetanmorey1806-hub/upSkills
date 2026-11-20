@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Editor, { loader } from '@monaco-editor/react';
-import { buildWebDoc, buildReactDoc, PLAYGROUND_LOAD_KEY, LIBS } from '../components/playgroundRuntime.js';
+import { buildWebDoc, buildReactDoc, buildNativeDoc, PLAYGROUND_LOAD_KEY, LIBS } from '../components/playgroundRuntime.js';
+import { RN_TEMPLATES } from '../components/rnTemplates.js';
 
 import Ico from '../components/Ico.jsx';
 const TEMPLATES = {
@@ -59,11 +60,15 @@ const TEMPLATES = {
   },
 };
 
+TEMPLATES.native = RN_TEMPLATES;
+
 const FILES = {
   web: [['html', 'index.html', 'html'], ['css', 'style.css', 'css'], ['js', 'script.js', 'javascript']],
   react: [['jsx', 'App.jsx', 'javascript'], ['css', 'style.css', 'css']],
+  native: [['rn', 'App.js', 'javascript']],
 };
-const ICON = { html: '🟧', css: '🟦', js: '🟨', jsx: '⚛️' };
+const ICON = { html: '🟧', css: '🟦', js: '🟨', jsx: '⚛️', rn: '📱' };
+const buildDoc = (mode, f) => (mode === 'react' ? buildReactDoc(f) : mode === 'native' ? buildNativeDoc(f) : buildWebDoc(f));
 const STORE = 'xlpbi-playground-v1';
 
 function readStore() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } }
@@ -73,11 +78,14 @@ export default function CodePlayground() {
     let loaded = null;
     try { loaded = JSON.parse(sessionStorage.getItem(PLAYGROUND_LOAD_KEY)); sessionStorage.removeItem(PLAYGROUND_LOAD_KEY); } catch { /* ignore */ }
     if (loaded) {
-      const mode = loaded.jsx ? 'react' : 'web';
-      return { mode, title: loaded.title, files: mode === 'react' ? { jsx: loaded.jsx || '', css: loaded.css || '' } : { html: loaded.html || '', css: loaded.css || '', js: loaded.js || '', libs: loaded.libs || [] } };
+      const mode = loaded.rn ? 'native' : loaded.jsx ? 'react' : 'web';
+      const files = mode === 'native' ? { rn: loaded.rn, device: loaded.device || 'android' }
+        : mode === 'react' ? { jsx: loaded.jsx || '', css: loaded.css || '' }
+          : { html: loaded.html || '', css: loaded.css || '', js: loaded.js || '', libs: loaded.libs || [] };
+      return { mode, title: loaded.title, files };
     }
     const st = readStore();
-    const mode = st.mode || 'web';
+    const mode = TEMPLATES[st.mode] ? st.mode : 'web';
     return { mode, title: null, files: st[mode] || TEMPLATES[mode][Object.keys(TEMPLATES[mode])[0]] };
   }, []);
 
@@ -100,7 +108,7 @@ export default function CodePlayground() {
   const run = useCallback(() => {
     setLogs([]);
     const f = filesRef.current;
-    setDoc(mode === 'react' ? buildReactDoc(f) : buildWebDoc(f));
+    setDoc(buildDoc(mode, f));
     setRunId((r) => r + 1);
   }, [mode]);
 
@@ -138,19 +146,19 @@ export default function CodePlayground() {
   };
   const loadTemplate = (name) => {
     if (!name) return;
-    setFiles({ ...TEMPLATES[mode][name] });
+    setFiles((f) => ({ ...TEMPLATES[mode][name], ...(mode === 'native' ? { device: f.device || 'android' } : {}) }));
     setActive(FILES[mode][0][0]);
     setTitle(name);
   };
   const download = () => {
-    const html = mode === 'react' ? buildReactDoc(files) : buildWebDoc(files);
+    const html = buildDoc(mode, files);
     const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     const a = document.createElement('a');
     a.href = url; a.download = 'index.html'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const openNewTab = () => {
-    const html = mode === 'react' ? buildReactDoc(files) : buildWebDoc(files);
+    const html = buildDoc(mode, files);
     const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     window.open(url, '_blank');
   };
@@ -162,7 +170,7 @@ export default function CodePlayground() {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run());
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => run());
     monaco.languages.typescript?.javascriptDefaults?.setCompilerOptions({ jsx: monaco.languages.typescript.JsxEmit.React, allowJs: true, allowNonTsExtensions: true, target: monaco.languages.typescript.ScriptTarget.ES2020 });
-    monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: mode === 'react' });
+    monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: mode !== 'web' });
   };
 
   return (
@@ -177,11 +185,18 @@ export default function CodePlayground() {
           <div className="seg">
             <button className={mode === 'web' ? 'on' : ''} onClick={() => switchMode('web')}>HTML / CSS / JS</button>
             <button className={mode === 'react' ? 'on' : ''} onClick={() => switchMode('react')}>React (JSX)</button>
+            <button className={mode === 'native' ? 'on' : ''} onClick={() => switchMode('native')}><Ico e="📱" /> React Native</button>
           </div>
           <select value="" onChange={(e) => loadTemplate(e.target.value)}>
             <option value="">Load template…</option>
             {Object.keys(TEMPLATES[mode]).map((t) => <option key={t}>{t}</option>)}
           </select>
+          {mode === 'native' && (
+            <div className="seg" title="Phone frame">
+              <button className={(files.device || 'android') === 'android' ? 'on' : ''} onClick={() => setFiles((f) => ({ ...f, device: 'android' }))}>Android</button>
+              <button className={files.device === 'ios' ? 'on' : ''} onClick={() => setFiles((f) => ({ ...f, device: 'ios' }))}>iPhone</button>
+            </div>
+          )}
           {mode === 'web' && Object.entries(LIBS).map(([k, l]) => (
             <label key={k} className="check" title={`Load ${l.label} from CDN`}>
               <input type="checkbox" checked={(files.libs || []).includes(k)} onChange={(e) => setFiles((f) => ({ ...f, libs: e.target.checked ? [...(f.libs || []), k] : (f.libs || []).filter((x) => x !== k) }))} /> {l.label}
@@ -198,7 +213,7 @@ export default function CodePlayground() {
       <div className={`pg-body ${layout}`}>
         <aside className="pg-explorer">
           <div className="pg-explorer-head">EXPLORER</div>
-          <div className="pg-folder">▾ {mode === 'react' ? 'react-app' : 'my-website'}</div>
+          <div className="pg-folder">▾ {mode === 'react' ? 'react-app' : mode === 'native' ? 'my-expo-app' : 'my-website'}</div>
           {fileDefs.map(([k, name]) => (
             <button key={k} className={`pg-file ${active === k ? 'on' : ''}`} onClick={() => setActive(k)}>
               <span><Ico e={ICON[k]} /></span> {name}
@@ -235,7 +250,7 @@ export default function CodePlayground() {
         </section>
 
         <section className="pg-output">
-          <div className="pg-preview-head"><span><Ico e="🌐" /> Preview</span><span className="pg-sub">{mode === 'react' ? 'React 18 + Babel (needs internet)' : 'Live'}</span></div>
+          <div className="pg-preview-head"><span><Ico e={mode === 'native' ? '📱' : '🌐'} /> {mode === 'native' ? 'Device preview' : 'Preview'}</span><span className="pg-sub">{mode === 'react' ? 'React 18 + Babel (needs internet)' : mode === 'native' ? 'React Native (react-native-web) · needs internet' : 'Live'}</span></div>
           <iframe
             key={runId}
             ref={iframeRef}

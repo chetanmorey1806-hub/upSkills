@@ -135,8 +135,8 @@ export const tracks = {
     topics: jsDays,
   },
   react: {
-    key: 'react', name: 'React 30-Day Course', short: 'React', icon: '⚛️', color: '#0891b2', unit: 'Day', lang: 'web', group: 'web',
-    tagline: '6 modules, 30 days: JSX, components, props, state, hooks, routing, Redux Toolkit, performance, testing, TypeScript and deployment.',
+    key: 'react', name: 'React 60-Day Course', short: 'React', icon: '⚛️', color: '#0891b2', unit: 'Day', lang: 'web', group: 'web',
+    tagline: '12 modules, 60 days: JSX, hooks, routing, Redux, then industry skills (Tailwind/MUI, Axios, React Query, auth, charts, tables, testing, CI/CD), React Native and 3 final projects: Weather app, E-commerce website and E-commerce mobile app.',
     topics: reactDays,
   },
   bootstrap: {

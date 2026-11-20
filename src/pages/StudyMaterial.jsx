@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { tracks, trackOrder } from '../data/index.js';
 import { serverMode } from '../serverApi.js';
-import { useMaterials, MaterialCard, KIND, ServerNeeded } from '../components/MaterialBits.jsx';
+import { useMaterials, MaterialCard, KIND } from '../components/MaterialBits.jsx';
 
 import Ico from '../components/Ico.jsx';
 export default function StudyMaterial() {
@@ -24,7 +24,8 @@ export default function StudyMaterial() {
         <h1><Ico e="📚" /> Study Material</h1>
         <p className="muted">Recorded classes, photos, PDF notes and files shared by your trainer.</p>
       </div>
-      {!serverMode ? <ServerNeeded what="Study material" /> : (
+      {!serverMode && <p className="muted small">Material your trainer saved on this computer.</p>}
+      {(
         <>
           <div className="quiz-settings">
             <label>Course

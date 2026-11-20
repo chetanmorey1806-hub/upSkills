@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Image as ImageIcon, Film, Link2, Download, ExternalLink, File as FileIcon, Trash2 } from 'lucide-react';
 import { api, fileUrl, fmtSize, serverMode } from '../serverApi.js';
-import { parseVideoLink } from '../media.js';
+import { parseVideoLink, useResolvedSrc } from '../media.js';
+import { listLocalMaterials, LOCAL_MAT_EVENT } from '../localMaterials.js';
 import { tracks } from '../data/index.js';
 
 import Ico from './Ico.jsx';
@@ -16,10 +17,16 @@ export const KIND = {
 };
 
 export function useMaterials(query = '') {
-  const [state, setState] = useState({ list: [], loading: serverMode, error: '' });
+  const [state, setState] = useState(() => (serverMode ? { list: [], loading: true, error: '' } : { list: listLocalMaterials(), loading: false, error: '' }));
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    if (!serverMode) return undefined;
+    if (!serverMode) {
+      // no server: material saved on this computer
+      const h = () => setState({ list: listLocalMaterials(), loading: false, error: '' });
+      h();
+      window.addEventListener(LOCAL_MAT_EVENT, h);
+      return () => window.removeEventListener(LOCAL_MAT_EVENT, h);
+    }
     let alive = true;
     setState((s) => ({ ...s, loading: true }));
     api(`/api/materials${query}`)
@@ -32,11 +39,14 @@ export function useMaterials(query = '') {
 
 export function MaterialCard({ m, onDelete, showCourse = true }) {
   const K = KIND[m.kind] || KIND.file;
-  const src = m.file ? fileUrl(m.file.id) : null;
-  const dl = m.file ? fileUrl(m.file.id, { download: true }) : null;
+  const isLocal = !!m.file?.id?.startsWith('idb:');
+  const { url: localUrl, missing } = useResolvedSrc(isLocal ? m.file.id : null);
+  const src = m.file ? (isLocal ? localUrl : fileUrl(m.file.id)) : null;
+  const dl = m.file ? (isLocal ? localUrl : fileUrl(m.file.id, { download: true })) : null;
   const link = m.kind === 'link' ? parseVideoLink(m.url) : null;
   return (
     <div className={`card mat-card mat-${m.kind}`}>
+      {isLocal && missing && <div className="mat-media mat-missing">This file is saved on another computer or was removed from this browser.</div>}
       {m.kind === 'video' && <video className="mat-media" src={src} controls preload="metadata" controlsList="nodownload" />}
       {m.kind === 'photo' && <a href={src} target="_blank" rel="noreferrer"><img className="mat-media mat-photo" src={src} alt={m.title} loading="lazy" /></a>}
       {m.kind === 'link' && link && ['youtube', 'vimeo', 'drive'].includes(link.kind) && (
@@ -56,7 +66,7 @@ export function MaterialCard({ m, onDelete, showCourse = true }) {
         </div>
         <div className="row-btns">
           {m.kind === 'pdf' && <a className="btn small" href={src} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open PDF</a>}
-          {m.file && <a className="btn small" href={dl}><Download size={14} /> Download</a>}
+          {m.file && <a className="btn small" href={dl || undefined} download={isLocal ? m.file.name : undefined}><Download size={14} /> Download</a>}
           {m.kind === 'link' && <a className="btn small" href={m.url} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open link</a>}
           {onDelete && <button className="btn small danger" onClick={() => onDelete(m)}><Trash2 size={14} /> Delete</button>}
         </div>
@@ -68,7 +78,6 @@ export function MaterialCard({ m, onDelete, showCourse = true }) {
 // On a lesson page: the material the admin attached to that lesson. On a course page: course-wide material.
 export function LessonMaterials({ track, lessonId }) {
   const { list } = useMaterials(`?course=${encodeURIComponent(track)}`);
-  if (!serverMode) return null;
   const mine = list.filter((m) => m.course === track && (lessonId ? m.lesson === lessonId : !m.lesson));
   if (!mine.length) return null;
   return (

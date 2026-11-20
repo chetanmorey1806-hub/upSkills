@@ -66,6 +66,7 @@ function codeOf(ex) {
   if (ex.playground) {
     const pg = ex.playground;
     if (pg.code) return pg.code;
+    if (pg.rn) return pg.rn;
     return [pg.html, pg.css && `/* CSS */\n${pg.css}`, pg.js && `// JS\n${pg.js}`].filter(Boolean).join('\n\n') || ex.code || '';
   }
   return ex.code || ex.python || ex.java || ex.csharp || ex.tsql || ex.mysql || ex.sql || ex.mongo || ex.prompt || '';
