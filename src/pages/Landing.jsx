@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import HeroBanner from '../components/HeroBanner.jsx';
 import CareerTracks from '../components/CareerTracks.jsx';
 import { Link } from 'react-router-dom';
 import { useAuth, logout, firstName } from '../auth.js';
@@ -9,6 +8,11 @@ import {
 } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import PackagesSection from '../components/PackagesSection.jsx';
+import WhyUpSkillr from '../components/WhyUpSkillr.jsx';
+import Testimonials from '../components/Testimonials.jsx';
+import FaqSection from '../components/FaqSection.jsx';
+import ContactSection from '../components/ContactSection.jsx';
+import LandingFooter from '../components/LandingFooter.jsx';
 import { allTopics, trackOrder } from '../data/index.js';
 import { codingProblems, javaProjects } from '../data/javaCareer.js';
 
@@ -164,6 +168,8 @@ export default function Landing() {
             <a href="#packages" onClick={go('packages')}>Packages</a>
             <a href="#career" onClick={go('career')}>Career prep</a>
             <a href="#journey" onClick={go('journey')}>How it works</a>
+            <a href="#faq" onClick={go('faq')}>FAQ</a>
+            <a href="#contact" onClick={go('contact')}>Contact</a>
             {user ? (
               <>
                 <span className="ld-user"><span className="ld-ava">{firstName(user).charAt(0).toUpperCase()}</span>{firstName(user)}</span>
@@ -180,9 +186,6 @@ export default function Landing() {
           <button className="ld-burger" onClick={() => setMenu(!menu)} aria-label={menu ? 'Close menu' : 'Open menu'} aria-expanded={menu}>{menu ? <X size={22} /> : <Menu size={22} />}</button>
         </div>
       </header>
-
-      {/* BANNER SLIDER (first section) */}
-      <HeroBanner user={user} onJump={go} />
 
       {/* HERO */}
       <section className="ld-hero">
@@ -247,6 +250,8 @@ export default function Landing() {
         </div>
       </section>
 
+      <WhyUpSkillr />
+
       {/* COURSES */}
       <CareerTracks />
 
@@ -295,6 +300,12 @@ export default function Landing() {
         </div>
       </section>
 
+      <Testimonials />
+
+      <FaqSection />
+
+      <ContactSection />
+
       {/* FINAL CTA */}
       <section className="ld-section">
         <div className="ld-wrap">
@@ -309,14 +320,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="footer">
-        <div className="footer-inner">
-          <div className="footer-brand"><Logo size={28} /><span className="brand-name">Up<b>Skillr</b></span></div>
-          <p className="footer-tag">Learn any tech, one day at a time</p>
-          <div className="footer-credit">Developed by <b>ER. Chetan D Morey</b></div>
-          <div className="footer-copy">© {new Date().getFullYear()} UpSkillr. All rights reserved.</div>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }

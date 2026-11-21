@@ -1,0 +1,38 @@
+/* Mobile bottom tab bar (MobileTabBar.jsx). Phones only. */
+.mtab { display: none; }
+@media (max-width: 760px) {
+  :root { --mtab-h: 60px; }
+  .mtab {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; align-items: stretch; justify-content: space-around;
+    height: calc(var(--mtab-h) + env(safe-area-inset-bottom, 0px));
+    padding: 0 4px env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -6px 20px -12px rgba(16, 24, 40, .25);
+  }
+  .mtab-item {
+    position: relative; flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: var(--muted); font-size: .7rem; font-weight: 600; line-height: 1.1; text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mtab-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mtab-item svg { transition: transform .2s; }
+  .mtab-item:active svg { transform: scale(.9); }
+  .mtab-item.on { color: var(--primary); }
+  .mtab-item.on::before {
+    content: ''; position: absolute; top: 0; left: 50%; width: 28px; height: 3px; margin-left: -14px;
+    border-radius: 0 0 3px 3px; background: var(--primary);
+  }
+  .mtab-item:focus-visible { outline: 2px solid var(--primary); outline-offset: -4px; border-radius: 10px; }
+
+  /* keep page content and floating buttons clear of the bar */
+  body.has-tabbar .app { padding-bottom: calc(var(--mtab-h) + env(safe-area-inset-bottom, 0px)); }
+  body.has-tabbar .to-top { bottom: calc(var(--mtab-h) + env(safe-area-inset-bottom, 0px) + 12px); }
+  body.has-tabbar .ft-pill { bottom: calc(var(--mtab-h) + env(safe-area-inset-bottom, 0px) + 12px); }
+  body.has-tabbar .protect-toast { bottom: calc(var(--mtab-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+}
+@media print { .mtab { display: none !important; } }

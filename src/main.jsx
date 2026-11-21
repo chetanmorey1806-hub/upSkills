@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './styles.css';
+import './styles/dark-polish.css';
 import { applyPrefs } from './uiPrefs.js';
 import { installProtection } from './protect.js';
 

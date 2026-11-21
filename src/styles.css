@@ -2372,51 +2372,6 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
 .mat-missing { display: grid; place-items: center; padding: 1rem; text-align: center; font-size: .85rem; color: var(--muted); background: var(--surface2); min-height: 120px; }
 
 
-/* ===== Landing: banner slider (first section) ===== */
-.hb { padding: 84px 0 0; }
-.hb + .ld-hero { padding-top: 56px; }
-.hb-frame { position: relative; height: clamp(380px, 64vh, 600px); border-radius: 24px; overflow: hidden; background: #0b1020; box-shadow: 0 24px 60px rgba(15, 23, 42, .25); outline: none; }
-.hb-frame:focus-visible { box-shadow: 0 0 0 3px var(--primary), 0 24px 60px rgba(15, 23, 42, .25); }
-.hb-slide { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .9s ease, visibility 0s linear .9s; }
-.hb-slide.on { opacity: 1; visibility: visible; transition: opacity .9s ease; }
-.hb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.08); }
-.hb-slide.on .hb-img { animation: hb-zoom 7s ease-out forwards; }
-@keyframes hb-zoom { from { transform: scale(1.08); } to { transform: scale(1); } }
-.hb-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 14, 35, .88) 0%, rgba(10, 14, 35, .62) 42%, rgba(10, 14, 35, .08) 78%); }
-.hb-text { position: absolute; left: clamp(20px, 6vw, 72px); right: 20px; top: 50%; transform: translateY(-50%); max-width: 600px; color: #fff; }
-.hb-slide.on .hb-text > * { animation: hb-up .7s ease both; }
-.hb-slide.on .hb-text > :nth-child(2) { animation-delay: .12s; }
-.hb-slide.on .hb-text > :nth-child(3) { animation-delay: .24s; }
-.hb-slide.on .hb-text > :nth-child(4) { animation-delay: .36s; }
-@keyframes hb-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.hb-eyebrow { display: inline-flex; align-items: center; gap: .4rem; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); backdrop-filter: blur(6px); padding: .3rem .8rem; border-radius: 99px; font-size: .85rem; font-weight: 600; }
-.hb-text h2 { font-size: clamp(1.7rem, 4.2vw, 3.1rem); line-height: 1.12; letter-spacing: -.02em; margin: .9rem 0 .7rem; color: #fff; }
-.hb-text p { font-size: clamp(.98rem, 1.6vw, 1.15rem); color: rgba(255, 255, 255, .86); margin: 0 0 1.4rem; max-width: 520px; }
-.hb-cta { display: flex; gap: .7rem; flex-wrap: wrap; }
-.hb-ghost { background: rgba(255, 255, 255, .12); color: #fff; border-color: rgba(255, 255, 255, .45); }
-.hb-ghost:hover { background: rgba(255, 255, 255, .22); color: #fff; }
-.hb-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); background: rgba(15, 23, 42, .35); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(6px); transition: background .2s, transform .2s; z-index: 2; }
-.hb-arrow:hover { background: rgba(15, 23, 42, .6); transform: translateY(-50%) scale(1.06); }
-.hb-arrow.prev { left: 14px; }
-.hb-arrow.next { right: 14px; }
-.hb-dots { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 8px; z-index: 2; }
-.hb-dots button { position: relative; width: 10px; height: 10px; border-radius: 99px; border: 0; padding: 0; background: rgba(255, 255, 255, .45); cursor: pointer; overflow: hidden; transition: width .3s; }
-.hb-dots button.on { width: 34px; background: rgba(255, 255, 255, .35); }
-.hb-dots button span { position: absolute; inset: 0; background: #fff; transform-origin: left; animation: hb-progress linear forwards; }
-.hb-dots button.on:not(:has(span)) { background: #fff; }
-@keyframes hb-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.hb-credit { position: absolute; right: 14px; bottom: 10px; font-size: .7rem; color: rgba(255, 255, 255, .55); z-index: 2; }
-@media (max-width: 700px) {
-  .hb { padding-top: 76px; }
-  .hb-frame { height: 470px; border-radius: 18px; }
-  .hb-shade { background: linear-gradient(0deg, rgba(10, 14, 35, .92) 0%, rgba(10, 14, 35, .7) 55%, rgba(10, 14, 35, .25) 100%); }
-  .hb-text { top: auto; bottom: 46px; transform: none; }
-  .hb-arrow { display: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hb-slide, .hb-slide.on { transition: none; }
-  .hb-slide.on .hb-img, .hb-slide.on .hb-text > * { animation: none; transform: none; }
-}
 .ch-local-note { display: block; margin: .15rem 0; }
 /* Java IDE: run in browser */
 .jide-result { display: flex; flex-direction: column; gap: .4rem; }
@@ -2466,34 +2421,12 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
 .protect-toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 2147483647; background: #111827; color: #fff; padding: .65rem 1.1rem; border-radius: 12px; font-size: .9rem; box-shadow: 0 10px 30px rgba(0, 0, 0, .3); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; max-width: calc(100% - 32px); text-align: center; }
 .protect-toast.show { opacity: 1; transform: translate(-50%, 0); }
 @media print {
-  .protect-on body * { display: none !important; }
-  .protect-on body::after { content: 'Printing is disabled on UpSkillr.'; display: block; padding: 2rem; font: 600 18px sans-serif; }
-}
-/* hero banner videos: the clip itself moves, so no extra zoom */
-.hb-video, .hb-slide.on .hb-video { transform: none; animation: none; background: #0b1020; }
-/* hero banner photos: zoom-in / zoom-out (Ken Burns) while the slide is showing */
-.hb-kb { transform-origin: var(--focus, 50% 50%); will-change: transform; }
-.hb-kb.in { transform: scale(1); }
-.hb-kb.out { transform: scale(1.22); }
-.hb-slide.on .hb-kb.in { animation: hb-kb-in var(--dur, 8s) ease-in-out forwards; }
-.hb-slide.on .hb-kb.out { animation: hb-kb-out var(--dur, 8s) ease-in-out forwards; }
-@keyframes hb-kb-in {
-  0% { transform: scale(1) translate(0, 0); }
-  55% { transform: scale(1.2) translate(-1.5%, -1%); }
-  100% { transform: scale(1.08) translate(-.5%, 0); }
-}
-@keyframes hb-kb-out {
-  0% { transform: scale(1.22) translate(1.5%, 1%); }
-  55% { transform: scale(1.02) translate(0, 0); }
-  100% { transform: scale(1.1) translate(.5%, -.5%); }
-}
-/* leaving slide keeps its zoom while it fades out, so there is no jump */
-.hb-slide:not(.on) .hb-kb { transition: transform .9s ease; }
-/* soft light sweep across the photo when a slide appears */
-.hb-slide::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .16) 50%, transparent 65%); transform: translateX(-120%); }
-.hb-slide.on::after { animation: hb-shine 2.2s ease .4s 1 forwards; }
-@keyframes hb-shine { to { transform: translateX(120%); } }
-@media (prefers-reduced-motion: reduce) {
-  .hb-slide.on .hb-kb.in, .hb-slide.on .hb-kb.out, .hb-slide.on::after { animation: none; }
-  .hb-kb.out { transform: none; }
+  .protect-on:not(.print-ok) body * { display: none !important; }
+  .protect-on:not(.print-ok) body::after { content: 'Printing is disabled on UpSkillr.'; display: block; padding: 2rem; font: 600 18px sans-serif; }
+  /* certificate exception (allowPrintOnce in protect.js): only the .print-allowed element is printed */
+  .protect-on.print-ok body * { visibility: hidden !important; }
+  .protect-on.print-ok .print-allowed, .protect-on.print-ok .print-allowed * { visibility: visible !important; }
+  .protect-on.print-ok body *:not(:has(.print-allowed)):not(.print-allowed):not(.print-allowed *) { display: none !important; }
+  .protect-on.print-ok #root { filter: none !important; }
+  .protect-on.print-ok .protect-shield, .protect-on.print-ok .protect-toast { display: none !important; }
 }

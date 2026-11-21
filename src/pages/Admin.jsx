@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { allUsers, setSupabaseRole } from '../auth.js';
 import { supaMode } from '../supabase.js';
 import { tracks, trackOrder } from '../data/index.js';
@@ -9,7 +9,7 @@ import AdminUploads from './AdminUploads.jsx';
 import { usePerms, writePerms, readPerms, permissionGroups, getPackages, packageTracks } from '../permissions.js';
 
 import Ico from '../components/Ico.jsx';
-import { Users as UsersIc, ShieldCheck, UserCog, Package as PackageIc, Upload as UploadIc, Images, Send } from 'lucide-react';
+import { Users as UsersIc, ShieldCheck, UserCog, Package as PackageIc, Upload as UploadIc, Images, Send, Inbox } from 'lucide-react';
 const TAB_ICONS = { users: UsersIc, roles: ShieldCheck, student: UserCog, packages: PackageIc, uploads: UploadIc, media: Images, settings: Send };
 const TABS = [['users', 'Users'], ['roles', 'Student permissions'], ['student', 'Per-student access'], ['packages', 'Packages'], ['uploads', 'Upload videos, photos & PDFs'], ['media', 'Videos & images'], ['settings', 'Publish & settings']];
 const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -112,6 +112,7 @@ export default function Admin() {
       <div className="page-head">
         <h1><Ico e="🛡" /> Admin Panel</h1>
         <p className="muted">Decide what students can see: courses, Day Tasks, test series, labs, projects and pages. Assign packages, manage accounts and publish the settings.</p>
+        <Link className="btn small" to="/admin/inbox"><Inbox size={15} /> Enquiries &amp; reviews</Link>
       </div>
       <div className="tabs">{TABS.map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setParams({ tab: k }, { replace: true })}><Ico e={TAB_ICONS[k]} /> {l}</button>)}</div>
 

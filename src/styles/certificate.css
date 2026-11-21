@@ -1,0 +1,79 @@
+/* ===== Course certificate (CertificateView in src/pages/CareerTools.jsx) =====
+   A4 landscape sheet. On screen it scales with its width (container query units); in print it is 297 x 210 mm.
+   The sheet always uses "paper" colours, also in dark mode. */
+.cert-view { max-width: 1120px; margin: 0 auto; }
+.cert-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .5rem; }
+.cert-toolbar .btn.primary { margin-left: auto; }
+.cert-hint { margin: 0 0 .9rem; }
+.cert-stage { padding: clamp(.5rem, 2vw, 1.5rem); border-radius: 18px; background: var(--surface2); border: 1px solid var(--border); }
+
+.cert-sheet {
+  --ink: #1f2547; --ink-soft: #5b6283; --gold: #b4893a; --gold-2: #e2c27a; --indigo: #4f46e5; --cyan: #0891b2;
+  container-type: inline-size; position: relative; width: 100%; aspect-ratio: 297 / 210; margin: 0 auto; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(79, 70, 229, .06), transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(180, 137, 58, .08), transparent 60%),
+    #fffdf8;
+  color: var(--ink); text-align: center; border-radius: 6px; box-shadow: 0 20px 50px -24px rgba(15, 23, 42, .45), 0 2px 6px rgba(15, 23, 42, .12);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.3;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+/* decorative double border */
+.cert-frame { position: absolute; inset: 1.8cqw; border: .35cqw solid var(--gold); padding: .55cqw; }
+.cert-frame::before { content: ''; position: absolute; inset: .55cqw; border: .12cqw solid var(--gold-2); pointer-events: none; }
+.cert-frame::after { content: ''; position: absolute; inset: 1.2cqw; pointer-events: none;
+  border: .9cqw solid transparent; border-image: repeating-linear-gradient(45deg, rgba(79, 70, 229, .14) 0 .25cqw, transparent .25cqw .6cqw) 12; opacity: .9; }
+.cert-corner { position: absolute; width: 8.5cqw; height: 8.5cqw; color: var(--gold); z-index: 1; }
+.cert-corner.tl { top: .2cqw; left: .2cqw; }
+.cert-corner.tr { top: .2cqw; right: .2cqw; transform: scaleX(-1); }
+.cert-corner.bl { bottom: .2cqw; left: .2cqw; transform: scaleY(-1); }
+.cert-corner.br { bottom: .2cqw; right: .2cqw; transform: scale(-1, -1); }
+.cert-watermark { position: absolute; inset: 0; display: grid; place-items: center; opacity: .03; pointer-events: none; }
+.cert-watermark svg { width: 36cqw; height: 36cqw; filter: grayscale(1); }
+
+.cert-content { position: absolute; inset: 2.6cqw 7cqw 2.4cqw; display: flex; flex-direction: column; align-items: center; justify-content: space-between; z-index: 2; }
+.cert-head { display: flex; align-items: center; gap: 1cqw; }
+.cert-head svg { width: 4.3cqw; height: 4.3cqw; }
+.cert-wordmark { display: flex; flex-direction: column; align-items: flex-start; gap: .25cqw; line-height: 1.1; }
+.cert-wordmark b { font-size: 2.3cqw; font-weight: 800; letter-spacing: .02em; background: linear-gradient(90deg, var(--indigo), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cert-wordmark span { font-size: .9cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
+.cert-heading { font-family: 'Cinzel', 'Trajan Pro', Georgia, 'Times New Roman', serif; font-size: 5.4cqw; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--ink); line-height: 1; margin-top: .4cqw; }
+.cert-sub { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 2.1cqw; color: var(--gold); letter-spacing: .06em; }
+.cert-rule { width: 30cqw; height: 1px; position: relative; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.cert-rule span { position: absolute; left: 50%; top: 50%; width: .9cqw; height: .9cqw; background: var(--gold); transform: translate(-50%, -50%) rotate(45deg); }
+.cert-line { margin: 0; font-size: 1.5cqw; color: var(--ink-soft); }
+.cert-line.small { font-size: 1.3cqw; max-width: 62cqw; }
+.cert-line b { color: var(--ink); }
+.cert-sheet .cert-photo { width: 7cqw; height: 7cqw; margin: 0; border-width: .35cqw; box-shadow: 0 0 0 .25cqw var(--gold); }
+.cert-student { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700; font-size: 4.4cqw; color: var(--ink); line-height: 1.1;
+  padding: 0 3cqw .5cqw; border-bottom: .12cqw solid var(--gold-2); min-width: 40cqw; max-width: 80cqw; overflow-wrap: anywhere; }
+.cert-course { display: inline-flex; align-items: center; gap: .8cqw; font-size: 2.5cqw; font-weight: 800; color: var(--indigo); letter-spacing: .01em; }
+.cert-course svg { width: 2.4cqw; height: 2.4cqw; color: var(--cc, var(--indigo)); }
+
+.cert-bottom { width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2cqw; }
+.cert-meta { display: flex; flex-direction: column; gap: .7cqw; text-align: left; }
+.cert-meta div { display: flex; flex-direction: column; }
+.cert-meta span, .cert-sign span { font-size: .95cqw; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.cert-meta b { font-size: 1.35cqw; color: var(--ink); }
+.cert-meta b.mono { font-size: 1.2cqw; letter-spacing: .04em; }
+.cert-seal { width: 10.5cqw; height: 10.5cqw; filter: drop-shadow(0 .3cqw .5cqw rgba(120, 86, 20, .3)); }
+.cert-seal-edge { fill: var(--gold); }
+.cert-seal-face { fill: #c99b46; }
+.cert-seal-ring { stroke: #fff3d6; stroke-width: 1; stroke-dasharray: 2 2; }
+.cert-seal-text { fill: #fff8e6; font: 700 6.4px Inter, system-ui, sans-serif; letter-spacing: 1.4px; }
+.cert-seal-star { fill: #fff8e6; }
+.cert-sign { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.cert-sign-script { font-family: 'Brush Script MT', 'Segoe Script', 'Lucida Handwriting', 'Apple Chancery', cursive; font-size: 2.6cqw; color: #26316b; line-height: 1; padding-right: 1cqw; transform: rotate(-3deg); }
+.cert-sign-line { width: 22cqw; height: .12cqw; background: var(--ink); margin: .5cqw 0 .5cqw; opacity: .7; }
+.cert-sign b { font-size: 1.35cqw; color: var(--ink); }
+
+/* print: the certificate fills exactly one A4 landscape page, nothing else is printed */
+@page upskillr-cert { size: A4 landscape; margin: 0; }
+@media print {
+  html.cert-page, html.cert-page body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  html.cert-page body *:not(:has(.cert-sheet)):not(.cert-sheet):not(.cert-sheet *) { display: none !important; }
+  html.cert-page body *:has(.cert-sheet) { display: block !important; position: static !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+    box-shadow: none !important; background: none !important; max-width: none !important; width: auto !important; min-height: 0 !important; transform: none !important; filter: none !important; overflow: visible !important; }
+  html.cert-page .cert-sheet { page: upskillr-cert; position: relative !important; inset: auto !important; width: 297mm !important; height: 209.5mm !important; aspect-ratio: auto;
+    margin: 0 !important; border-radius: 0; box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
+}

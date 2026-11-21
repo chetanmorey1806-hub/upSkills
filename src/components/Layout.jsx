@@ -18,6 +18,7 @@ import { Avatar } from './MediaBits.jsx';
 import { tracks, trackGroups } from '../data/index.js';
 
 import Ico from './Ico.jsx';
+import MobileTabBar from './MobileTabBar.jsx';
 const ic = (I, size = 16) => <I size={size} strokeWidth={2} />;
 
 /*
@@ -495,6 +496,7 @@ export default function Layout({ children }) {
       <FocusPill />
       <CommandPalette />
       <Onboarding />
+      <MobileTabBar />
       <button
         className={`to-top ${scrolled && progress > 0.15 ? 'show' : ''}`}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

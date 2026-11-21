@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Award, Printer, Download, Code2, Eye, CheckCircle2, Sparkles, Copy, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Award, ArrowLeft, Printer, Download, Code2, Eye, CheckCircle2, Sparkles, Copy, Plus, Trash2, RefreshCw } from 'lucide-react';
 import { tracks, trackOrder, trackGroups } from '../data/index.js';
 import { codingProblems, javaProjects } from '../data/javaCareer.js';
 import { projects as pyProjects } from '../data/projects.js';
@@ -17,7 +17,10 @@ import { downloadFile, esc } from '../components/careerUtils.js';
 import { JAVA_LOAD_KEY } from './JavaIDE.jsx';
 import ApiKeyBox, { useApiKey } from '../ai/ApiKeyBox.jsx';
 import { streamClaude, describeError, stopNote } from '../ai/claudeClient.js';
-import { CertPhoto, CertName } from '../components/MediaBits.jsx';
+import { CertPhoto, CertName, useCertName } from '../components/MediaBits.jsx';
+import Logo from '../components/Logo.jsx';
+import { allowPrintOnce } from '../protect.js';
+import '../styles/certificate.css';
 
 import Ico from '../components/Ico.jsx';
 const readLS = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -67,28 +70,101 @@ export function CertificatesPage() {
   );
 }
 
+// date the grand test was first passed (falls back to today when the test history no longer has it)
+function completionDate(track) {
+  const hist = readLS('upskillr-tests-v1', {}).history || [];
+  const hit = [...hist].reverse().find((h) => h.testId === `${track}#grand` && h.mode === 'mcq' && h.pct >= 60);
+  return new Date(hit?.at || Date.now());
+}
+
+function CertCorner({ className }) {
+  return (
+    <svg className={`cert-corner ${className}`} viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M4 96 V30 Q4 4 30 4 H96" fill="none" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M14 96 V36 Q14 14 36 14 H96" fill="none" stroke="currentColor" strokeWidth="1" opacity=".7" />
+      <path d="M24 46 Q24 24 46 24" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="30" cy="30" r="3.4" fill="currentColor" />
+      <path d="M30 4 L36 10 L30 16 L24 10 Z" fill="currentColor" opacity=".85" transform="translate(30 -4) scale(.7)" />
+      <path d="M4 30 L10 36 L16 30 L10 24 Z" fill="currentColor" opacity=".85" transform="translate(-4 30) scale(.7)" />
+    </svg>
+  );
+}
+
+function CertSeal() {
+  const teeth = 24;
+  const pts = Array.from({ length: teeth * 2 }, (_, i) => {
+    const a = (Math.PI * i) / teeth;
+    const r = i % 2 ? 44 : 48;
+    return `${(50 + r * Math.sin(a)).toFixed(2)},${(50 - r * Math.cos(a)).toFixed(2)}`;
+  }).join(' ');
+  return (
+    <svg className="cert-seal" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points={pts} className="cert-seal-edge" />
+      <circle cx="50" cy="50" r="38" className="cert-seal-face" />
+      <circle cx="50" cy="50" r="33" fill="none" className="cert-seal-ring" />
+      <path id="cert-seal-arc" d="M50 50 m-27 0 a27 27 0 1 1 54 0" fill="none" />
+      <text className="cert-seal-text"><textPath href="#cert-seal-arc" startOffset="50%" textAnchor="middle">UPSKILLR CERTIFIED</textPath></text>
+      <path d="M50 44 l3.1 6.3 6.9 1 -5 4.9 1.2 6.9 -6.2 -3.3 -6.2 3.3 1.2 -6.9 -5 -4.9 6.9 -1z" className="cert-seal-star" />
+    </svg>
+  );
+}
+
 export function CertificateView() {
   const { track } = useParams();
   const user = useAuth();
+  const name = useCertName();
   const t = tracks[track];
+  useEffect(() => {
+    document.documentElement.classList.add('cert-page');
+    return () => document.documentElement.classList.remove('cert-page');
+  }, []);
   if (!t) return <p>Course not found. <Link to="/study/certificates">All certificates</Link></p>;
   const c = courseCompletion(track, t.topics);
   if (!c.eligible) return <div className="card"><h3>Not unlocked yet</h3><p>Finish all {c.total} lessons ({c.done} done) and pass the grand test (60%+) to unlock this certificate.</p><Link className="btn primary" to="/study/certificates">Back</Link></div>;
-  const name = user?.name || 'Student';
   const certId = `UPS-${track.toUpperCase().slice(0, 4)}-${hashText(`${user?.username}|${track}`).toUpperCase().slice(0, 6)}`;
+  const date = completionDate(track).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   return (
-    <div>
-      <div className="row-btns no-print"><Link className="btn" to="/study/certificates">← All certificates</Link><button className="btn primary" onClick={() => window.print()}><Printer size={15} /> Print / Save as PDF</button></div>
-      <div className="certificate course-cert" id="certificate">
-        <div className="cert-inner">
-          <div className="cert-brand">UpSkillr</div><CertPhoto />
-          <div className="cert-title">Certificate of Course Completion</div>
-          <p>This certifies that</p>
-          <div className="cert-name">{name}</div>
-          <p>has successfully completed all <b>{c.total} lessons</b> of</p>
-          <div className="cert-project">{t.name}</div>
-          <p>and passed the course Grand Test with <b>{c.grand}%</b>.</p>
-          <div className="cert-foot"><span>Issued {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} · ID {certId}</span><span>Developed by ER. Chetan D Morey</span></div>
+    <div className="cert-view">
+      <div className="cert-toolbar no-print">
+        <Link className="btn" to="/study/certificates"><ArrowLeft size={15} /> All certificates</Link>
+        <Link className="btn" to={`/track/${track}`}><TrackIcon track={track} size={15} /> Back to course</Link>
+        <button className="btn primary" onClick={allowPrintOnce}><Printer size={15} /> Print / Save as PDF</button>
+      </div>
+      <p className="muted small no-print cert-hint">Tip: in the print dialog choose <b>Save as PDF</b>, paper size <b>A4</b>, layout <b>Landscape</b>, margins <b>None</b> and turn on <b>Background graphics</b>.</p>
+      <div className="cert-stage">
+        <div className="cert-sheet print-allowed" id="certificate" style={{ '--cc': /^#/.test(t.color) ? t.color : '#4f46e5' }}>
+          <div className="cert-frame">
+            <CertCorner className="tl" /><CertCorner className="tr" /><CertCorner className="bl" /><CertCorner className="br" />
+            <div className="cert-watermark" aria-hidden="true"><Logo size={300} /></div>
+            <div className="cert-content">
+              <div className="cert-head">
+                <Logo size={46} />
+                <div className="cert-wordmark"><b>UpSkillr</b><span>Learn · Practice · Get hired</span></div>
+              </div>
+              <div className="cert-heading">Certificate</div>
+              <div className="cert-sub">of Completion</div>
+              <div className="cert-rule"><span /></div>
+              <p className="cert-line">This is to certify that</p>
+              <CertPhoto />
+              <div className="cert-student">{name}</div>
+              <p className="cert-line">has successfully completed the course</p>
+              <div className="cert-course"><TrackIcon track={track} size={22} /> {t.name}</div>
+              <p className="cert-line small">completing all <b>{c.total} lessons</b> and passing the course Grand Test with a score of <b>{c.grand}%</b>.</p>
+              <div className="cert-bottom">
+                <div className="cert-meta">
+                  <div><span>Date of completion</span><b>{date}</b></div>
+                  <div><span>Certificate ID</span><b className="mono">{certId}</b></div>
+                </div>
+                <CertSeal />
+                <div className="cert-sign">
+                  <div className="cert-sign-script">Chetan D Morey</div>
+                  <div className="cert-sign-line" />
+                  <b>ER. Chetan D Morey</b>
+                  <span>Founder, UpSkillr</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -147,6 +147,24 @@ export function installProtection() {
   window.addEventListener('blur', checkFocus);
   window.addEventListener('focus', () => shield(false));
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') shield(true); });
-  window.addEventListener('beforeprint', () => shield(true));
+  window.addEventListener('beforeprint', () => { if (!printOk()) shield(true); });
   window.addEventListener('afterprint', () => shield(false));
+}
+
+// The one exception to "no printing": the course certificate. Its Print button calls allowPrintOnce(),
+// which (only on a /study/certificate/<course> page that contains a .print-allowed element) sets
+// html.print-ok for a single print. The protection CSS then prints ONLY the .print-allowed element.
+// Ctrl+P and the browser's own Print menu stay blocked everywhere, including on the certificate page.
+const printOk = () => document.documentElement.classList.contains('print-ok');
+export function allowPrintOnce() {
+  if (OFF) { window.print(); return; }
+  const route = window.location.hash.replace(/^#/, '').split('?')[0] || window.location.pathname; // HashRouter
+  if (!/^\/study\/certificate\/[^/]+\/?$/.test(route) || !document.querySelector('.print-allowed')) { toast('Printing is disabled on UpSkillr.'); return; }
+  const root = document.documentElement;
+  let timer = null;
+  const end = () => { root.classList.remove('print-ok'); window.removeEventListener('afterprint', end); clearTimeout(timer); };
+  root.classList.add('print-ok');
+  window.addEventListener('afterprint', end);
+  timer = setTimeout(end, 120000); // safety net for browsers that never fire afterprint
+  window.print();
 }

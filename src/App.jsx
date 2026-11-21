@@ -49,6 +49,8 @@ import Classroom, { AdminUsers } from './pages/Classroom.jsx';
 import { ApplicationTracker, OfferComparison, InterviewJournal } from './pages/CareerHub.jsx';
 import { RequireAuth } from './auth.js';
 import Admin from './pages/Admin.jsx';
+import AdminInbox from './pages/AdminInbox.jsx';
+import Legal from './pages/Legal.jsx';
 import Chat from './pages/Chat.jsx';
 import StudyMaterial from './pages/StudyMaterial.jsx';
 import Profile from './pages/Profile.jsx';
@@ -74,6 +76,7 @@ function AppShell() {
       <PermissionGate>
       <Routes>
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/inbox" element={<AdminInbox />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/home" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -167,6 +170,8 @@ export default function App() {
       <ScrollTop />
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/privacy" element={<Legal kind="privacy" />} />
+        <Route path="/terms" element={<Legal kind="terms" />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         {DevVerifyTasks && <Route path="/dev/verify-tasks/:track" element={<Suspense fallback={<p>Loading verifier…</p>}><DevVerifyTasks /></Suspense>} />}
