@@ -4,6 +4,8 @@ import { tracks } from '../data/index.js';
 import { usePerms, getPackages, packageTracks } from '../permissions.js';
 
 import Ico from './Ico.jsx';
+// All packages are shown as FREE to students (owner's decision), even if a price was saved in Admin → Packages.
+const isFree = () => true;
 const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const INCLUDED = [
   'Day-wise lessons: theory in simple English + solved examples',
@@ -44,7 +46,7 @@ function Details({ p, onClose }) {
           <div><b>{qa.toLocaleString('en-IN')}</b><span>interview Q&amp;A</span></div>
           <div><b>{p.months}</b><span>months (suggested)</span></div>
         </div>
-        <div className="pkg-price big">{p.offerPrice ? <><s>{inr(p.price)}</s> <b>{inr(p.offerPrice)}</b> <span className="pkg-save">Save {Math.round((1 - p.offerPrice / p.price) * 100)}%</span></> : <b>{inr(p.price)}</b>}<span className="muted small"> · {p.mode}</span></div>
+        <div className="pkg-price big">{isFree(p) ? <><b>Free</b> <span className="pkg-save">for every student</span></> : p.offerPrice ? <><s>{inr(p.price)}</s> <b>{inr(p.offerPrice)}</b> <span className="pkg-save">Save {Math.round((1 - p.offerPrice / p.price) * 100)}%</span></> : <b>{inr(p.price)}</b>}<span className="muted small"> · {p.mode}</span></div>
 
         <h3><Ico e="📚" /> Courses included</h3>
         <div className="table-wrap">
@@ -105,7 +107,7 @@ export default function PackagesSection() {
                 {p.badge && <span className="pkg-badge">{p.badge}</span>}
                 <div className="pkg-top"><span className="pkg-ic"><Ico e={p.icon} /></span><h3>{p.name}</h3></div>
                 <p className="pkg-tag">{p.tagline}</p>
-                <div className="pkg-price">{p.offerPrice ? <><s>{inr(p.price)}</s> <b>{inr(p.offerPrice)}</b></> : <b>{inr(p.price)}</b>}</div>
+                <div className="pkg-price">{isFree(p) ? <b>Free</b> : p.offerPrice ? <><s>{inr(p.price)}</s> <b>{inr(p.offerPrice)}</b></> : <b>{inr(p.price)}</b>}</div>
                 <ul className="pkg-facts">
                   <li><Ico e="📚" /> {ks.length} courses · {lessons} lessons</li>
                   <li><Ico e="💬" /> {qa.toLocaleString('en-IN')} interview Q&amp;A</li>

@@ -145,3 +145,7 @@
 .tp .rv { opacity: 1; }
 /* .rv is also the RecordedVideos class (left accent border in styles.css); keep the hero's own top accent */
 .tp .tp-hero.rv { border-left: 1px solid var(--border); }
+
+/* The app-wide scroll reveal (Layout.jsx) can leave cards that were scanned before a route change at opacity 0.
+   Everything on this page is shown right away. */
+.tp .rv:not(.rv-in) { opacity: 1; }
