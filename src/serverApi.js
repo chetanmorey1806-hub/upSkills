@@ -1,4 +1,4 @@
-// Connection to the UpSkillr backend (server/ folder): accounts, study material uploads and the chat.
+// Connection to the NGU backend (server/ folder): accounts, study material uploads and the chat.
 // Set VITE_API_URL (e.g. https://api.yoursite.com) when building the website. Without it the app runs
 // browser-only as before, and Chat / Study material show how to connect the server.
 import { supaMode } from './supabase.js';
@@ -24,7 +24,7 @@ export function token() {
  */
 export function api(path, { method = 'GET', json, form, onProgress, signal } = {}) {
   if (supaMode) return supaApi(path, { method, json, form, onProgress, signal });
-  if (!serverMode) return Promise.reject(Object.assign(new Error('The UpSkillr server is not connected.'), { status: 0 }));
+  if (!serverMode) return Promise.reject(Object.assign(new Error('The NGU server is not connected.'), { status: 0 }));
   const url = `${API_URL}${path}`;
   const headers = {};
   const t = token();

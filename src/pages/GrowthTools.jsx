@@ -155,7 +155,7 @@ ${skills.length ? `<section id="skills"><div class="wrap rv"><h2>Skills</h2><div
 <section id="projects"><div class="wrap"><h2 class="rv">Projects</h2><div class="grid">${projects.map((p) => `<article class="card rv"><h3>${esc(p.title)}</h3>${p.tech ? `<div class="tech">${esc(p.tech)}</div>` : ''}<ul>${p.desc.split('\n').filter((x) => x.trim()).map((x) => `<li>${esc(x.trim())}</li>`).join('')}</ul>${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">View project →</a>` : ''}</article>`).join('') || '<p class="muted">Projects coming soon.</p>'}</div></div></section>
 ${certs.length ? `<section id="certs"><div class="wrap rv"><h2>Certifications</h2><ul>${certs.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></div></section>` : ''}
 <section id="contact"><div class="wrap rv"><h2>Contact</h2><p class="tag">Open to entry-level roles and internships. Let's talk!</p><div class="btns">${d.email ? `<a class="btn p" href="mailto:${esc(d.email)}">${esc(d.email)}</a>` : ''}${d.linkedin ? `<a class="btn" href="${esc(d.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ''}${d.github ? `<a class="btn" href="${esc(d.github)}" target="_blank" rel="noopener">GitHub</a>` : ''}</div></div></section>
-<footer>© ${new Date().getFullYear()} ${esc(d.name)} · Built with UpSkillr</footer>
+<footer>© ${new Date().getFullYear()} ${esc(d.name)} · Built with NGU</footer>
 <script>var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1});document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});</script>
 </body></html>`;
 }
@@ -252,7 +252,7 @@ export function WeeklyReport() {
       </div>
       <div className="card wr-sheet">
         <div className="wr-top">
-          <div><div className="cert-brand">UpSkillr</div><h2>Weekly Progress Report</h2><div className="muted">{user?.name || 'Student'} · {fmt(start)} – {fmt(end)}</div></div>
+          <div><div className="cert-brand">NGU</div><h2>Weekly Progress Report</h2><div className="muted">{user?.name || 'Student'} · {fmt(start)} – {fmt(end)}</div></div>
           <div className="wr-lv"><b>Level {lv.level}</b><span>{lv.name} · {s.xp} XP</span></div>
         </div>
         <div className="wr-tiles">{tiles.map(([i, v, l]) => <div key={l}><span><Ico e={i} /></span><b>{v}</b><small>{l}</small></div>)}</div>

@@ -470,7 +470,7 @@ kbd { background: var(--surface2); border: 1px solid var(--border); border-botto
 .hl-dn { color: #8b5cf6; }
 
 /* =====================================================================
-   UpSkillr — design layer: header, footer, motion, mobile
+   NGU — design layer: header, footer, motion, mobile
    ===================================================================== */
 :root {
   --topbar-h: 62px;
@@ -2451,7 +2451,7 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
 .protect-toast.show { opacity: 1; transform: translate(-50%, 0); }
 @media print {
   .protect-on:not(.print-ok) body * { display: none !important; }
-  .protect-on:not(.print-ok) body::after { content: 'Printing is disabled on UpSkillr.'; display: block; padding: 2rem; font: 600 18px sans-serif; }
+  .protect-on:not(.print-ok) body::after { content: 'Printing is disabled on NGU.'; display: block; padding: 2rem; font: 600 18px sans-serif; }
   /* certificate exception (allowPrintOnce in protect.js): only the .print-allowed element is printed */
   .protect-on.print-ok body * { visibility: hidden !important; }
   .protect-on.print-ok .print-allowed, .protect-on.print-ok .print-allowed * { visibility: visible !important; }

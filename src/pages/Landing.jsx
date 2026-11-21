@@ -152,7 +152,7 @@ export default function Landing() {
     window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
-  useEffect(() => { document.title = 'UpSkillr – Learn, Practise, Get Hired'; }, []);
+  useEffect(() => { document.title = 'NGU – Learn, Practise, Get Hired'; }, []);
 
   const lessons = allTopics.length;
   const qa = allTopics.reduce((s, t) => s + (t.interview?.length || 0), 0);
@@ -163,7 +163,7 @@ export default function Landing() {
     <div className="ld" ref={ref}>
       <header className={`ld-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="ld-wrap ld-nav-in">
-          <Link to="/" className="brand"><Logo size={32} /><span className="brand-name">Up<b>Skillr</b></span></Link>
+          <Link to="/" className="brand"><Logo size={32} /><span className="brand-name">N<b>GU</b></span></Link>
           <nav className={`ld-links ${menu ? 'open' : ''}`}>
             <a href="#features" onClick={go('features')}>Features</a>
             <a href="#courses" onClick={go('courses')}>Courses</a>

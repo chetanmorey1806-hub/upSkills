@@ -1,10 +1,10 @@
-// UpSkillr service worker: lets the app open offline and makes repeat visits fast.
+// NGU service worker: lets the app open offline and makes repeat visits fast.
 // - app files (/assets/*, hashed by Vite): cache-first – all lessons live inside these files
 // - page loads: network-first, falling back to the cached app shell when offline
 // - other same-origin files: stale-while-revalidate
 // Cross-origin requests (CDNs, APIs, Claude) are never touched.
-const VERSION = 'upskillr-v2';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './logo.svg', './icon-192.png', './icon-512.png'];
+const VERSION = 'upskillr-v3';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './logo.svg', './ngu-logo.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -64,7 +64,7 @@ self.addEventListener('periodicsync', (e) => {
     const [h, m] = String(st.time || '19:00').split(':').map(Number);
     const now = new Date();
     if (now.getHours() * 60 + now.getMinutes() < h * 60 + m) return;
-    const msg = st.day === today && st.msg ? st.msg : { title: '📚 Time to study', body: 'Open UpSkillr for today\'s plan and revision.', url: './#/today' };
+    const msg = st.day === today && st.msg ? st.msg : { title: '📚 Time to study', body: 'Open NGU for today\'s plan and revision.', url: './#/today' };
     await self.registration.showNotification(msg.title, { body: msg.body, icon: './icon-192.png', badge: './icon-192.png', tag: 'upskillr-daily', data: { url: msg.url } });
     await c.put('./__reminder-state.json', new Response(JSON.stringify({ ...st, bgLast: today }), { headers: { 'Content-Type': 'application/json' } }));
   })());

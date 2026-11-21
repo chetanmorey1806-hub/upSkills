@@ -1,4 +1,5 @@
-// Canvas renderer for UpSkillr video lessons (1280x720). Pure drawing, no React.
+// Canvas renderer for NGU video lessons (1280x720). Pure drawing, no React.
+import logoUrl from '../assets/ngu-logo.png';
 export const W = 1280;
 export const H = 720;
 
@@ -23,32 +24,19 @@ function rr(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// ---------- Logo (same artwork as components/Logo.jsx) ----------
+// ---------- Logo (same NGU artwork as components/Logo.jsx) ----------
+let logoImg = null;
+if (typeof Image !== 'undefined') { logoImg = new Image(); logoImg.src = logoUrl; }
 export function drawLogo(ctx, x, y, size, alpha = 1) {
-  const s = size / 64;
   ctx.save();
   ctx.globalAlpha *= alpha;
-  ctx.translate(x, y);
-  ctx.scale(s, s);
-  const g = ctx.createLinearGradient(0, 0, 64, 64);
-  g.addColorStop(0, '#4f46e5');
-  g.addColorStop(1, '#06b6d4');
-  ctx.fillStyle = g;
-  rr(ctx, 0, 0, 64, 64, 14);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  [[12, 38, 14, 0.6], [27.5, 29, 23, 0.8], [43, 20, 32, 1]].forEach(([bx, by, bh, o]) => {
-    ctx.globalAlpha = alpha * o;
-    rr(ctx, bx, by, 9, bh, 2.5);
-    ctx.fill();
-  });
-  ctx.globalAlpha = alpha;
-  ctx.strokeStyle = '#fde047';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.moveTo(12, 30); ctx.lineTo(28, 17); ctx.lineTo(35, 23); ctx.lineTo(48, 11); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(41, 10.5); ctx.lineTo(49.5, 10); ctx.lineTo(49, 18.5); ctx.stroke();
+  if (logoImg && logoImg.complete && logoImg.naturalWidth) {
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(logoImg, x, y, size, size);
+  } else { // image still loading: plain black badge
+    ctx.fillStyle = '#08080a';
+    ctx.beginPath(); ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -56,11 +44,11 @@ function brandName(ctx, x, y, size) {
   ctx.font = `700 ${size}px ${FONT}`;
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('Up', x, y);
-  const w = ctx.measureText('Up').width;
+  ctx.fillText('N', x, y);
+  const w = ctx.measureText('N').width;
   ctx.fillStyle = C.accent;
-  ctx.fillText('Skillr', x + w, y);
-  return w + ctx.measureText('Skillr').width;
+  ctx.fillText('GU', x + w, y);
+  return w + ctx.measureText('GU').width;
 }
 
 // ---------- rich text (**bold**, `code`) with wrapping ----------
@@ -363,7 +351,7 @@ function chrome(ctx, meta) {
   const ft = meta.title.length > 80 ? `${meta.title.slice(0, 80)}…` : meta.title;
   ctx.fillText(`${meta.chapter}  ·  ${ft}`, 22, H - 20);
   ctx.textAlign = 'right';
-  ctx.fillText(`upskillr  ·  ${meta.index + 1}/${meta.total}`, W - 60, H - 20);
+  ctx.fillText(`NGU  ·  ${meta.index + 1}/${meta.total}`, W - 60, H - 20);
   ctx.textAlign = 'left';
   drawLogo(ctx, W - 48, H - 33, 26, 0.9);
   // progress
@@ -785,7 +773,7 @@ function sOutro(ctx, s, p, meta) {
   ctx.textAlign = 'center';
   ctx.font = `600 18px ${FONT}`;
   ctx.fillStyle = C.accent;
-  ctx.fillText(`UpSkillr  ·  ${s.L?.tagline || 'Learn any tech, one day at a time'}`, W / 2, 590);
+  ctx.fillText(`NGU  ·  ${s.L?.tagline || 'Learn any tech, one day at a time'}`, W / 2, 590);
   ctx.restore();
 }
 

@@ -10,7 +10,7 @@ export const LANGS = [
 
 const T = {
   en: {
-    intro: (course, label, title) => `Hello everyone, and welcome to UpSkillr. This is ${/course$/i.test(course) ? `the ${course}` : `the ${course} course`}${label ? `, ${label}` : ''}. In today's session, we are going to learn: ${title}. So, let's get started.`,
+    intro: (course, label, title) => `Hello everyone, and welcome to NGU. This is ${/course$/i.test(course) ? `the ${course}` : `the ${course} course`}${label ? `, ${label}` : ''}. In today's session, we are going to learn: ${title}. So, let's get started.`,
     objectives: 'By the end of this video, you will be able to do these things.',
     theory: (h) => `${h}.`,
     keyPoints: 'Now, let us quickly note down the key points. Please remember these.',
@@ -29,7 +29,7 @@ const T = {
     solution: 'Okay, now let us check the solution.',
     qa: (n) => (n === 1 ? 'Now, some interview questions. These are asked very often, so listen carefully. Question 1.' : `Interview question ${n}.`),
     answer: 'You can answer it like this.',
-    outro: (title, tool) => `Very good! You have completed ${title}. Now practise the tasks in the ${tool}, and then take the quiz to test yourself. Keep practising daily. Thank you for watching, and see you in the next video on UpSkillr.`,
+    outro: (title, tool) => `Very good! You have completed ${title}. Now practise the tasks in the ${tool}, and then take the quiz to test yourself. Keep practising daily. Thank you for watching, and see you in the next video on NGU.`,
     // on-screen labels
     L: {
       objectives: 'After this video you will be able to', keyPoints: 'key points', syntax: 'Syntax', proTip: 'Pro Tip', handsOn: 'Hands-on',
@@ -67,7 +67,7 @@ const T = {
     },
   },
   hi: {
-    intro: (course, label, title) => `नमस्ते! UpSkillr में आपका स्वागत है। यह ${course} कोर्स${label ? ` का ${label}` : ''} है। आज का टॉपिक है: ${title}।`,
+    intro: (course, label, title) => `नमस्ते! NGU में आपका स्वागत है। यह ${course} कोर्स${label ? ` का ${label}` : ''} है। आज का टॉपिक है: ${title}।`,
     objectives: 'इस वीडियो के बाद आप ये कर पाएंगे:',
     theory: (h) => `अब समझते हैं: ${h}।`,
     keyPoints: 'ये मुख्य बातें याद रखिए।',
@@ -86,7 +86,7 @@ const T = {
     solution: 'अब solution देखते हैं।',
     qa: (n) => `इंटरव्यू प्रश्न ${n}।`,
     answer: 'जवाब:',
-    outro: (title, tool) => `बहुत बढ़िया! आपने ${title} पूरा कर लिया। अब ${tool} में practice tasks कीजिए और फिर quiz देकर खुद को test कीजिए। अगले वीडियो में मिलते हैं, UpSkillr पर।`,
+    outro: (title, tool) => `बहुत बढ़िया! आपने ${title} पूरा कर लिया। अब ${tool} में practice tasks कीजिए और फिर quiz देकर खुद को test कीजिए। अगले वीडियो में मिलते हैं, NGU पर।`,
     L: {
       objectives: 'इस वीडियो के बाद आप ये कर पाएंगे', keyPoints: 'मुख्य बातें', syntax: 'Syntax', proTip: 'ज़रूरी टिप', handsOn: 'Practical',
       practiseIn: (tool) => `Practical: ${tool} में practice कैसे करें`, example: 'उदाहरण', liveDemo: 'Live demo', codeWalk: 'कोड समझिए', part: 'भाग',
@@ -123,7 +123,7 @@ const T = {
     },
   },
   mr: {
-    intro: (course, label, title) => `नमस्कार! UpSkillr मध्ये तुमचं स्वागत आहे. हा ${course} कोर्स${label ? `चा ${label}` : ''} आहे. आजचा टॉपिक आहे: ${title}.`,
+    intro: (course, label, title) => `नमस्कार! NGU मध्ये तुमचं स्वागत आहे. हा ${course} कोर्स${label ? `चा ${label}` : ''} आहे. आजचा टॉपिक आहे: ${title}.`,
     objectives: 'हा व्हिडिओ पाहिल्यानंतर तुम्ही हे करू शकाल:',
     theory: (h) => `आता समजून घेऊया: ${h}.`,
     keyPoints: 'हे महत्त्वाचे मुद्दे लक्षात ठेवा.',
@@ -142,7 +142,7 @@ const T = {
     solution: 'आता solution पाहूया.',
     qa: (n) => `इंटरव्ह्यू प्रश्न ${n}.`,
     answer: 'उत्तर:',
-    outro: (title, tool) => `खूप छान! तुम्ही ${title} पूर्ण केलंत. आता ${tool} मध्ये practice tasks करा आणि मग quiz देऊन स्वतःला test करा. पुढच्या व्हिडिओमध्ये भेटूया, UpSkillr वर.`,
+    outro: (title, tool) => `खूप छान! तुम्ही ${title} पूर्ण केलंत. आता ${tool} मध्ये practice tasks करा आणि मग quiz देऊन स्वतःला test करा. पुढच्या व्हिडिओमध्ये भेटूया, NGU वर.`,
     L: {
       objectives: 'हा व्हिडिओ पाहिल्यानंतर तुम्ही हे करू शकाल', keyPoints: 'महत्त्वाचे मुद्दे', syntax: 'Syntax', proTip: 'महत्त्वाची टीप', handsOn: 'Practical',
       practiseIn: (tool) => `Practical: ${tool} मध्ये practice कशी करायची`, example: 'उदाहरण', liveDemo: 'Live demo', codeWalk: 'कोड समजून घ्या', part: 'भाग',

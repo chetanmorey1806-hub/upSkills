@@ -1,4 +1,4 @@
-// Role-based access for UpSkillr (admin decides what students can see), modelled on the bk-steels permission matrix:
+// Role-based access for NGU (admin decides what students can see), modelled on the bk-steels permission matrix:
 // a MODULES registry (key, label, group, actions) + per-role defaults + optional per-student overrides + packages.
 //
 // Storage: admin settings live in localStorage under 'upskillr-auth-perms' (global, not swapped per user by auth.js).

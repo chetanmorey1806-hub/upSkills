@@ -177,7 +177,7 @@ export default function Dashboard() {
         if (!window.confirm('Replace the progress in this browser with the backup file?')) return;
         Object.entries(j.data).forEach(([k, v]) => { if (k.startsWith('xlpbi-')) localStorage.setItem(k, v); });
         window.location.reload();
-      } catch { window.alert('This is not a valid UpSkillr backup file.'); }
+      } catch { window.alert('This is not a valid NGU backup file.'); }
     };
     rd.readAsText(file);
   };

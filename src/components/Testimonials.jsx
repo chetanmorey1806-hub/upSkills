@@ -99,7 +99,7 @@ export default function Testimonials() {
         <div className="ld-head">
           <span className="ld-eyebrow">Student reviews</span>
           <h2>{items.length ? 'What our students say' : 'Be the first to review'}</h2>
-          <p>{items.length ? 'Real reviews from students who learned on UpSkillr.' : 'Studied with UpSkillr? Tell other students how it went.'}</p>
+          <p>{items.length ? 'Real reviews from students who learned on NGU.' : 'Studied with NGU? Tell other students how it went.'}</p>
         </div>
         {items.length > 0 && (
           <div className="lx-rev-track" tabIndex={0} aria-label="Student reviews">

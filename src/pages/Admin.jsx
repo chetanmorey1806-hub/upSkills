@@ -101,7 +101,7 @@ export default function Admin() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const importConfig = async (f) => {
-    try { const d = JSON.parse(await f.text()); if (!d.roles) throw new Error('Not an UpSkillr settings file'); writePerms({ roles: d.roles, users: d.users || {}, packages: d.packages || null, settings: d.settings || {} }); window.alert('Settings imported.'); } catch (e) { window.alert(`Import failed: ${e.message}`); }
+    try { const d = JSON.parse(await f.text()); if (!d.roles) throw new Error('Not an NGU settings file'); writePerms({ roles: d.roles, users: d.users || {}, packages: d.packages || null, settings: d.settings || {} }); window.alert('Settings imported.'); } catch (e) { window.alert(`Import failed: ${e.message}`); }
   };
 
   const selUser = students.find((u) => u.username === sel);
@@ -234,7 +234,7 @@ export default function Admin() {
         <div className="grid2">
           <div className="card">
             <h3><Ico e="📤" /> Publish settings to every device</h3>
-            <p>UpSkillr has no server yet, so admin settings are saved in this browser. To apply them for <b>all students on all devices</b>:</p>
+            <p>NGU has no server yet, so admin settings are saved in this browser. To apply them for <b>all students on all devices</b>:</p>
             <ol>
               <li>Click <b>Download settings file</b> (upskillr-config.json).</li>
               <li>Put the file in the website's <code>public/</code> folder (next to index.html) and deploy the site again.</li>
@@ -256,7 +256,7 @@ export default function Admin() {
               <li>Packages control access: {m.settings.packagesControlAccess ? 'ON' : 'OFF'}</li>
             </ul>
             <button className="btn small" onClick={() => window.confirm('Reset ALL admin settings on this computer (permissions, packages)?') && writePerms(null) }>↺ Reset all admin settings</button>
-            <p className="muted small">For real multi-device accounts and central control, UpSkillr needs a backend server (like the bk-steels API). This screen is ready to move to one.</p>
+            <p className="muted small">For real multi-device accounts and central control, NGU needs a backend server (like the bk-steels API). This screen is ready to move to one.</p>
           </div>
         </div>
       )}

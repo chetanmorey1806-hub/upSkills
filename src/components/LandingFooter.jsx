@@ -13,7 +13,7 @@ export default function LandingFooter() {
     .map((g) => ({ ...g, first: g.tracks.find((k) => tracks[k]?.topics?.length) }))
     .filter((g) => g.first);
   const socials = socialLinks();
-  const wa = waLink('Hello UpSkillr, I have an enquiry.');
+  const wa = waLink('Hello NGU, I have an enquiry.');
   const hasContact = !!(siteInfo.phone || wa || siteInfo.email || siteInfo.address || socials.length);
   const go = (id) => (e) => {
     e.preventDefault(); // HashRouter: a bare "#id" would be treated as a route
@@ -24,7 +24,7 @@ export default function LandingFooter() {
     <footer className="lx-footer">
       <div className="ld-wrap lx-foot-grid">
         <div className="lx-foot-brand">
-          <Link to="/" className="brand"><Logo size={30} /><span className="brand-name">Up<b>Skillr</b></span></Link>
+          <Link to="/" className="brand"><Logo size={30} /><span className="brand-name">N<b>GU</b></span></Link>
           <p>Learn any tech, one day at a time. Day-wise lessons, built-in labs, test series and projects in one place.</p>
           {socials.length > 0 && (
             <div className="lx-socials">
@@ -56,7 +56,7 @@ export default function LandingFooter() {
       <div className="ld-wrap lx-foot-bottom">
         <div className="lx-foot-legal"><Link to="/privacy">Privacy policy</Link><Link to="/terms">Terms of use</Link></div>
         <div className="footer-credit">Developed by <b>ER. Chetan D Morey</b></div>
-        <div className="footer-copy">© {new Date().getFullYear()} UpSkillr. All rights reserved.</div>
+        <div className="footer-copy">© {new Date().getFullYear()} NGU. All rights reserved.</div>
       </div>
     </footer>
   );

@@ -415,7 +415,7 @@ export default function Layout({ children }) {
     const last = seg[seg.length - 1] || 'Home';
     return decodeURIComponent(last).replace(/^grp:/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }, [menu, cur, pathname]);
-  useEffect(() => { document.title = `${pageLabel} · UpSkillr`; }, [pageLabel]);
+  useEffect(() => { document.title = `${pageLabel} · NGU`; }, [pageLabel]);
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -452,7 +452,7 @@ export default function Layout({ children }) {
         <div className="topbar-inner">
           <Link to="/" className="brand">
             <Logo size={32} />
-            <span className="brand-name">Up<b>Skillr</b></span>
+            <span className="brand-name">N<b>GU</b></span>
           </Link>
           <form onSubmit={submit} className="search-form top-search">
             <span className="search-ic"><Search size={14} /></span>
@@ -473,7 +473,7 @@ export default function Layout({ children }) {
         <div className={`nav-overlay ${open ? 'show' : ''}`} onClick={() => setOpen(false)} />
         <nav className={`nav ${open ? 'open' : ''}`} aria-label="Menu">
           <div className="nav-head">
-            <span className="brand"><Logo size={28} /><span className="brand-name">Up<b>Skillr</b></span></span>
+            <span className="brand"><Logo size={28} /><span className="brand-name">N<b>GU</b></span></span>
             <button className="nav-close" onClick={() => setOpen(false)} aria-label="Close menu">✕</button>
           </div>
           <form onSubmit={submit} className="search-form">
@@ -486,10 +486,10 @@ export default function Layout({ children }) {
       </header>
 
       <main className="container" ref={mainRef}>
-        <div key={`pb-${pathname}`} className="page-brand" aria-label="UpSkillr">
-          <Link to="/" className="pb-logo" title="UpSkillr home"><Logo size={30} /></Link>
+        <div key={`pb-${pathname}`} className="page-brand" aria-label="NGU">
+          <Link to="/" className="pb-logo" title="NGU home"><Logo size={30} /></Link>
           <div className="pb-text">
-            <span className="pb-name">Up<b>Skillr</b></span>
+            <span className="pb-name">N<b>GU</b></span>
             <span className="pb-sep">›</span>
             <span className="pb-page">{pageLabel}</span>
           </div>
@@ -502,11 +502,11 @@ export default function Layout({ children }) {
         <div className="footer-inner">
           <div className="footer-brand">
             <Logo size={28} />
-            <span className="brand-name">Up<b>Skillr</b></span>
+            <span className="brand-name">N<b>GU</b></span>
           </div>
           <p className="footer-tag">Learn any tech, one day at a time · Progress is saved in your browser</p>
           <div className="footer-credit">Developed by <b>ER. Chetan D Morey</b></div>
-          <div className="footer-copy">© {new Date().getFullYear()} UpSkillr. All rights reserved.</div>
+          <div className="footer-copy">© {new Date().getFullYear()} NGU. All rights reserved.</div>
         </div>
       </footer>
 

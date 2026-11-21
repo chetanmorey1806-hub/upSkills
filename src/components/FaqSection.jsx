@@ -9,8 +9,8 @@ const scrollTo = (id, fallback) => (e) => {
 
 // Honest answers about what the app really does. Keep them in sync with the features.
 const FAQS = [
-  ['What is UpSkillr?',
-    <>UpSkillr is a learning platform with day-wise courses in Data Analytics (Excel, Power BI), Java, Python, .NET, MERN and web development, databases, AI and soft skills. Each course is a step-by-step plan: you learn one topic a day, practise it in the browser and test yourself.</>],
+  ['What is NGU?',
+    <>NGU is a learning platform with day-wise courses in Data Analytics (Excel, Power BI), Java, Python, .NET, MERN and web development, databases, AI and soft skills. Each course is a step-by-step plan: you learn one topic a day, practise it in the browser and test yourself.</>],
   ['How is each lesson structured?',
     <>Every lesson has simple theory, solved examples, interview questions and answers, hands-on practice and a short quiz. Many lessons also have a Day Task that is checked automatically and a video lesson.</>],
   ['Do I need to install any software?',
@@ -26,7 +26,7 @@ const FAQS = [
   ['Which languages are the video lessons in?',
     <>Video lessons can be played in English, Hindi and Marathi. The written lesson content is in simple English.</>],
   ['Do you guarantee a job or placement?',
-    <>No. We do not promise a job. UpSkillr helps you learn the skills and prepare for technical and HR interview rounds; how you perform in interviews is up to your practice and effort.</>],
+    <>No. We do not promise a job. NGU helps you learn the skills and prepare for technical and HR interview rounds; how you perform in interviews is up to your practice and effort.</>],
   ['How much does it cost?',
     <>Creating an account is free. Course packages and their prices are listed in the Packages section. <a href="#packages" className="lx-inline-link" onClick={scrollTo('packages', 'contact')}>See packages <ArrowRight size={14} /></a></>],
 ];
@@ -50,7 +50,7 @@ export default function FaqSection() {
         <div className="ld-head ld-rv">
           <span className="ld-eyebrow">FAQ</span>
           <h2>Frequently asked questions</h2>
-          <p>Straight answers about how UpSkillr works.</p>
+          <p>Straight answers about how NGU works.</p>
         </div>
         <div className="lx-acc ld-rv" style={{ '--d': '80ms' }}>
           {FAQS.map(([q, a], i) => {

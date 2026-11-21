@@ -75,7 +75,7 @@ export const isNaturalVoice = (v) => !!v && NATURAL.test(v.name) && !ROBOTIC.tes
 // Make lesson text sound like a person reading it, not a machine reading symbols.
 export function speakable(text, lang) {
   let t = String(text || '');
-  t = t.replace(/UpSkillr/g, 'Up Skiller')
+  t = t.replace(/\bNGU\b/g, 'N G U')
     .replace(/https?:\/\/\S+/g, 'the link')
     .replace(/\s*(->|=>|→|⇒)\s*/g, ', then ')
     .replace(/[“”"]/g, '')
@@ -370,7 +370,7 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
       const blob = new Blob(parts, { type: rec.mimeType || 'video/webm' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `UpSkillr-${(track?.short || 'course').replace(/\W+/g, '-')}-${(label || topic.id).replace(/\W+/g, '-')}-${lang}.${/mp4/.test(rec.mimeType) ? 'mp4' : 'webm'}`;
+      a.download = `NGU-${(track?.short || 'course').replace(/\W+/g, '-')}-${(label || topic.id).replace(/\W+/g, '-')}-${lang}.${/mp4/.test(rec.mimeType) ? 'mp4' : 'webm'}`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     };
@@ -476,7 +476,7 @@ export default function VideoLesson({ topic, track, label, toolName, lessonKey }
                   ? <><Ico e="⚠" /> No voice for this language is installed, subtitles are shown instead. </>
                   : !exactVoice
                     ? `No ${LANGS.find((l) => l.id === lang)?.label} voice is installed, so “${voice.name}” is used. `
-                    : `Now speaking with “${voice.name}”. For the most natural Indian teacher voice, open UpSkillr in Microsoft Edge (voices Neerja / Prabhat for English, Swara for Hindi, Aarohi for Marathi). `}
+                    : `Now speaking with “${voice.name}”. For the most natural Indian teacher voice, open NGU in Microsoft Edge (voices Neerja / Prabhat for English, Swara for Hindi, Aarohi for Marathi). `}
                 Microsoft Edge has natural Indian voices for English, Hindi and Marathi (e.g. Neerja, Swara, Aarohi). On Windows you can also add them in Settings → Time &amp; language → Speech.
               </p>
             )}

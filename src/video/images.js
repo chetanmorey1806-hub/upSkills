@@ -111,7 +111,7 @@ function api(params) {
     if (now < pauseUntil) throw new Error('wiki: backing off');
     const qs = new URLSearchParams({ format: 'json', origin: '*', action: 'query', prop: 'pageimages|description', piprop: 'thumbnail', pithumbsize: String(SIZE), ...params });
     if (params.prop === 'imageinfo') { qs.delete('piprop'); qs.delete('pithumbsize'); }
-    const r = await fetch(`${API}?${qs}`, { headers: { 'Api-User-Agent': 'UpSkillr-lesson-videos/1.0' } });
+    const r = await fetch(`${API}?${qs}`, { headers: { 'Api-User-Agent': 'NGU-lesson-videos/1.0' } });
     if (r.status === 429 || r.status >= 500) { pauseUntil = Date.now() + 60000; throw new Error(`wiki ${r.status}`); }
     if (!r.ok) throw new Error(`wiki ${r.status}`);
     const d = await r.json();

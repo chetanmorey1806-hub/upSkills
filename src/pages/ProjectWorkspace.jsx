@@ -309,7 +309,7 @@ export default function ProjectWorkspace() {
           {st.submission && (
             <div className="certificate" id="certificate">
               <div className="cert-inner">
-                <div className="cert-brand">UpSkillr</div><CertPhoto />
+                <div className="cert-brand">NGU</div><CertPhoto />
                 <div className="cert-title">Certificate of Project Completion</div>
                 <p>This certifies that</p>
                 <div className="cert-name"><CertName fallback={st.name} /></div>

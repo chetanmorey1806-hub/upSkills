@@ -91,7 +91,7 @@ export function LessonMaterials({ track, lessonId }) {
 export function ServerNeeded({ what }) {
   return (
     <div className="card server-needed">
-      <h3><Ico e="🔌" /> {what} needs the UpSkillr server</h3>
+      <h3><Ico e="🔌" /> {what} needs the NGU server</h3>
       <p>Chat and shared study material are stored on a server so every student sees the same messages and files. The server is in the <code>server/</code> folder of this project.</p>
       <ol>
         <li>Copy <code>server/.env.example</code> to <code>server/.env</code> and fill in MySQL, <code>JWT_SECRET</code> and the admin password.</li>

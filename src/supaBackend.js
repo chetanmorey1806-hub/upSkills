@@ -1,4 +1,4 @@
-// Supabase implementation of the UpSkillr API used by the app (same paths and data shapes as the
+// Supabase implementation of the NGU API used by the app (same paths and data shapes as the
 // Node server in server/), so login, study material and chat work on Vercel + Supabase without a server.
 import { supabase, SUPA_URL, publicFileUrl } from './supabase.js';
 

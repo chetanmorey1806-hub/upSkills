@@ -79,7 +79,7 @@ export default function Profile() {
       <h2 className="section-title">Certificate preview</h2>
       <div className="certificate">
         <div className="cert-inner">
-          <div className="cert-brand">UpSkillr</div>
+          <div className="cert-brand">NGU</div>
           {p.photo && <img className="cert-photo" src={p.photo} alt="Student" />}
           <div className="cert-title">Certificate of Project Completion</div>
           <p>This certifies that</p>

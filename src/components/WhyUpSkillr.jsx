@@ -1,7 +1,7 @@
 import { Check, X, Minus } from 'lucide-react';
 import '../styles/landing-extra.css';
 
-// [feature, typical video course: true | false | 'partial', typical note, UpSkillr note]
+// [feature, typical video course: true | false | 'partial', typical note, NGU note]
 // Only list features the app really has.
 const ROWS = [
   ['Day-wise lessons', 'partial', 'Long videos, you decide the pace', 'One topic a day with theory, examples and practice'],
@@ -25,21 +25,21 @@ export default function WhyUpSkillr() {
     <section id="why" className="ld-section lx-why">
       <div className="ld-wrap">
         <div className="ld-head ld-rv">
-          <span className="ld-eyebrow">Why UpSkillr</span>
+          <span className="ld-eyebrow">Why NGU</span>
           <h2>More than a video course</h2>
-          <p>How learning on UpSkillr compares with a typical recorded video course.</p>
+          <p>How learning on NGU compares with a typical recorded video course.</p>
         </div>
-        <div className="lx-cmp ld-rv" style={{ '--d': '80ms' }} role="table" aria-label="Typical video course compared with UpSkillr">
+        <div className="lx-cmp ld-rv" style={{ '--d': '80ms' }} role="table" aria-label="Typical video course compared with NGU">
           <div className="lx-cmp-row lx-cmp-head" role="row">
             <span role="columnheader">Feature</span>
             <span role="columnheader">Typical video course</span>
-            <span role="columnheader" className="lx-cmp-us">UpSkillr</span>
+            <span role="columnheader" className="lx-cmp-us">NGU</span>
           </div>
           {ROWS.map(([feat, other, otherNote, usNote]) => (
             <div key={feat} className="lx-cmp-row" role="row">
               <b role="rowheader">{feat}</b>
               <span role="cell" className="lx-cmp-other" data-label="Typical video course"><Mark v={other} /><small>{otherNote}</small></span>
-              <span role="cell" className="lx-cmp-us" data-label="UpSkillr"><Mark v /><small>{usNote}</small></span>
+              <span role="cell" className="lx-cmp-us" data-label="NGU"><Mark v /><small>{usNote}</small></span>
             </div>
           ))}
         </div>

@@ -7,7 +7,7 @@ const siteInfo = {
   whatsapp: '', // digits with country code, no + or spaces, e.g. '9198xxxxxxxx' (used for wa.me links)
   email: '', // e.g. 'hello@yourdomain.com'
   address: '', // full postal address shown in the Contact section and footer
-  mapQuery: '', // what Google Maps should search for, e.g. 'UpSkillr, FC Road, Pune' (leave empty to hide the map)
+  mapQuery: '', // what Google Maps should search for, e.g. 'NGU, FC Road, Pune' (leave empty to hide the map)
   social: {
     instagram: '', // full URL, e.g. 'https://instagram.com/yourpage'
     facebook: '', // full URL

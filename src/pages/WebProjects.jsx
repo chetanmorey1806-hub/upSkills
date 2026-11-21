@@ -40,7 +40,7 @@ export function WebProjectList() {
     <div>
       <div className="page-head">
         <h1><Ico e="🌐" /> Web Development Final Projects</h1>
-        <p className="muted">Build real websites and apps inside UpSkillr: a code editor with live preview, automated checks that test your page like a real user, milestones, a score and a certificate for your portfolio.</p>
+        <p className="muted">Build real websites and apps inside NGU: a code editor with live preview, automated checks that test your page like a real user, milestones, a score and a certificate for your portfolio.</p>
       </div>
       <div className="steps proj-steps">
         {STEPS.map(([ic, h, p]) => (
@@ -333,7 +333,7 @@ export function WebProjectWorkspace() {
           {st.submission && (
             <div className="certificate" id="certificate">
               <div className="cert-inner">
-                <div className="cert-brand">UpSkillr</div><CertPhoto />
+                <div className="cert-brand">NGU</div><CertPhoto />
                 <div className="cert-title">Certificate of Project Completion</div>
                 <p>This certifies that</p>
                 <div className="cert-name"><CertName fallback={st.name} /></div>

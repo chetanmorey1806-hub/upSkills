@@ -113,7 +113,7 @@ export function NotesPage() {
 
   const exportHtml = () => `<!doctype html><html><head><meta charset="utf-8"><title>My Notes</title>
 <style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:820px;margin:2rem auto;padding:0 16px;color:#1d2433;line-height:1.55}h1{margin:0}h2{border-bottom:2px solid #4f46e5;padding-bottom:4px;margin-top:2rem}h3{margin:1.2rem 0 .3rem}mark{background:#fde68a;padding:0 2px}pre{white-space:pre-wrap;font-family:inherit;background:#f6f7fb;padding:.6rem .8rem;border-radius:8px}.m{color:#5d6679;font-size:.85rem}@media print{h2{break-after:avoid}}</style></head><body>
-<h1>My Study Notes</h1><p class="m">Exported ${new Date().toLocaleString()} · UpSkillr</p>
+<h1>My Study Notes</h1><p class="m">Exported ${new Date().toLocaleString()} · NGU</p>
 ${courses.map((c) => `<h2>${esc(c)}</h2>${list.filter((n) => (n.course || 'Other') === c).map((n) => `<h3>${esc(n.title || n.key)}</h3>${n.text ? `<pre>${esc(n.text)}</pre>` : ''}${(n.highlights || []).length ? `<ul>${n.highlights.map((h) => `<li><mark>${esc(h.text)}</mark></li>`).join('')}</ul>` : ''}`).join('')}`).join('')}
 </body></html>`;
   const printPdf = () => {

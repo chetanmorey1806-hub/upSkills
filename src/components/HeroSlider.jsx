@@ -1,4 +1,4 @@
-// Landing page banner: animated slider where every slide shows a live "scene" from UpSkillr itself
+// Landing page banner: animated slider where every slide shows a live "scene" from NGU itself
 // (course progress, Python IDE, Power BI dashboard, project certificate, mock test, speaking coach)
 // over a tinted photo with Ken Burns zoom and floating code glyphs.
 // Autoplay every 3 s (pauses on hover / hidden tab), arrows, dots with progress, keyboard and swipe.
@@ -47,7 +47,7 @@ const CODE = [
 function SceneCode() {
   return (
     <div className="sc-window">
-      <div className="sc-bar"><i /><i /><i /><span>main.py · UpSkillr Python IDE</span><span className="sc-run"><Play size={11} /> Run</span></div>
+      <div className="sc-bar"><i /><i /><i /><span>main.py · NGU Python IDE</span><span className="sc-run"><Play size={11} /> Run</span></div>
       <pre className="sc-code">
         {CODE.map((ln, n) => (
           <div key={n} className="sc-line" style={{ '--d': `${150 + n * 230}ms` }}>
@@ -96,7 +96,7 @@ function SceneCertificate() {
   return (
     <div className="sc-cert-wrap">
       <div className="sc-cert">
-        <div className="sc-cert-top"><Logo size={22} /><b>UpSkillr</b></div>
+        <div className="sc-cert-top"><Logo size={22} /><b>NGU</b></div>
         <div className="sc-cert-photo"><Users size={26} /></div>
         <span className="sc-cert-small">Certificate of Completion</span>
         <b className="sc-cert-name">Asha Patil</b>
@@ -193,7 +193,7 @@ export default function HeroSlider({ user, onJump }) {
       className={`hs ${running ? '' : 'hs-paused'}`}
       style={{ '--tint': SLIDES[i].tint }}
       aria-roledescription="carousel"
-      aria-label="UpSkillr highlights"
+      aria-label="NGU highlights"
       tabIndex={0}
       onKeyDown={onKey}
       onMouseEnter={() => setHover(true)}

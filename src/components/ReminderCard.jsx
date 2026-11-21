@@ -36,10 +36,10 @@ export default function ReminderCard({ tasks = {}, days = [] }) {
       {msg && <p className="small">{msg}</p>}
       <p className="muted small">
         The reminder tells you how many revision cards are due, or reminds you about the daily challenge.
-        {backgroundSupported() ? ' When UpSkillr is installed as an app, it can remind you even when the app is closed (Chrome / Android).' : ' This browser shows the reminder when you open UpSkillr after the chosen time. For reminders when the app is closed, add it to your calendar:'}
+        {backgroundSupported() ? ' When NGU is installed as an app, it can remind you even when the app is closed (Chrome / Android).' : ' This browser shows the reminder when you open NGU after the chosen time. For reminders when the app is closed, add it to your calendar:'}
       </p>
       <div className="row-btns">
-        <a className="btn" href={googleCalUrl({ title: 'UpSkillr study time', time: r.time, minutes, details: `Today's plan, revision and daily challenge: ${appUrl()}`, daily: true })} target="_blank" rel="noreferrer"><CalendarPlus size={15} /> Daily reminder in Google Calendar</a>
+        <a className="btn" href={googleCalUrl({ title: 'NGU study time', time: r.time, minutes, details: `Today's plan, revision and daily challenge: ${appUrl()}`, daily: true })} target="_blank" rel="noreferrer"><CalendarPlus size={15} /> Daily reminder in Google Calendar</a>
         <button className="btn" onClick={() => downloadFile('upskillr-daily-study.ics', icsDailyReminder(r.time, minutes, appUrl()), 'text/calendar')}><Download size={15} /> Daily reminder (.ics)</button>
         <button className="btn" disabled={!taskCount} onClick={() => downloadFile('upskillr-week-plan.ics', icsTasks(weekTasks, r.time), 'text/calendar')}><Download size={15} /> This week's {taskCount || ''} planned task{taskCount === 1 ? '' : 's'} (.ics)</button>
       </div>

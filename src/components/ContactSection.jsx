@@ -9,7 +9,7 @@ import '../styles/landing-extra.css';
 const EMPTY = { name: '', phone: '', email: '', course: '', message: '' };
 
 function enquiryText(f) {
-  const lines = ['Hello UpSkillr, I have an enquiry.'];
+  const lines = ['Hello NGU, I have an enquiry.'];
   if (f.name.trim()) lines.push(`Name: ${f.name.trim()}`);
   if (f.course) lines.push(`Course: ${f.course}`);
   if (f.phone.trim()) lines.push(`Phone: ${f.phone.trim()}`);
@@ -126,7 +126,7 @@ export default function ContactSection() {
               {hasInfo && (
                 <div className="lx-card lx-info">
                   {siteInfo.phone && <a href={tel}><Phone size={18} /><span><small>Call us</small>{siteInfo.phone}</span></a>}
-                  {wa && <a href={waLink('Hello UpSkillr, I have an enquiry.')} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} /><span><small>WhatsApp</small>Chat with us</span></a>}
+                  {wa && <a href={waLink('Hello NGU, I have an enquiry.')} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} /><span><small>WhatsApp</small>Chat with us</span></a>}
                   {siteInfo.email && <a href={`mailto:${siteInfo.email}`}><Mail size={18} /><span><small>Email</small>{siteInfo.email}</span></a>}
                   {siteInfo.address && <div><MapPin size={18} /><span><small>Address</small>{siteInfo.address}</span></div>}
                   {socials.length > 0 && (

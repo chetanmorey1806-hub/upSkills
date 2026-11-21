@@ -204,7 +204,7 @@ function Workspace({ project }) {
           </div>
           {st.submission && (
             <div className="certificate" id="certificate"><div className="cert-inner">
-              <div className="cert-brand">UpSkillr</div><CertPhoto /><div className="cert-title">Certificate of Project Completion</div>
+              <div className="cert-brand">NGU</div><CertPhoto /><div className="cert-title">Certificate of Project Completion</div>
               <p>This certifies that</p><div className="cert-name"><CertName fallback={st.name} /></div><p>built the MERN project</p>
               <div className="cert-project">{project.title}</div>
               <p>with a final score of <b>{st.submission.score}/100</b> ({st.submission.passed}/{st.submission.total} automated API tests passing)</p>

@@ -1,4 +1,4 @@
-// Career Kit data for UpSkillr: Resume ATS checker + LinkedIn / GitHub profile builder.
+// Career Kit data for NGU: Resume ATS checker + LinkedIn / GitHub profile builder.
 // Audience: Indian freshers. All keywords are lowercase.
 
 export const ROLES = {

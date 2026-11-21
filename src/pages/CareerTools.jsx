@@ -139,7 +139,7 @@ export function CertificateView() {
             <div className="cert-content">
               <div className="cert-head">
                 <Logo size={46} />
-                <div className="cert-wordmark"><b>UpSkillr</b><span>Learn · Practice · Get hired</span></div>
+                <div className="cert-wordmark"><b>NGU</b><span>Learn · Practice · Get hired</span></div>
               </div>
               <div className="cert-heading">Certificate</div>
               <div className="cert-sub">of Completion</div>
@@ -160,7 +160,7 @@ export function CertificateView() {
                   <div className="cert-sign-script">Chetan D Morey</div>
                   <div className="cert-sign-line" />
                   <b>ER. Chetan D Morey</b>
-                  <span>Founder, UpSkillr</span>
+                  <span>Founder, NGU</span>
                 </div>
               </div>
             </div>
@@ -189,7 +189,7 @@ export function autoData(user) {
   MERN_PROJECTS.forEach((p) => { const s = readLS(`upskillr-project-v1:mern-${p.id}`, {}); if (s.submission) push(p.title, (p.skills || []).join(', '), p.summary); });
   const jp = readLS('xlpbi-java-projects-v1', {});
   javaProjects.forEach((p) => { const s = jp[p.id]; if (s && Object.values(s.tasks || {}).some(Boolean)) push(p.title, p.stack.join(', '), p.summary, s.sub?.github); });
-  const certs = trackOrder.filter((k) => tracks[k]?.topics?.length && courseCompletion(k, tracks[k].topics).eligible).map((k) => `${tracks[k].name} – UpSkillr (${new Date().getFullYear()})`);
+  const certs = trackOrder.filter((k) => tracks[k]?.topics?.length && courseCompletion(k, tracks[k].topics).eligible).map((k) => `${tracks[k].name} – NGU (${new Date().getFullYear()})`);
   return {
     name: user?.name || '', email: user?.email || '', phone: '', city: '', linkedin: '', github: '', portfolio: '',
     title: started.some((k) => ['corejava', 'springboot'].includes(k)) ? 'Java Full Stack Developer' : started.some((k) => ['react', 'js'].includes(k)) ? 'Frontend / Web Developer' : started.some((k) => k === 'python') ? 'Python Developer' : 'Software Developer (Fresher)',

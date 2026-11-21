@@ -43,7 +43,7 @@ export default function AuthPage({ mode }) {
   const [err, setErr] = useState({});
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(loc.state?.registered ? `Registration successful! Welcome ${loc.state.name || ''}. ${loc.state?.confirm ? 'We sent a confirmation link to your email — open it first, then sign in here.' : 'Please sign in with your new username and password.'}` : '');
-  useEffect(() => { document.title = `${isLogin ? 'Sign in' : 'Create account'} · UpSkillr`; setErr({}); }, [isLogin]);
+  useEffect(() => { document.title = `${isLogin ? 'Sign in' : 'Create account'} · NGU`; setErr({}); }, [isLogin]);
   // /register and /login share this component: reset when switching, and show the "registered" note on arrival
   useEffect(() => {
     setBusy(false);
@@ -77,7 +77,7 @@ export default function AuthPage({ mode }) {
     <div className="au">
       <aside className="au-side">
         <span className="au-blob a" /><span className="au-blob b" /><span className="au-blob c" />
-        <Link to="/" className="au-brand"><Logo size={38} /><span>Up<b>Skillr</b></span></Link>
+        <Link to="/" className="au-brand"><Logo size={38} /><span>N<b>GU</b></span></Link>
         <div className="au-side-body">
           <h2>{isLogin ? 'Welcome back!' : 'Start your journey'}</h2>
           <p>{isLogin ? 'Sign in to continue your lessons, tests and projects right where you left off.' : 'Create a free student account to save your own progress, scores and projects.'}</p>
@@ -95,7 +95,7 @@ export default function AuthPage({ mode }) {
         <Link to="/" className="au-back"><ArrowLeft size={16} /> Back to home</Link>
         <div className="au-card" key={mode}>
           <div className="au-logo"><Logo size={52} /></div>
-          <h1>{isLogin ? 'Sign in to UpSkillr' : 'Create your account'}</h1>
+          <h1>{isLogin ? 'Sign in to NGU' : 'Create your account'}</h1>
           <p className="muted">{isLogin ? 'New here? ' : 'Already registered? '}<Link to={isLogin ? '/register' : '/login'} state={loc.state?.from ? { from: loc.state.from } : undefined}>{isLogin ? 'Register as a new student' : 'Sign in'}</Link></p>
 
           {ok && isLogin && <div className="au-ok"><CheckCircle2 size={17} /> {ok}</div>}

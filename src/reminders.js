@@ -65,14 +65,14 @@ const pad = (n) => String(n).padStart(2, '0');
 const icsDate = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
 const icsEsc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 const stamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-const wrap = (events) => ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UpSkillr//Study Planner//EN', 'CALSCALE:GREGORIAN', ...events, 'END:VCALENDAR'].join('\r\n');
+const wrap = (events) => ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NGU//Study Planner//EN', 'CALSCALE:GREGORIAN', ...events, 'END:VCALENDAR'].join('\r\n');
 
 export function icsDailyReminder(time, minutes, appUrl) {
   const [h, m] = time.split(':').map(Number);
   const start = new Date(); start.setHours(h, m, 0, 0);
   const end = new Date(start.getTime() + minutes * 60000);
   return wrap(['BEGIN:VEVENT', `UID:upskillr-daily-${Date.now()}@upskillr`, `DTSTAMP:${stamp()}`, `DTSTART:${icsDate(start)}`, `DTEND:${icsDate(end)}`, 'RRULE:FREQ=DAILY',
-    'SUMMARY:UpSkillr study time', `DESCRIPTION:${icsEsc(`Today's plan, revision and daily challenge.\n${appUrl}`)}`,
+    'SUMMARY:NGU study time', `DESCRIPTION:${icsEsc(`Today's plan, revision and daily challenge.\n${appUrl}`)}`,
     'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Study time', 'TRIGGER:-PT5M', 'END:VALARM', 'END:VEVENT']);
 }
 export function icsTasks(byDay, time = '19:00') {

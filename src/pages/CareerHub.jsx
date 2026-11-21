@@ -250,7 +250,7 @@ export function InterviewJournal() {
   const shown = list.filter((e) => !q || `${e.company} ${e.role} ${e.rounds.map((r) => r.questions).join(' ')}`.toLowerCase().includes(q.toLowerCase()));
   const allQs = useMemo(() => list.flatMap((e) => e.rounds.flatMap((r) => r.questions.split('\n').map((x) => x.trim()).filter(Boolean).map((x) => ({ q: x, company: e.company, round: r.name })))), [list]);
   const save = () => { setList((l) => (edit.id ? l.map((x) => (x.id === edit.id ? edit : x)) : [{ ...edit, id: uid(), author: user?.name || 'Me', at: Date.now() }, ...l])); setEdit(null); };
-  const asText = (e) => `${e.company} – ${e.role} (${e.mode}, ${e.date || ''}) – ${e.result}\n\n${e.rounds.map((r, i) => `Round ${i + 1}: ${r.name} [${r.difficulty}]\n${r.questions.split('\n').filter((x) => x.trim()).map((x) => `• ${x.trim()}`).join('\n')}${r.notes ? `\nNote: ${r.notes}` : ''}`).join('\n\n')}${e.tips ? `\n\nTips: ${e.tips}` : ''}\n\n— shared via UpSkillr`;
+  const asText = (e) => `${e.company} – ${e.role} (${e.mode}, ${e.date || ''}) – ${e.result}\n\n${e.rounds.map((r, i) => `Round ${i + 1}: ${r.name} [${r.difficulty}]\n${r.questions.split('\n').filter((x) => x.trim()).map((x) => `• ${x.trim()}`).join('\n')}${r.notes ? `\nNote: ${r.notes}` : ''}`).join('\n\n')}${e.tips ? `\n\nTips: ${e.tips}` : ''}\n\n— shared via NGU`;
   const copy = async (e) => { try { await navigator.clipboard.writeText(asText(e)); setCopied(e.id); setTimeout(() => setCopied(''), 1500); } catch { /* ignore */ } };
   const importFile = (f) => {
     const rd = new FileReader();
@@ -261,7 +261,7 @@ export function InterviewJournal() {
         if (!arr.length) throw new Error('empty');
         setList((l) => { const ids = new Set(l.map((x) => x.id)); return [...arr.filter((x) => !ids.has(x.id)).map((x) => ({ ...x, shared: true })), ...l]; });
         window.alert(`Imported ${arr.length} experience${arr.length === 1 ? '' : 's'}.`);
-      } catch { window.alert('This is not a valid UpSkillr interview journal file.'); }
+      } catch { window.alert('This is not a valid NGU interview journal file.'); }
     };
     rd.readAsText(f);
   };

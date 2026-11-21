@@ -31,7 +31,7 @@ export default function Projects() {
     <div>
       <div className="page-head">
         <h1><Ico e="🏁" /> Python Final Projects</h1>
-        <p className="muted">Build a complete Python project inside UpSkillr: real starter code, automated tests that run in your browser, milestones, hints and a final score you can show in interviews.</p>
+        <p className="muted">Build a complete Python project inside NGU: real starter code, automated tests that run in your browser, milestones, hints and a final score you can show in interviews.</p>
       </div>
 
       <div className="steps proj-steps">

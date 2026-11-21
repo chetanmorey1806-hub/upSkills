@@ -83,7 +83,7 @@ export const DEFAULT_PACKAGES = [
   },
   {
     id: 'all-access', name: 'All-Access Pass', icon: '🏆', color: '#4f46e5', badge: 'Everything',
-    tagline: 'Every course, every lab, every project and every test series on UpSkillr.',
+    tagline: 'Every course, every lab, every project and every test series on NGU.',
     tracks: '*',
     price: 59999, offerPrice: 34999, months: 12, mode: 'Everything included',
     roles: ['Choose any career path, switch anytime'],

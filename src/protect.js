@@ -12,7 +12,7 @@
 // To switch it off (e.g. while developing), set VITE_DISABLE_PROTECTION=true in .env.local.
 
 const OFF = import.meta.env.VITE_DISABLE_PROTECTION === 'true';
-const MSG = 'Copying, pasting and screenshots are disabled on UpSkillr.';
+const MSG = 'Copying, pasting and screenshots are disabled on NGU.';
 
 let toastEl = null;
 let toastTimer = null;
@@ -159,7 +159,7 @@ const printOk = () => document.documentElement.classList.contains('print-ok');
 export function allowPrintOnce() {
   if (OFF) { window.print(); return; }
   const route = window.location.hash.replace(/^#/, '').split('?')[0] || window.location.pathname; // HashRouter
-  if (!/^\/(study\/certificate|tools\/cheat-sheets)\/[^/]+\/?$/.test(route) || !document.querySelector('.print-allowed')) { toast('Printing is disabled on UpSkillr.'); return; }
+  if (!/^\/(study\/certificate|tools\/cheat-sheets)\/[^/]+\/?$/.test(route) || !document.querySelector('.print-allowed')) { toast('Printing is disabled on NGU.'); return; }
   const root = document.documentElement;
   let timer = null;
   const end = () => { root.classList.remove('print-ok'); window.removeEventListener('afterprint', end); clearTimeout(timer); };

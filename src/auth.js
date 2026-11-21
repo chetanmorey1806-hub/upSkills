@@ -1,4 +1,4 @@
-// Browser-only sign-in for UpSkillr.
+// Browser-only sign-in for NGU.
 // There is no server: accounts live in this browser's localStorage and passwords are stored only
 // as salted SHA-256 hashes. This keeps each student's progress separate on a shared computer, but it
 // is NOT real security (anyone with dev tools can bypass it). A real deployment needs a backend.

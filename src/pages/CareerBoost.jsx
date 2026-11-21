@@ -375,7 +375,7 @@ function InternshipDetail({ it }) {
       </div>
       {doneAll && (
         <div className="cert vi-cert">
-          <div className="cert-brand">UpSkillr</div>
+          <div className="cert-brand">NGU</div>
           <CertPhoto />
           <div className="cert-title">Certificate of Internship Completion</div>
           <p>This is to certify that</p>
@@ -503,7 +503,7 @@ export function CheatSheets() {
           {pdfOn && <button className="btn small primary" onClick={allowPrintOnce}><Printer size={14} /> Save as PDF</button>}
         </div>
         <div className="cs-sheet print-allowed" style={{ '--c': s.color }}>
-          <div className="cs-head"><div><h1>{s.name} Cheat Sheet</h1><p>{s.summary}</p></div><span className="cs-brand">UpSkillr</span></div>
+          <div className="cs-head"><div><h1>{s.name} Cheat Sheet</h1><p>{s.summary}</p></div><span className="cs-brand">NGU</span></div>
           <div className="cs-grid">
             {s.sections.map((sec) => (
               <div key={sec.h} className="cs-sec"><h3>{sec.h}</h3>
@@ -515,7 +515,7 @@ export function CheatSheets() {
             {s.interview?.length > 0 && <div className="cs-sec"><h3>Must remember for interviews</h3><ul>{s.interview.map((x) => <li key={x}>{x}</li>)}</ul></div>}
             {s.mistakes?.length > 0 && <div className="cs-sec"><h3>Common mistakes</h3><ul>{s.mistakes.map((x) => <li key={x}>{x}</li>)}</ul></div>}
           </div>
-          <div className="cs-foot">UpSkillr · Developed by ER. Chetan D Morey</div>
+          <div className="cs-foot">NGU · Developed by ER. Chetan D Morey</div>
         </div>
       </div>
     );
@@ -523,7 +523,7 @@ export function CheatSheets() {
   return (
     <div className="ic-page">
       <Head icon={ScrollText} title="Cheat Sheets">Two-page revision sheets for {list.length || 26} technologies: syntax, must-remember interview facts and common mistakes. Read one the night before your exam or interview.</Head>
-      {isAdmin && <div className="card row-btns"><label className="check"><input type="checkbox" checked={pdfOn} onChange={togglePdf} /> Allow students to save cheat sheets as PDF</label><span className="muted small">Off by default because copying and printing are blocked on UpSkillr.</span></div>}
+      {isAdmin && <div className="card row-btns"><label className="check"><input type="checkbox" checked={pdfOn} onChange={togglePdf} /> Allow students to save cheat sheets as PDF</label><span className="muted small">Off by default because copying and printing are blocked on NGU.</span></div>}
       {!list.length ? <Empty what="cheat sheet" /> : (
         <div className="cs-cards">
           {list.map((x) => <Link key={x.id} to={`/tools/cheat-sheets/${x.id}`} className="card cs-card" style={{ '--c': x.color }}><b>{x.name}</b><span className="muted small">{x.summary}</span><span className="small">{x.sections.length} sections</span></Link>)}
