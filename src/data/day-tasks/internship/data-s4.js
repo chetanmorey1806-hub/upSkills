@@ -1,0 +1,102 @@
+const SETUP = `CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL);
+CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT, product_id INTEGER, qty INTEGER, order_date TEXT);
+INSERT INTO products VALUES (1, 'Basmati Rice 5kg', 'Grocery', 689), (2, 'Toor Dal 1kg', 'Grocery', 165), (3, 'Sunflower Oil 1L', 'Grocery', 155),
+(4, 'LED Bulb 9W', 'Electronics', 99), (5, 'Mixer Grinder', 'Electronics', 2999), (6, 'Ceiling Fan', 'Electronics', 1899),
+(7, 'Steel Bottle', 'Home', 349), (8, 'Bedsheet Double', 'Home', 899);
+INSERT INTO orders VALUES
+(1, 'Asha', 1, 4, '2024-01-05'), (2, 'Ravi', 5, 1, '2024-01-09'), (3, 'Meera', 2, 10, '2024-01-15'), (4, 'Asha', 7, 3, '2024-01-22'),
+(5, 'Dev', 6, 2, '2024-02-03'), (6, 'Ravi', 1, 6, '2024-02-11'), (7, 'Zoya', 8, 2, '2024-02-14'), (8, 'Asha', 4, 20, '2024-02-25'),
+(9, 'Meera', 5, 2, '2024-03-02'), (10, 'Kabir', 3, 12, '2024-03-08'), (11, 'Dev', 1, 5, '2024-03-15'), (12, 'Ravi', 6, 1, '2024-03-21'),
+(13, 'Zoya', 7, 6, '2024-03-27'), (14, 'Asha', 2, 8, '2024-04-04'), (15, 'Kabir', 8, 1, '2024-04-12'), (16, 'Meera', 6, 3, '2024-04-19');`;
+
+const MODEL_NOTE = '\n\nModel (B2B division): Sales[OrderDate, Quantity, SalesAmount, Cost] -> Product[Product, Category], Customer[Customer, City, Segment], Date[Date, Year, Quarter, Month] (marked as date table).';
+
+export default {
+  lesson: 'data-s4',
+  minutes: 60,
+  intro: 'Sprint 4 at BazaarMart: deliver the leadership dashboard numbers with window functions, CTEs, VAR/RETURN, RANKX and a two-way Excel lookup.',
+  tasks: [
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 10,
+      q: '**BM-401 · Story · High** Rank products within each category\n\nLeadership wants the best seller **in each category**, not just overall.\n\nAcceptance criteria:\n- Columns: `category`, `product`, `revenue` (qty × price), `rnk`\n- `rnk` = `RANK()` of revenue (highest = 1) that **restarts for every category**\n- Order by `category`, then `rnk`',
+      example: { title: 'RANK with PARTITION BY', code: 'SELECT city, name, marks,\n       RANK() OVER (PARTITION BY city ORDER BY marks DESC) AS rnk\nFROM students\nORDER BY city, rnk;' },
+      setup: SETUP,
+      starter: 'SELECT p.category, p.name AS product FROM products p;',
+      solution: 'SELECT p.category, p.name AS product, SUM(o.qty * p.price) AS revenue, RANK() OVER (PARTITION BY p.category ORDER BY SUM(o.qty * p.price) DESC) AS rnk FROM orders o JOIN products p ON p.id = o.product_id GROUP BY p.id ORDER BY p.category, rnk;',
+      ordered: true,
+      explain: 'Review: window functions run **after** GROUP BY, so you can rank an aggregate like `SUM(qty * price)` directly. `PARTITION BY category` makes the rank restart at 1 in each category; without it you get one overall ranking. RANK leaves gaps after ties (1, 1, 3); use DENSE_RANK if the business wants 1, 1, 2.',
+    },
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 10,
+      q: '**BM-402 · Story · High** Month-over-month growth\n\nThe CFO wants revenue per month with the change from the previous month.\n\nAcceptance criteria:\n- Columns: `month` (YYYY-MM), `revenue`, `prev_revenue`, `change`\n- `prev_revenue` uses `LAG` (NULL for the first month); `change` = revenue - prev_revenue (NULL for the first month)\n- Oldest month first\n- Tip: compute monthly revenue in a CTE first',
+      example: { title: 'LAG over a CTE', code: "WITH daily AS (\n  SELECT visit_date AS d, COUNT(*) AS visits FROM visits GROUP BY visit_date\n)\nSELECT d, visits, LAG(visits) OVER (ORDER BY d) AS prev_visits\nFROM daily\nORDER BY d;" },
+      setup: SETUP,
+      starter: "SELECT strftime('%Y-%m', order_date) AS month FROM orders;",
+      solution: "WITH monthly AS (SELECT strftime('%Y-%m', o.order_date) AS month, SUM(o.qty * p.price) AS revenue FROM orders o JOIN products p ON p.id = o.product_id GROUP BY month) SELECT month, revenue, LAG(revenue) OVER (ORDER BY month) AS prev_revenue, revenue - LAG(revenue) OVER (ORDER BY month) AS change FROM monthly ORDER BY month;",
+      ordered: true,
+      explain: 'Review: aggregate first (one row per month in a CTE named after what it holds), then apply `LAG` over the monthly rows. Applying LAG to raw orders would compare individual orders, not months. The first month has no previous value, so NULL is correct; do not replace it with 0, or the "growth" looks like 100% of revenue.',
+    },
+    {
+      type: 'code',
+      lang: 'sql',
+      mins: 9,
+      q: '**BM-403 · Story · Medium** Repeat customers\n\nMarketing wants customers who ordered in **at least 3 different months** (for a loyalty campaign).\n\nAcceptance criteria:\n- Columns: `customer`, `active_months`, `total_spent` (qty × price)\n- Only customers with `active_months >= 3`\n- Order by `total_spent` descending',
+      example: { title: 'counting distinct values per group', code: "SELECT student, COUNT(DISTINCT subject) AS subjects\nFROM exams\nGROUP BY student\nHAVING COUNT(DISTINCT subject) >= 2;" },
+      setup: SETUP,
+      starter: 'SELECT customer, COUNT(*) AS orders FROM orders GROUP BY customer;',
+      solution: "SELECT o.customer, COUNT(DISTINCT strftime('%Y-%m', o.order_date)) AS active_months, SUM(o.qty * p.price) AS total_spent FROM orders o JOIN products p ON p.id = o.product_id GROUP BY o.customer HAVING COUNT(DISTINCT strftime('%Y-%m', o.order_date)) >= 3 ORDER BY total_spent DESC;",
+      ordered: true,
+      explain: 'Review: `COUNT(*)` counts orders, but two orders in the same month are still one active month, so count **distinct months**. The condition is on an aggregate, so it goes in HAVING. Double-check one customer by hand (Asha: Jan, Feb, Apr = 3 months) before sending the list to marketing.',
+    },
+    {
+      type: 'code',
+      lang: 'dax',
+      mins: 9,
+      q: '**BM-404 · Story · High** YoY Growth %\n\nCreate **YoY Growth %** = (sales this period - sales same period last year) / sales last year.\n\nAcceptance criteria:\n- Use `VAR` for the current value (`[Total Sales]`) and the last-year value (`CALCULATE([Total Sales], SAMEPERIODLASTYEAR(Date[Date]))`)\n- Return the result with `DIVIDE` after `RETURN`' + MODEL_NOTE,
+      example: { title: 'VAR / RETURN', code: 'Margin =\nVAR S = [Total Sales]\nVAR C = SUM(Sales[Cost])\nRETURN DIVIDE(S - C, S)' },
+      measures: { 'Total Sales': 'SUM(Sales[SalesAmount])' },
+      starter: 'YoY Growth % =\n    // TODO\n',
+      solution: 'VAR Cur = [Total Sales]\nVAR LY = CALCULATE([Total Sales], SAMEPERIODLASTYEAR(Date[Date]))\nRETURN DIVIDE(Cur - LY, LY)',
+      explain: 'Review: VARs make the formula readable (the reviewer sees "current" and "last year" by name) and each value is calculated once. `DIVIDE(Cur - LY, LY)` returns blank for 2023, where there is no last year, instead of a misleading error or infinite growth. Cross-check one cell against the SQL growth query before the board meeting.',
+    },
+    {
+      type: 'code',
+      lang: 'dax',
+      mins: 8,
+      q: '**BM-405 · Story · High** Product Rank\n\nIn the product table visual, show each product\'s rank by sales among **all** products (1 = best).\n\nCreate **Product Rank** with `RANKX` over `ALL(Product[Product])` and `[Total Sales]`.' + MODEL_NOTE,
+      example: { title: 'rank cities', code: 'City Rank =\nRANKX(ALL(Customer[City]), [Total Sales])' },
+      measures: { 'Total Sales': 'SUM(Sales[SalesAmount])' },
+      starter: 'Product Rank =\n    // TODO\n',
+      solution: 'RANKX(ALL(Product[Product]), [Total Sales])',
+      explain: 'Review: RANKX evaluates `[Total Sales]` for every product in the table you give it and returns the position of the current product. With `ALL(Product[Product])` the list contains every product regardless of the visual filter; with just `Product` (filtered to the current row) every product would rank 1, the classic RANKX bug. Year and city slicers still apply, so ranks change per year.',
+    },
+    {
+      type: 'code',
+      lang: 'excel',
+      mins: 7,
+      q: '**BM-406 · Task · Medium** Two-way lookup for the leadership one-pager\n\nThe one-pager has a small matrix of quarterly sales by region (A1:E4). The CEO selects a region in **H1** and a quarter in **H2**. Return the matching sales value.\n\nAcceptance criteria:\n- Works for any region/quarter in the table\n- Use `INDEX` with two `MATCH`es (or nested XLOOKUP)',
+      example: { title: 'INDEX + MATCH in both directions', code: '=INDEX(B2:D5, MATCH(G1, A2:A5, 0), MATCH(G2, B1:D1, 0))' },
+      grid: { A1: 'Region', B1: 'Q1', C1: 'Q2', D1: 'Q3', E1: 'Q4', A2: 'West', B2: '820000', C2: '910000', D2: '875000', E2: '1040000', A3: 'South', B3: '640000', C3: '702000', D3: '738000', E3: '815000', A4: 'North', B4: '310000', C4: '355000', D4: '342000', E4: '398000', G1: 'Region', H1: 'South', G2: 'Quarter', H2: 'Q3' },
+      starter: '=',
+      solution: '=INDEX(B2:E4,MATCH(H1,A2:A4,0),MATCH(H2,B1:E1,0))',
+      explain: 'Review: the first MATCH finds the row (South = 2), the second the column (Q3 = 3), and INDEX returns the cell where they cross (738000). The `0` means exact match; leaving it out gives approximate matching on unsorted labels. Because nothing is hard-coded, the CEO can change H1/H2 and the one-pager updates.',
+    },
+    {
+      type: 'mcq',
+      mins: 2,
+      q: '**BM-407 · Task · Medium** Presenting to leadership\n\nYou present the dashboard to the leadership team on Friday. Which opening is best?',
+      options: [
+        'Walk through every SQL query and DAX measure you wrote, in the order you wrote them',
+        'Start with the key insight and the number ("Electronics drove 60% of Q1 growth; West is 8% above target"), then show the supporting chart, then the assumptions (period, returns excluded) and next steps',
+        'Show the raw tables and let them find the insights',
+        'Apologise for being an intern and read the slides word by word',
+      ],
+      answer: 1,
+      explain: 'Review: leaders have minutes, not hours. Lead with the **insight and its number**, support it with one clear visual, state the data period and assumptions so nobody misquotes it, and end with what you recommend. Keep the technical details ready for questions, not as the main story.',
+    },
+  ],
+};

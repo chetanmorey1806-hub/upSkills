@@ -12,7 +12,7 @@ import Onboarding, { startTour, openOnboarding } from './Onboarding.jsx';
 import { checkReminder } from '../reminders.js';
 import { supaMode } from '../supabase.js';
 import { startSync, syncNow, syncState, SYNC_EVENT } from '../cloudSync.js';
-import { Languages, Presentation, Mic, Headphones, SpellCheck, CalendarCheck, BriefcaseBusiness } from 'lucide-react';
+import { Languages, Presentation, Mic, Headphones, SpellCheck, CalendarCheck, BriefcaseBusiness, Megaphone, FileSearch, UserRoundPen, ScrollText } from 'lucide-react';
 import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard, Sunrise, Briefcase, KanbanSquare, Scale, BookUser, Cloud, UsersRound, MessagesSquare as Forum2, School } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
 import { Avatar } from './MediaBits.jsx';
@@ -119,6 +119,8 @@ function buildMenu() {
         { to: '/practice/aptitude', label: 'Aptitude & Reasoning', icon: Calculator },
         { to: '/practice/companies', label: 'Company-wise Kits', icon: Building2 },
         { to: '/practice/video-interview', label: 'Video Mock Interview', icon: Video },
+        { to: '/tools/dsa', label: 'DSA Practice Sheet', icon: Code2 },
+        { to: '/tools/cheat-sheets', label: 'Cheat Sheets', icon: ScrollText },
         { to: '/tools/interview-phrases', label: 'Interview Phrases (मराठी/हिंदी → English)', icon: Languages },
         { to: '/tools/project-pitch', label: 'Explain Your Project', icon: Presentation },
         { to: '/tools/jam', label: 'JAM / Extempore Speaking', icon: Mic },
@@ -147,6 +149,10 @@ function buildMenu() {
     {
       key: 'career', label: 'Career', icon: Briefcase,
       items: [
+        { to: '/tools/placement-drives', label: 'Placement Drives', icon: Megaphone },
+        { to: '/tools/internship', label: 'Virtual Internship', icon: BriefcaseBusiness },
+        { to: '/tools/ats-checker', label: 'Resume ATS Checker', icon: FileSearch },
+        { to: '/tools/profile-builder', label: 'LinkedIn & GitHub Builder', icon: UserRoundPen },
         { to: '/career/applications', label: 'Application Tracker', icon: KanbanSquare },
         { to: '/career/offers', label: 'Offer Comparison', icon: Scale },
         { to: '/career/experiences', label: 'Interview Journal', icon: BookUser },

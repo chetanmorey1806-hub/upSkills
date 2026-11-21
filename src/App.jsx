@@ -44,6 +44,7 @@ import { ExplainError, CodePuzzles, QuizBattle } from './pages/PracticeGames.jsx
 import { AptitudeHome, AptitudeTopic, CompanyKits, VideoInterview } from './pages/PlacementTools.jsx';
 import { InterviewPhrases, ProjectPitch, JamPractice, SituationalRound, CompanyHR } from './pages/InterviewCoach.jsx';
 import { VersantPractice, GDTopics, EnglishMistakes, InterviewDayKit, FirstJobSkills } from './pages/InterviewCoach2.jsx';
+import { DsaPractice, AtsChecker, VirtualInternship, PlacementDrives, CheatSheets, ProfileBuilder } from './pages/CareerBoost.jsx';
 import { DiagnosticTest, PortfolioBuilder, WeeklyReport } from './pages/GrowthTools.jsx';
 import TodayPage from './pages/TodayPage.jsx';
 import { Leaderboard, Forum, ForumThread, ExperienceBank } from './pages/Community.jsx';
@@ -146,6 +147,15 @@ function AppShell() {
         <Route path="/tools/english-mistakes" element={<EnglishMistakes />} />
         <Route path="/tools/interview-day" element={<InterviewDayKit />} />
         <Route path="/tools/first-job" element={<FirstJobSkills />} />
+        <Route path="/tools/dsa" element={<DsaPractice />} />
+        <Route path="/tools/dsa/:id" element={<DsaPractice />} />
+        <Route path="/tools/ats-checker" element={<AtsChecker />} />
+        <Route path="/tools/internship" element={<VirtualInternship />} />
+        <Route path="/tools/internship/:id" element={<VirtualInternship />} />
+        <Route path="/tools/placement-drives" element={<PlacementDrives />} />
+        <Route path="/tools/cheat-sheets" element={<CheatSheets />} />
+        <Route path="/tools/cheat-sheets/:id" element={<CheatSheets />} />
+        <Route path="/tools/profile-builder" element={<ProfileBuilder />} />
         <Route path="/study/diagnostic" element={<DiagnosticTest />} />
         <Route path="/study/portfolio" element={<PortfolioBuilder />} />
         <Route path="/study/report" element={<WeeklyReport />} />

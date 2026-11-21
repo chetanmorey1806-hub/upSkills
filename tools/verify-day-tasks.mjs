@@ -1,7 +1,7 @@
 // Dev tool: grade every Day Task model answer with the real in-app grader.
 // usage: node tools/verify-day-tasks.mjs <trackKey> [id1,id2]   (needs `npx vite --port 5199` running)
 import { spawn } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 const [track, only] = process.argv.slice(2);
@@ -23,6 +23,8 @@ for (let i = 0; i < 1200 && !report; i++) {
   if (r.result?.result?.value) report = JSON.parse(r.result.result.value);
 }
 ws.close(); chrome.kill();
+await sleep(500);
+try { rmSync(dir, { recursive: true, force: true }); } catch { /* ignore */ } // never leave Chrome profiles behind (they filled the disk once)
 if (!report) { console.log('TIMEOUT: verifier did not finish'); process.exit(2); }
 console.log(`track ${report.track}: ${report.files} files, ${report.tasks} tasks, ${report.passed} model answers pass`);
 for (const e of report.errors) console.log(`✗ ${e.lesson}${e.task ? ` #${e.task}` : ''}: ${e.msg}`);

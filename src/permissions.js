@@ -33,6 +33,8 @@ export const TOOLS = [
   ['situational', 'Situational Round', 'Interview Prep'], ['company-hr', 'Company HR Rounds', 'Interview Prep'],
   ['versant', 'Versant / Communication Test', 'Interview Prep'], ['gd-topics', 'GD Topics', 'Interview Prep'], ['english-mistakes', 'Common English Mistakes', 'Interview Prep'],
   ['interview-day', 'Interview Day Kit', 'Interview Prep'], ['first-job', 'First Job Skills', 'Interview Prep'],
+  ['dsa', 'DSA Practice Sheet', 'Interview Prep'], ['cheat-sheets', 'Cheat Sheets', 'Interview Prep'],
+  ['placement-drives', 'Placement Drives', 'Career'], ['internship', 'Virtual Internship', 'Career'], ['ats-checker', 'Resume ATS Checker', 'Career'], ['profile-builder', 'LinkedIn & GitHub Builder', 'Career'],
   ['quiz', 'Quiz Arena', 'Interview Prep'], ['flashcards', 'Flashcards', 'Interview Prep'], ['shortcuts', 'Shortcuts & Cheat Sheets', 'Interview Prep'],
   ['web-projects', 'Web Dev Projects', 'Projects'], ['python-projects', 'Python Projects', 'Projects'], ['mern-projects', 'MERN Projects', 'Projects'],
   ['java-projects', 'Java Projects', 'Projects'],

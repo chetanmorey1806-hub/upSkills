@@ -48,7 +48,7 @@ export default function DevVerifyTasks() {
     (async () => {
       await new Promise((r) => setTimeout(r, 50));
       if (cancelled) return;
-      const lessonIds = track === 'coach' ? dayTaskIds('coach') : (tracks[track]?.topics || []).map((t) => t.id); // 'coach' = Interview Coach tool tests (no lessons)
+      const lessonIds = ['coach', 'internship'].includes(track) ? dayTaskIds(track) : (tracks[track]?.topics || []).map((t) => t.id); // 'coach' = Interview Coach tool tests (no lessons)
       const ids = dayTaskIds(track).filter((id) => !only || only.split(',').includes(id)).sort();
       const report = { track, files: ids.length, tasks: 0, passed: 0, errors: [] };
       for (const id of ids) {
