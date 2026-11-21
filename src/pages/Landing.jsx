@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import CareerTracks from '../components/CareerTracks.jsx';
+import HeroSlider from '../components/HeroSlider.jsx';
 import HeroPhotos from '../components/HeroPhotos.jsx';
 import { Link } from 'react-router-dom';
 import { useAuth, logout, firstName } from '../auth.js';
@@ -187,6 +188,9 @@ export default function Landing() {
           <button className="ld-burger" onClick={() => setMenu(!menu)} aria-label={menu ? 'Close menu' : 'Open menu'} aria-expanded={menu}>{menu ? <X size={22} /> : <Menu size={22} />}</button>
         </div>
       </header>
+
+      {/* BANNER SLIDER */}
+      <HeroSlider user={user} onJump={go} />
 
       {/* HERO */}
       <section className="ld-hero">

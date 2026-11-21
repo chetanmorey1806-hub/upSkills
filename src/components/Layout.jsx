@@ -12,7 +12,7 @@ import Onboarding, { startTour, openOnboarding } from './Onboarding.jsx';
 import { checkReminder } from '../reminders.js';
 import { supaMode } from '../supabase.js';
 import { startSync, syncNow, syncState, SYNC_EVENT } from '../cloudSync.js';
-import { Languages, Presentation, Mic } from 'lucide-react';
+import { Languages, Presentation, Mic, Headphones, SpellCheck, CalendarCheck, BriefcaseBusiness } from 'lucide-react';
 import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard, Sunrise, Briefcase, KanbanSquare, Scale, BookUser, Cloud, UsersRound, MessagesSquare as Forum2, School } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
 import { Avatar } from './MediaBits.jsx';
@@ -124,6 +124,11 @@ function buildMenu() {
         { to: '/tools/jam', label: 'JAM / Extempore Speaking', icon: Mic },
         { to: '/tools/situational', label: 'Situational & Managerial Round', icon: Scale },
         { to: '/tools/company-hr', label: 'Company-wise HR Rounds', icon: Building2 },
+        { to: '/tools/versant', label: 'Versant / Communication Test', icon: Headphones },
+        { to: '/tools/gd-topics', label: 'GD Topics 2026', icon: UsersRound },
+        { to: '/tools/english-mistakes', label: 'Common English Mistakes', icon: SpellCheck },
+        { to: '/tools/interview-day', label: 'Interview Day Kit', icon: CalendarCheck },
+        { to: '/tools/first-job', label: 'First Job Skills', icon: BriefcaseBusiness },
         { to: '/tools/java-interview', label: 'Interview Prep', icon: ClipboardCheck },
         { to: '/tools/soft-skills', label: 'Soft Skills', icon: MessageCircle },
         { to: '/tools/quiz', label: 'Quiz Arena', icon: ListChecks },

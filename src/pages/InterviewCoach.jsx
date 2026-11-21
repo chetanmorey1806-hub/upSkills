@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useParams } from 'react-router-dom';
 import {
   Languages, Presentation, Mic, Scale, Building2, Volume2, Shuffle, CheckCircle2, XCircle, Star, Search, Timer, Download, RotateCcw, ArrowRight, Lightbulb, MicOff, ListChecks,
+  Headphones, Users, SpellCheck, CalendarCheck, BriefcaseBusiness,
 } from 'lucide-react';
 import { useStudy } from '../study.js';
 import { useSpeech, speak, stopSpeaking } from '../components/useSpeech.js';
@@ -37,9 +38,14 @@ const TOOLS = [
   { to: '/tools/jam', label: 'JAM / Extempore', icon: Mic },
   { to: '/tools/situational', label: 'Situational Round', icon: Scale },
   { to: '/tools/company-hr', label: 'Company HR Rounds', icon: Building2 },
+  { to: '/tools/versant', label: 'Versant / Communication Test', icon: Headphones },
+  { to: '/tools/gd-topics', label: 'GD Topics 2026', icon: Users },
+  { to: '/tools/english-mistakes', label: 'Common English Mistakes', icon: SpellCheck },
+  { to: '/tools/interview-day', label: 'Interview Day Kit', icon: CalendarCheck },
+  { to: '/tools/first-job', label: 'First Job Skills', icon: BriefcaseBusiness },
 ];
 
-function CoachNav() {
+export function CoachNav() {
   return (
     <div className="ic-nav">
       {TOOLS.map(({ to, label, icon: I }) => (
@@ -49,20 +55,20 @@ function CoachNav() {
   );
 }
 
-const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+export const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const STOP = new Set('a an the is am are was were be to of in on at for and or but i my me it this that with as by from you your we our will would can could do does did have has had so very please'.split(' '));
 const words = (s) => (String(s || '').toLowerCase().match(/[a-z']+/g) || []).filter((w) => !STOP.has(w));
 // How much of the target's meaning words appear in the answer (0..1); best over all accepted versions.
-function similarity(answer, targets) {
+export function similarity(answer, targets) {
   const a = new Set(words(answer));
   return Math.max(0, ...targets.filter(Boolean).map((t) => { const tw = [...new Set(words(t.replace(/\.\.\./g, '')))]; return tw.length ? tw.filter((w) => a.has(w)).length / tw.length : 0; }));
 }
 
-function SpeakBtn({ text, label = 'Listen' }) {
+export function SpeakBtn({ text, label = 'Listen' }) {
   return <button type="button" className="btn small" onClick={() => speak(text, 0.95)}><Volume2 size={14} /> {label}</button>;
 }
 
-function MicBox({ value, onChange, placeholder = 'Type your answer, or press the mic and speak…', rows = 3 }) {
+export function MicBox({ value, onChange, placeholder = 'Type your answer, or press the mic and speak…', rows = 3 }) {
   const sp = useSpeech({ onText: (t) => onChange((v) => `${v ? `${v} ` : ''}${t}`) });
   return (
     <div className="ic-mic">
@@ -76,7 +82,7 @@ function MicBox({ value, onChange, placeholder = 'Type your answer, or press the
   );
 }
 
-function Empty({ what }) {
+export function Empty({ what }) {
   return <div className="card muted">The {what} content is being prepared. Please check again soon.</div>;
 }
 
@@ -344,13 +350,13 @@ function AnswerPractice({ question }) {
 }
 
 /* ---------------- shared: timed speaking drill + speech report ---------------- */
-function useTicker(running) {
+export function useTicker(running) {
   const [secs, setSecs] = useState(0);
   useEffect(() => { if (!running) return undefined; const id = setInterval(() => setSecs((s) => s + 1), 1000); return () => clearInterval(id); }, [running]);
   return [secs, setSecs];
 }
 
-function SpeakingDrill({ target, label }) {
+export function SpeakingDrill({ target, label }) {
   const [text, setText] = useState('');
   const [run, setRun] = useState(false);
   const [secs, setSecs] = useTicker(run);
@@ -370,7 +376,7 @@ function SpeakingDrill({ target, label }) {
   );
 }
 
-function SpeechReport({ text, secs, target }) {
+export function SpeechReport({ text, secs, target }) {
   const a = analyzeSpeech(text, secs || 0, fillerWords);
   const tips = [];
   if (a.wpm && a.wpm > 170) tips.push('You are speaking too fast. Slow down and pause after each point.');

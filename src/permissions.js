@@ -31,6 +31,8 @@ export const TOOLS = [
   ['test-series', 'Test Series', 'Interview Prep'], ['java-interview', 'Interview Prep', 'Interview Prep'], ['soft-skills', 'Soft Skills Lab', 'Interview Prep'],
   ['interview-phrases', 'Interview Phrases', 'Interview Prep'], ['project-pitch', 'Explain Your Project', 'Interview Prep'], ['jam', 'JAM / Extempore', 'Interview Prep'],
   ['situational', 'Situational Round', 'Interview Prep'], ['company-hr', 'Company HR Rounds', 'Interview Prep'],
+  ['versant', 'Versant / Communication Test', 'Interview Prep'], ['gd-topics', 'GD Topics', 'Interview Prep'], ['english-mistakes', 'Common English Mistakes', 'Interview Prep'],
+  ['interview-day', 'Interview Day Kit', 'Interview Prep'], ['first-job', 'First Job Skills', 'Interview Prep'],
   ['quiz', 'Quiz Arena', 'Interview Prep'], ['flashcards', 'Flashcards', 'Interview Prep'], ['shortcuts', 'Shortcuts & Cheat Sheets', 'Interview Prep'],
   ['web-projects', 'Web Dev Projects', 'Projects'], ['python-projects', 'Python Projects', 'Projects'], ['mern-projects', 'MERN Projects', 'Projects'],
   ['java-projects', 'Java Projects', 'Projects'],
@@ -109,7 +111,7 @@ export function canFor(user, key, action = 'view', m = readPerms()) {
   const rules = u.custom ? u.rules : m.roles.student;
   if (!allowedBy(rules, key, action)) return false;
   // Packages: when enabled, students only get the courses inside their assigned packages.
-  if (m.settings.packagesControlAccess && key.startsWith('course:')) {
+  if (m.settings.packagesControlAccess && key.startsWith('course:') && key !== 'course:coach') { // 'coach' = Interview Coach tests, not a package course
     const pk = getPackages(m).filter((p) => (u.packages || []).includes(p.id));
     if (!pk.some((p) => packageTracks(p).includes(key.slice(7)))) return false;
   }

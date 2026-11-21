@@ -43,6 +43,7 @@ import Visualizers from './pages/Visualizers.jsx';
 import { ExplainError, CodePuzzles, QuizBattle } from './pages/PracticeGames.jsx';
 import { AptitudeHome, AptitudeTopic, CompanyKits, VideoInterview } from './pages/PlacementTools.jsx';
 import { InterviewPhrases, ProjectPitch, JamPractice, SituationalRound, CompanyHR } from './pages/InterviewCoach.jsx';
+import { VersantPractice, GDTopics, EnglishMistakes, InterviewDayKit, FirstJobSkills } from './pages/InterviewCoach2.jsx';
 import { DiagnosticTest, PortfolioBuilder, WeeklyReport } from './pages/GrowthTools.jsx';
 import TodayPage from './pages/TodayPage.jsx';
 import { Leaderboard, Forum, ForumThread, ExperienceBank } from './pages/Community.jsx';
@@ -140,6 +141,11 @@ function AppShell() {
         <Route path="/tools/situational" element={<SituationalRound />} />
         <Route path="/tools/company-hr" element={<CompanyHR />} />
         <Route path="/tools/company-hr/:id" element={<CompanyHR />} />
+        <Route path="/tools/versant" element={<VersantPractice />} />
+        <Route path="/tools/gd-topics" element={<GDTopics />} />
+        <Route path="/tools/english-mistakes" element={<EnglishMistakes />} />
+        <Route path="/tools/interview-day" element={<InterviewDayKit />} />
+        <Route path="/tools/first-job" element={<FirstJobSkills />} />
         <Route path="/study/diagnostic" element={<DiagnosticTest />} />
         <Route path="/study/portfolio" element={<PortfolioBuilder />} />
         <Route path="/study/report" element={<WeeklyReport />} />
