@@ -29,6 +29,8 @@ export const TOOLS = [
   ['ai-lab', 'AI Prompt Lab', 'AI Tools'], ['ai-concepts', 'AI Concepts Lab', 'AI Tools'], ['ml-playground', 'ML Playground', 'AI Tools'],
   ['ai-app-builder', 'AI App Builder', 'AI Tools'], ['ai-tools', 'AI Tools Directory', 'AI Tools'],
   ['test-series', 'Test Series', 'Interview Prep'], ['java-interview', 'Interview Prep', 'Interview Prep'], ['soft-skills', 'Soft Skills Lab', 'Interview Prep'],
+  ['interview-phrases', 'Interview Phrases', 'Interview Prep'], ['project-pitch', 'Explain Your Project', 'Interview Prep'], ['jam', 'JAM / Extempore', 'Interview Prep'],
+  ['situational', 'Situational Round', 'Interview Prep'], ['company-hr', 'Company HR Rounds', 'Interview Prep'],
   ['quiz', 'Quiz Arena', 'Interview Prep'], ['flashcards', 'Flashcards', 'Interview Prep'], ['shortcuts', 'Shortcuts & Cheat Sheets', 'Interview Prep'],
   ['web-projects', 'Web Dev Projects', 'Projects'], ['python-projects', 'Python Projects', 'Projects'], ['mern-projects', 'MERN Projects', 'Projects'],
   ['java-projects', 'Java Projects', 'Projects'],

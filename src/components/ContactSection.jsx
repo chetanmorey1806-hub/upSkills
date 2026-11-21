@@ -83,7 +83,7 @@ export default function ContactSection() {
                   <span>Mobile number *</span>
                   <div className="lx-phone">
                     <span aria-hidden="true">+91</span>
-                    <input id="lx-enq-phone" className="input" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="10-digit mobile" value={f.phone} onChange={set('phone')} maxLength={14} aria-invalid={!!err.phone} />
+                    <input id="lx-enq-phone" className="input" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="10-digit mobile" value={f.phone} onChange={set('phone')} maxLength={16} aria-invalid={!!err.phone} />
                   </div>
                   {err.phone && <em className="lx-err">{err.phone}</em>}
                 </label>

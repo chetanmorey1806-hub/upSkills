@@ -139,3 +139,9 @@
   .tp-lesson { padding: .65rem 2rem .65rem .8rem; }
   .tp-go { right: .6rem; }
 }
+
+/* Never leave course content invisible: Layout's scroll-reveal can miss elements rendered during a route change
+   (they keep .rv without .rv-in). The fade-in animation still plays when .rv-in is added. */
+.tp .rv { opacity: 1; }
+/* .rv is also the RecordedVideos class (left accent border in styles.css); keep the hero's own top accent */
+.tp .tp-hero.rv { border-left: 1px solid var(--border); }

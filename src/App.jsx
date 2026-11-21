@@ -42,6 +42,7 @@ import CodeVisualizer from './pages/CodeVisualizer.jsx';
 import Visualizers from './pages/Visualizers.jsx';
 import { ExplainError, CodePuzzles, QuizBattle } from './pages/PracticeGames.jsx';
 import { AptitudeHome, AptitudeTopic, CompanyKits, VideoInterview } from './pages/PlacementTools.jsx';
+import { InterviewPhrases, ProjectPitch, JamPractice, SituationalRound, CompanyHR } from './pages/InterviewCoach.jsx';
 import { DiagnosticTest, PortfolioBuilder, WeeklyReport } from './pages/GrowthTools.jsx';
 import TodayPage from './pages/TodayPage.jsx';
 import { Leaderboard, Forum, ForumThread, ExperienceBank } from './pages/Community.jsx';
@@ -133,6 +134,12 @@ function AppShell() {
         <Route path="/practice/companies" element={<CompanyKits />} />
         <Route path="/practice/companies/:id" element={<CompanyKits />} />
         <Route path="/practice/video-interview" element={<VideoInterview />} />
+        <Route path="/tools/interview-phrases" element={<InterviewPhrases />} />
+        <Route path="/tools/project-pitch" element={<ProjectPitch />} />
+        <Route path="/tools/jam" element={<JamPractice />} />
+        <Route path="/tools/situational" element={<SituationalRound />} />
+        <Route path="/tools/company-hr" element={<CompanyHR />} />
+        <Route path="/tools/company-hr/:id" element={<CompanyHR />} />
         <Route path="/study/diagnostic" element={<DiagnosticTest />} />
         <Route path="/study/portfolio" element={<PortfolioBuilder />} />
         <Route path="/study/report" element={<WeeklyReport />} />

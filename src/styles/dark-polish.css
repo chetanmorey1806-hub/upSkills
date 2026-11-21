@@ -1,1 +1,97 @@
-/* Dark mode polish: overrides for hard-coded light colours. */
+/* Dark mode polish: overrides for colours that were hard-coded for the light theme.
+ * Every rule below appears twice: once for system dark mode (unless the user picked Light)
+ * and once for an explicit Dark choice — the same pattern as the top of src/styles.css.
+ * Theme-independent fix (not dark-only) is at the very end. */
+
+@media (prefers-color-scheme: dark) {
+  /* palette: a slightly brighter red so error text stays readable on dark cards */
+  :root:not([data-theme="light"]) { --bad: #ef4444; }
+
+  /* MySQL Workbench / SSMS labs (/tools/mysql-workbench, /tools/ssms-lab): the whole panel was light-only */
+  :root:not([data-theme="light"]) .wb { --wb-bg: #1b1d21; --wb-panel: #23252a; --wb-bar: #2d3036; --wb-text: #e3e5e8; --wb-muted: #9aa1aa; --wb-border: #3b3f46; --wb-sel: #263d55; --wb-accent: #38b2cf; }
+  :root:not([data-theme="light"]) .wb.ssms { --wb-accent: #4ea3e0; }
+  :root:not([data-theme="light"]) .wb-btn:hover:not(:disabled), :root:not([data-theme="light"]) .wb-filter, :root:not([data-theme="light"]) .wb-act, :root:not([data-theme="light"]) .wb-editor, :root:not([data-theme="light"]) .wb-snip, :root:not([data-theme="light"]) .wb-bottom, :root:not([data-theme="light"]) .wb-tab.on, :root:not([data-theme="light"]) .wb-side-tabs button.on, :root:not([data-theme="light"]) .wb-btabs button.on { background: var(--wb-panel); }
+  :root:not([data-theme="light"]) .wb-act.danger { color: #f87171; }
+  :root:not([data-theme="light"]) .wb.ssms .ssms-exec { color: #4ade80; }
+  :root:not([data-theme="light"]) .wb-expected { background: #2a2615; }
+  :root:not([data-theme="light"]) .wb-grid th, :root:not([data-theme="light"]) .wb-grid td, :root:not([data-theme="light"]) .wb-out th, :root:not([data-theme="light"]) .wb-out td { border-color: #353940; color: var(--wb-text); }
+  :root:not([data-theme="light"]) .wb-grid th, :root:not([data-theme="light"]) .wb-out th { background: var(--wb-bar); }
+  :root:not([data-theme="light"]) .wb-grid .rn { color: #8b919a; background: #202227; }
+  :root:not([data-theme="light"]) .wb-grid .null { background: #363a41; color: #a3a9b1; }
+  :root:not([data-theme="light"]) .wb-grid tbody tr:nth-child(even) td { background: #202227; }
+  :root:not([data-theme="light"]) .wb-out tr.bad td { background: #3a1c1f; }
+  /* the editor in this lab is created with Monaco's light "vs" theme (set in MySQLWorkbench.jsx); flip it to match */
+  :root:not([data-theme="light"]) .wb-monaco .monaco-editor { filter: invert(.9) hue-rotate(180deg); }
+
+  /* API Lab method labels and status codes: the light-theme blues/reds are too dark on dark cards */
+  :root:not([data-theme="light"]) .m-GET:not(.http-m) { color: #4ade80; }
+  :root:not([data-theme="light"]) .m-POST:not(.http-m) { color: #facc15; }
+  :root:not([data-theme="light"]) .m-PUT:not(.http-m) { color: #60a5fa; }
+  :root:not([data-theme="light"]) .m-PATCH:not(.http-m) { color: #a78bfa; }
+  :root:not([data-theme="light"]) .m-DELETE:not(.http-m) { color: #f87171; }
+  :root:not([data-theme="light"]) .api-code.s3 { color: #60a5fa; }
+
+  /* AI Concepts Lab token chips: pastel blocks were glaring on the dark page */
+  :root:not([data-theme="light"]) .ai-tokens span { filter: brightness(.86) saturate(.9); }
+
+  /* icon / badge tints that were tuned for white backgrounds */
+  :root:not([data-theme="light"]) .ico.t-blue { color: #60a5fa; }
+  :root:not([data-theme="light"]) .ico.t-violet { color: #a78bfa; }
+  :root:not([data-theme="light"]) .ico.t-green { color: #4ade80; }
+  :root:not([data-theme="light"]) .ico.t-yellow { color: #facc15; }
+  :root:not([data-theme="light"]) .ico.t-warn { color: #fbbf24; }
+  :root:not([data-theme="light"]) .ico.t-orange { color: #fb923c; }
+  :root:not([data-theme="light"]) .um-sync.error, :root:not([data-theme="light"]) .um-sync.offline { color: #fbbf24; }
+  :root:not([data-theme="light"]) .db-ticon.t3 { color: #22d3ee; }
+  :root:not([data-theme="light"]) .cm-role.admin { color: #fbbf24; }
+  :root:not([data-theme="light"]) .cm-role.teacher { color: #22d3ee; }
+  :root:not([data-theme="light"]) .vl-list li.done .vl-li-name::before { color: #4ade80; }
+}
+
+/* palette: a slightly brighter red so error text stays readable on dark cards */
+:root[data-theme="dark"] { --bad: #ef4444; }
+
+/* MySQL Workbench / SSMS labs (/tools/mysql-workbench, /tools/ssms-lab): the whole panel was light-only */
+:root[data-theme="dark"] .wb { --wb-bg: #1b1d21; --wb-panel: #23252a; --wb-bar: #2d3036; --wb-text: #e3e5e8; --wb-muted: #9aa1aa; --wb-border: #3b3f46; --wb-sel: #263d55; --wb-accent: #38b2cf; }
+:root[data-theme="dark"] .wb.ssms { --wb-accent: #4ea3e0; }
+:root[data-theme="dark"] .wb-btn:hover:not(:disabled), :root[data-theme="dark"] .wb-filter, :root[data-theme="dark"] .wb-act, :root[data-theme="dark"] .wb-editor, :root[data-theme="dark"] .wb-snip, :root[data-theme="dark"] .wb-bottom, :root[data-theme="dark"] .wb-tab.on, :root[data-theme="dark"] .wb-side-tabs button.on, :root[data-theme="dark"] .wb-btabs button.on { background: var(--wb-panel); }
+:root[data-theme="dark"] .wb-act.danger { color: #f87171; }
+:root[data-theme="dark"] .wb.ssms .ssms-exec { color: #4ade80; }
+:root[data-theme="dark"] .wb-expected { background: #2a2615; }
+:root[data-theme="dark"] .wb-grid th, :root[data-theme="dark"] .wb-grid td, :root[data-theme="dark"] .wb-out th, :root[data-theme="dark"] .wb-out td { border-color: #353940; color: var(--wb-text); }
+:root[data-theme="dark"] .wb-grid th, :root[data-theme="dark"] .wb-out th { background: var(--wb-bar); }
+:root[data-theme="dark"] .wb-grid .rn { color: #8b919a; background: #202227; }
+:root[data-theme="dark"] .wb-grid .null { background: #363a41; color: #a3a9b1; }
+:root[data-theme="dark"] .wb-grid tbody tr:nth-child(even) td { background: #202227; }
+:root[data-theme="dark"] .wb-out tr.bad td { background: #3a1c1f; }
+/* the editor in this lab is created with Monaco's light "vs" theme (set in MySQLWorkbench.jsx); flip it to match */
+:root[data-theme="dark"] .wb-monaco .monaco-editor { filter: invert(.9) hue-rotate(180deg); }
+
+/* API Lab method labels and status codes: the light-theme blues/reds are too dark on dark cards */
+:root[data-theme="dark"] .m-GET:not(.http-m) { color: #4ade80; }
+:root[data-theme="dark"] .m-POST:not(.http-m) { color: #facc15; }
+:root[data-theme="dark"] .m-PUT:not(.http-m) { color: #60a5fa; }
+:root[data-theme="dark"] .m-PATCH:not(.http-m) { color: #a78bfa; }
+:root[data-theme="dark"] .m-DELETE:not(.http-m) { color: #f87171; }
+:root[data-theme="dark"] .api-code.s3 { color: #60a5fa; }
+
+/* AI Concepts Lab token chips: pastel blocks were glaring on the dark page */
+:root[data-theme="dark"] .ai-tokens span { filter: brightness(.86) saturate(.9); }
+
+/* icon / badge tints that were tuned for white backgrounds */
+:root[data-theme="dark"] .ico.t-blue { color: #60a5fa; }
+:root[data-theme="dark"] .ico.t-violet { color: #a78bfa; }
+:root[data-theme="dark"] .ico.t-green { color: #4ade80; }
+:root[data-theme="dark"] .ico.t-yellow { color: #facc15; }
+:root[data-theme="dark"] .ico.t-warn { color: #fbbf24; }
+:root[data-theme="dark"] .ico.t-orange { color: #fb923c; }
+:root[data-theme="dark"] .um-sync.error, :root[data-theme="dark"] .um-sync.offline { color: #fbbf24; }
+:root[data-theme="dark"] .db-ticon.t3 { color: #22d3ee; }
+:root[data-theme="dark"] .cm-role.admin { color: #fbbf24; }
+:root[data-theme="dark"] .cm-role.teacher { color: #22d3ee; }
+:root[data-theme="dark"] .vl-list li.done .vl-li-name::before { color: #4ade80; }
+
+/* Both themes: in API Lab the request-method labels (.m-GET etc.) also pick up the coloured
+ * background meant for .http-m badges, so text and background were the same colour. */
+.api-presets b[class^="m-"], .api-hrow b[class^="m-"] { background: none; }
+select[class^="m-"] { background-color: var(--surface2); }

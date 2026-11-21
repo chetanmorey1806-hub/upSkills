@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import CareerTracks from '../components/CareerTracks.jsx';
+import HeroPhotos from '../components/HeroPhotos.jsx';
 import { Link } from 'react-router-dom';
 import { useAuth, logout, firstName } from '../auth.js';
 import {
@@ -210,7 +211,8 @@ export default function Landing() {
             </div>
             <div className="ld-trust"><CheckCircle2 size={15} /> {user ? `Signed in as ${user.username}` : 'Free account · your own progress, tests and projects'} · works on mobile</div>
           </div>
-          <div className="ld-hero-art" aria-hidden="true">
+          <div className="ld-hero-art has-photos" aria-hidden="true">
+            <HeroPhotos />
             <div className="ld-window">
               <div className="ld-win-bar"><i /><i /><i /><span>{file}</span></div>
               <pre><TypingCode onFile={setFile} /></pre>

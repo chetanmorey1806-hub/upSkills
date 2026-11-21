@@ -12,6 +12,7 @@ import Onboarding, { startTour, openOnboarding } from './Onboarding.jsx';
 import { checkReminder } from '../reminders.js';
 import { supaMode } from '../supabase.js';
 import { startSync, syncNow, syncState, SYNC_EVENT } from '../cloudSync.js';
+import { Languages, Presentation, Mic } from 'lucide-react';
 import { NotebookPen, AlertTriangle, Repeat, CalendarDays, Award, FileUser, Bot, Medal, CodeXml, Compass, Swords, Globe2, FileBarChart, Calculator, Building2, Video, ScanSearch, Stethoscope, Puzzle, Clapperboard, Sunrise, Briefcase, KanbanSquare, Scale, BookUser, Cloud, UsersRound, MessagesSquare as Forum2, School } from 'lucide-react';
 import { usePerms, filterMenu } from '../permissions.js';
 import { Avatar } from './MediaBits.jsx';
@@ -118,6 +119,11 @@ function buildMenu() {
         { to: '/practice/aptitude', label: 'Aptitude & Reasoning', icon: Calculator },
         { to: '/practice/companies', label: 'Company-wise Kits', icon: Building2 },
         { to: '/practice/video-interview', label: 'Video Mock Interview', icon: Video },
+        { to: '/tools/interview-phrases', label: 'Interview Phrases (मराठी/हिंदी → English)', icon: Languages },
+        { to: '/tools/project-pitch', label: 'Explain Your Project', icon: Presentation },
+        { to: '/tools/jam', label: 'JAM / Extempore Speaking', icon: Mic },
+        { to: '/tools/situational', label: 'Situational & Managerial Round', icon: Scale },
+        { to: '/tools/company-hr', label: 'Company-wise HR Rounds', icon: Building2 },
         { to: '/tools/java-interview', label: 'Interview Prep', icon: ClipboardCheck },
         { to: '/tools/soft-skills', label: 'Soft Skills', icon: MessageCircle },
         { to: '/tools/quiz', label: 'Quiz Arena', icon: ListChecks },

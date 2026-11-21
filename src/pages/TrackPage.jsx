@@ -126,7 +126,7 @@ export default function TrackPage() {
   return (
     <div className="tp" style={{ '--tc': t.color }}>
       <header className="tp-hero card">
-        <div className="tp-cover"><span className="only-wide"><CourseCover track={t} height={150} wide /></span><span className="only-narrow"><CourseCover track={t} height={120} /></span></div>
+        <div className="tp-cover"><span className="only-wide"><CourseCover track={t} height={130} showTitle={false} wide /></span><span className="only-narrow"><CourseCover track={t} height={100} showTitle={false} /></span></div>
         <div className="tp-hero-body">
           <div className="tp-hero-info">
             <div className="tp-title-row">
