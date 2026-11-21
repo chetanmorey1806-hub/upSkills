@@ -2471,3 +2471,29 @@ h1 .ico, h2 .ico { vertical-align: -0.12em; color: var(--primary); }
 }
 /* hero banner videos: the clip itself moves, so no extra zoom */
 .hb-video, .hb-slide.on .hb-video { transform: none; animation: none; background: #0b1020; }
+/* hero banner photos: zoom-in / zoom-out (Ken Burns) while the slide is showing */
+.hb-kb { transform-origin: var(--focus, 50% 50%); will-change: transform; }
+.hb-kb.in { transform: scale(1); }
+.hb-kb.out { transform: scale(1.22); }
+.hb-slide.on .hb-kb.in { animation: hb-kb-in var(--dur, 8s) ease-in-out forwards; }
+.hb-slide.on .hb-kb.out { animation: hb-kb-out var(--dur, 8s) ease-in-out forwards; }
+@keyframes hb-kb-in {
+  0% { transform: scale(1) translate(0, 0); }
+  55% { transform: scale(1.2) translate(-1.5%, -1%); }
+  100% { transform: scale(1.08) translate(-.5%, 0); }
+}
+@keyframes hb-kb-out {
+  0% { transform: scale(1.22) translate(1.5%, 1%); }
+  55% { transform: scale(1.02) translate(0, 0); }
+  100% { transform: scale(1.1) translate(.5%, -.5%); }
+}
+/* leaving slide keeps its zoom while it fades out, so there is no jump */
+.hb-slide:not(.on) .hb-kb { transition: transform .9s ease; }
+/* soft light sweep across the photo when a slide appears */
+.hb-slide::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .16) 50%, transparent 65%); transform: translateX(-120%); }
+.hb-slide.on::after { animation: hb-shine 2.2s ease .4s 1 forwards; }
+@keyframes hb-shine { to { transform: translateX(120%); } }
+@media (prefers-reduced-motion: reduce) {
+  .hb-slide.on .hb-kb.in, .hb-slide.on .hb-kb.out, .hb-slide.on::after { animation: none; }
+  .hb-kb.out { transform: none; }
+}

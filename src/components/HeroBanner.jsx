@@ -2,41 +2,42 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight, UserPlus, Code2, Layers, ClipboardCheck, Rocket, GraduationCap } from 'lucide-react';
 
-// Banner videos: free Mixkit stock clips (Mixkit License: free for commercial use, no attribution needed),
-// shortened to 10 s, 720p, no sound, in /public/banner/clip-N.mp4 with a first-frame poster clip-N.jpg.
-// To use your own videos, replace the files in public/banner/ keeping the same names.
-// (students-N.jpg are the earlier Unsplash photos, kept for reference.)
+// Banner: photos of students with laptops (free Unsplash photos, Unsplash License) in /public/banner/students-N.jpg,
+// animated with a slow zoom-in / zoom-out ("Ken Burns") effect.
+// Short video clips (Mixkit License) are also kept in /public/banner/clip-N.mp4: set USE_VIDEO = true to show them instead.
+// To use your own photos, replace the files in public/banner/ keeping the same names.
 const base = import.meta.env.BASE_URL || '/';
-const img = (n) => `${base}banner/clip-${n}.jpg`;
-const vid = (n) => `${base}banner/clip-${n}.mp4`;
+const USE_VIDEO = false;
+const img = (n) => `${base}banner/students-${n}.jpg`;
+const vid = (n) => (USE_VIDEO ? `${base}banner/clip-${n}.mp4` : null);
 
 const SLIDES = [
   {
-    photo: img(1), video: vid(1), icon: GraduationCap, eyebrow: 'Day-wise learning',
+    photo: img(1), video: vid(1), zoom: 'in', focus: '30% 40%', icon: GraduationCap, eyebrow: 'Day-wise learning',
     title: 'Learn coding the practical way',
     text: 'Every day: clear theory, step-by-step solved examples, interview questions, practice tasks and a quiz.',
     jump: ['courses', 'Explore courses'],
   },
   {
-    photo: img(2), video: vid(2), icon: Code2, eyebrow: 'Practise in the browser',
+    photo: img(2), video: vid(2), zoom: 'out', focus: '45% 30%', icon: Code2, eyebrow: 'Practise in the browser',
     title: 'No setup. Just open and code.',
     text: 'Write and run Java, Python, C#, SQL, React and React Native right inside UpSkillr with VS Code style editors.',
     jump: ['features', 'See the tools'],
   },
   {
-    photo: img(3), video: vid(3), icon: Layers, eyebrow: 'Full stack courses',
+    photo: img(3), video: vid(3), zoom: 'in', focus: '70% 45%', icon: Layers, eyebrow: 'Full stack courses',
     title: 'Java, Python, .NET and MERN Full Stack',
     text: 'From the first line of code to frameworks, databases and deployment: one lesson a day.',
     jump: ['courses', 'View all courses'],
   },
   {
-    photo: img(4), video: vid(4), icon: ClipboardCheck, eyebrow: 'Interview preparation',
+    photo: img(4), video: vid(4), zoom: 'out', focus: '50% 35%', icon: ClipboardCheck, eyebrow: 'Interview preparation',
     title: 'Get ready for your first job',
     text: 'Interview Q&A for every topic, timed test series, mock interviews and soft skills practice.',
     jump: ['career', 'Career prep'],
   },
   {
-    photo: img(5), video: vid(5), icon: Rocket, eyebrow: 'Final projects',
+    photo: img(5), video: vid(5), zoom: 'in', focus: '60% 40%', icon: Rocket, eyebrow: 'Final projects',
     title: 'Build real projects for your portfolio',
     text: 'Weather app, e-commerce website, e-commerce mobile app and more guided final projects.',
     jump: ['journey', 'How it works'],
@@ -108,7 +109,7 @@ export default function HeroBanner({ user, onJump }) {
             const on = k === i;
             return (
               <div key={s.photo} className={`hb-slide ${on ? 'on' : ''}`} role="group" aria-roledescription="slide" aria-label={`${k + 1} of ${n}`} aria-hidden={!on}>
-                {s.video ? <SlideVideo src={s.video} poster={s.photo} on={on} /> : <img src={s.photo} alt="" className="hb-img" loading={k === 0 ? 'eager' : 'lazy'} />}
+                {s.video ? <SlideVideo src={s.video} poster={s.photo} on={on} /> : <img src={s.photo} alt="" className={`hb-img hb-kb ${s.zoom}`} style={{ '--focus': s.focus, '--dur': `${DELAY}ms` }} loading={k === 0 ? 'eager' : 'lazy'} />}
                 <div className="hb-shade" />
                 <div className="hb-text">
                   <span className="hb-eyebrow"><I size={15} /> {s.eyebrow}</span>
@@ -134,7 +135,7 @@ export default function HeroBanner({ user, onJump }) {
               </button>
             ))}
           </div>
-          <span className="hb-credit">Videos: Mixkit</span>
+          <span className="hb-credit">{USE_VIDEO ? 'Videos: Mixkit' : 'Photos: Unsplash'}</span>
         </div>
       </div>
     </section>
