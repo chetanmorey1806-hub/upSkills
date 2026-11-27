@@ -1,0 +1,15 @@
+/* Download theory PDF (src/components/TheoryPdfButton.jsx) */
+.tpdf-btn { gap: .45rem; }
+.tpdf-btn:disabled { opacity: .75; cursor: progress; }
+.tpdf-spin { animation: tpdf-rot 1s linear infinite; }
+@keyframes tpdf-rot { to { transform: rotate(360deg); } }
+.tpdf-card { display: flex; align-items: center; gap: 1rem; margin: 1.6rem 0 1rem; padding: 1.1rem 1.2rem; border-radius: 16px; background: color-mix(in srgb, var(--primary) 7%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border)); }
+.tpdf-icon { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; color: #fff; background: var(--grad, var(--primary)); }
+.tpdf-text { flex: 1; display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.tpdf-text span { color: var(--muted); font-size: .9rem; }
+.tpdf-err { color: #dc2626 !important; }
+@media (max-width: 640px) {
+  .tpdf-card { flex-direction: column; align-items: flex-start; }
+  .tpdf-card .tpdf-btn { width: 100%; justify-content: center; }
+}
+.tpdf-row { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; }

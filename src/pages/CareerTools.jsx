@@ -103,7 +103,7 @@ function CertSeal() {
       <circle cx="50" cy="50" r="38" className="cert-seal-face" />
       <circle cx="50" cy="50" r="33" fill="none" className="cert-seal-ring" />
       <path id="cert-seal-arc" d="M50 50 m-27 0 a27 27 0 1 1 54 0" fill="none" />
-      <text className="cert-seal-text"><textPath href="#cert-seal-arc" startOffset="50%" textAnchor="middle">UPSKILLR CERTIFIED</textPath></text>
+      <text className="cert-seal-text"><textPath href="#cert-seal-arc" startOffset="50%" textAnchor="middle">NGU CERTIFIED</textPath></text>
       <path d="M50 44 l3.1 6.3 6.9 1 -5 4.9 1.2 6.9 -6.2 -3.3 -6.2 3.3 1.2 -6.9 -5 -4.9 6.9 -1z" className="cert-seal-star" />
     </svg>
   );
@@ -139,7 +139,7 @@ export function CertificateView() {
             <div className="cert-content">
               <div className="cert-head">
                 <Logo size={46} />
-                <div className="cert-wordmark"><b>NGU</b><span>Learn · Practice · Get hired</span></div>
+                <div className="cert-wordmark"><b>NGU</b><span>Never Give Up</span></div>
               </div>
               <div className="cert-heading">Certificate</div>
               <div className="cert-sub">of Completion</div>

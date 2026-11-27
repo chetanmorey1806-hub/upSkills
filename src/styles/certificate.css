@@ -29,11 +29,11 @@
 .cert-corner.bl { bottom: .2cqw; left: .2cqw; transform: scaleY(-1); }
 .cert-corner.br { bottom: .2cqw; right: .2cqw; transform: scale(-1, -1); }
 .cert-watermark { position: absolute; inset: 0; display: grid; place-items: center; opacity: .03; pointer-events: none; }
-.cert-watermark svg { width: 36cqw; height: 36cqw; filter: grayscale(1); }
+.cert-watermark svg, .cert-watermark img { width: 36cqw; height: 36cqw; object-fit: contain; filter: grayscale(1); }
 
 .cert-content { position: absolute; inset: 2.6cqw 7cqw 2.4cqw; display: flex; flex-direction: column; align-items: center; justify-content: space-between; z-index: 2; }
 .cert-head { display: flex; align-items: center; gap: 1cqw; }
-.cert-head svg { width: 4.3cqw; height: 4.3cqw; }
+.cert-head svg, .cert-head img { width: 4.3cqw; height: 4.3cqw; object-fit: contain; }
 .cert-wordmark { display: flex; flex-direction: column; align-items: flex-start; gap: .25cqw; line-height: 1.1; }
 .cert-wordmark b { font-size: 2.3cqw; font-weight: 800; letter-spacing: .02em; background: linear-gradient(90deg, var(--indigo), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .cert-wordmark span { font-size: .9cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
@@ -68,12 +68,12 @@
 .cert-sign b { font-size: 1.35cqw; color: var(--ink); }
 
 /* print: the certificate fills exactly one A4 landscape page, nothing else is printed */
-@page upskillr-cert { size: A4 landscape; margin: 0; }
+@page ngu-cert { size: A4 landscape; margin: 0; }
 @media print {
   html.cert-page, html.cert-page body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
   html.cert-page body *:not(:has(.cert-sheet)):not(.cert-sheet):not(.cert-sheet *) { display: none !important; }
   html.cert-page body *:has(.cert-sheet) { display: block !important; position: static !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
     box-shadow: none !important; background: none !important; max-width: none !important; width: auto !important; min-height: 0 !important; transform: none !important; filter: none !important; overflow: visible !important; }
-  html.cert-page .cert-sheet { page: upskillr-cert; position: relative !important; inset: auto !important; width: 297mm !important; height: 209.5mm !important; aspect-ratio: auto;
+  html.cert-page .cert-sheet { page: ngu-cert; position: relative !important; inset: auto !important; width: 297mm !important; height: 209.5mm !important; aspect-ratio: auto;
     margin: 0 !important; border-radius: 0; box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
 }

@@ -125,7 +125,8 @@
   .tp-ring, .tp-ring svg { width: 104px !important; height: 104px !important; }
   .tp-ring-label b { font-size: 1.35rem; }
   .tp-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; }
-  .tp-actions .btn { justify-content: center; padding: .5rem .4rem; font-size: .85rem; }
+  .tp-actions .btn { justify-content: center; padding: .5rem .3rem; font-size: .8rem; gap: .3rem; white-space: nowrap; }
+  .tp-actions .btn svg { width: 14px; height: 14px; flex: none; }
   .tp-actions .tp-cta { grid-column: 1 / -1; font-size: 1rem; }
   .tp-cert { padding: .7rem 1rem; }
   .tp-search { max-width: none; flex-basis: 100%; }

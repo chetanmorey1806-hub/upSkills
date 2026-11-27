@@ -17,6 +17,7 @@ import RichText, { Inline } from '../components/RichText.jsx';
 import CodeBlock from '../components/CodeBlock.jsx';
 import DataTable from '../components/DataTable.jsx';
 import Quiz from '../components/Quiz.jsx';
+import TheoryPdfButton from '../components/TheoryPdfButton.jsx';
 import VideoLesson from '../components/VideoLesson.jsx';
 import DayTask from '../components/DayTask.jsx';
 import { RecordedVideos } from '../components/MediaBits.jsx';
@@ -185,7 +186,10 @@ export default function TopicPage() {
               </div>
             </section>
           )}
-          <div className="center"><button className="btn primary" onClick={() => setTab('examples')}>Next: Worked examples →</button></div>
+          <div className="center tpdf-row">
+            <TheoryPdfButton topic={t} course={tr.name} label={topicLabel(track, t, index)} />
+            <button className="btn primary" onClick={() => setTab('examples')}>Next: Worked examples →</button>
+          </div>
         </div>
       )}
 
@@ -377,6 +381,8 @@ export default function TopicPage() {
       </div>
 
       <LessonStudyTools lessonKey={key} lesson={t} courseName={tr.name} link={`/track/${track}/${t.id}`} contentRef={contentRef} tab={tab} />
+
+      <TheoryPdfButton topic={t} course={tr.name} label={topicLabel(track, t, index)} variant="card" />
 
       <div className="pager">
         {prev ? <Link className="btn" to={`/track/${track}/${prev.id}`}>← {topicLabel(track, prev, index - 1)}: {prev.title}</Link> : <span />}

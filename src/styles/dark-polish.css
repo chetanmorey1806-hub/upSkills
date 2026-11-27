@@ -46,6 +46,9 @@
   :root:not([data-theme="light"]) .cm-role.admin { color: #fbbf24; }
   :root:not([data-theme="light"]) .cm-role.teacher { color: #22d3ee; }
   :root:not([data-theme="light"]) .vl-list li.done .vl-li-name::before { color: #4ade80; }
+
+  /* Theory PDF download card (src/styles/theory-pdf.css): error text */
+  :root:not([data-theme="light"]) .tpdf-err { color: #f87171 !important; }
 }
 
 /* palette: a slightly brighter red so error text stays readable on dark cards */
@@ -90,6 +93,9 @@
 :root[data-theme="dark"] .cm-role.admin { color: #fbbf24; }
 :root[data-theme="dark"] .cm-role.teacher { color: #22d3ee; }
 :root[data-theme="dark"] .vl-list li.done .vl-li-name::before { color: #4ade80; }
+
+/* Theory PDF download card (src/styles/theory-pdf.css): error text */
+:root[data-theme="dark"] .tpdf-err { color: #f87171 !important; }
 
 /* Both themes: in API Lab the request-method labels (.m-GET etc.) also pick up the coloured
  * background meant for .http-m badges, so text and background were the same colour. */
